@@ -69,3 +69,16 @@ SELECT nombre, numero_lote,
        IF(status = 1, 'VERDE', 'ROJO') AS color_franja,
        IF(status = 1, 'PAGOS AL DIA', 'NO HA PAGADO') AS texto_franja
 FROM Vecinos;
+
+-- 8. TABLA DE MENSAJES (Bandeja de Entrada / Comunicados)
+CREATE TABLE Mensajes (
+    id_mensaje INT PRIMARY KEY AUTO_INCREMENT,
+    id_remitente INT NOT NULL, -- Usuario que envía el mensaje (ej. Directiva)
+    id_destinatario INT NOT NULL, -- Usuario que recibe (Vecino u otro admin)
+    asunto VARCHAR(150) NOT NULL,
+    cuerpo TEXT NOT NULL,
+    fecha_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    leido TINYINT(1) DEFAULT 0, -- 0: No leido, 1: Leido
+    FOREIGN KEY (id_remitente) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
+    FOREIGN KEY (id_destinatario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
+);

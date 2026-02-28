@@ -47,6 +47,21 @@ def init_db():
         FOREIGN KEY (id_vecino_vinculado) REFERENCES Vecinos(id_vecino) ON DELETE CASCADE
     )
     ''')
+    
+    # 5. TABLA DE MENSAJES (Bandeja / Comunicados)
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Mensajes (
+        id_mensaje INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_remitente INTEGER NOT NULL,
+        id_destinatario INTEGER NOT NULL,
+        asunto VARCHAR(150) NOT NULL,
+        cuerpo TEXT NOT NULL,
+        fecha_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        leido INTEGER DEFAULT 0,
+        FOREIGN KEY (id_remitente) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
+        FOREIGN KEY (id_destinatario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
+    )
+    ''')
 
     # 6. INSERCIÓN DE DATOS INICIALES
     vecinos_data = [

@@ -135,10 +135,236 @@
             color: white;
             text-decoration: underline;
         }
+
+        /* Responsive para celulares pequeñas */
+        @media (max-width: 480px) {
+            body {
+                padding: 1rem;
+            }
+
+            .marbete-card {
+                border-radius: 0.8rem;
+            }
+
+            .header-strip {
+                padding: 1.2rem;
+            }
+
+            .header-title {
+                font-size: 1.5rem;
+            }
+
+            .content {
+                padding: 1.5rem 1rem;
+            }
+
+            .qr-container img {
+                width: 150px;
+                height: 150px;
+            }
+
+            .info-value {
+                font-size: 1.1rem;
+            }
+
+            .status-strip {
+                padding: 0.8rem;
+                font-size: 1.1rem;
+                letter-spacing: 1px;
+            }
+        }
+
+        /* Estilos tipo Glassmorphism (Premium) */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1.5rem;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            width: 100%;
+            max-width: 450px;
+            margin: auto;
+        }
+
+        .logo-circle {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem auto;
+            background: linear-gradient(135deg, var(--primary-color), #60a5fa);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            color: white;
+        }
+
+        .btn-glass {
+            display: block;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+
+        .btn-glass-primary {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 2px 4px -2px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-glass-primary:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4), 0 4px 6px -4px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-glass-secondary {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-glass-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideUpFade {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+
+        /* Alertas / Mensajes Modal */
+        .alerts-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .alert-card {
+            background-color: #1e293b;
+            border-left: 5px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            animation: popIn 0.3s ease-out forwards;
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .alert-card.alert-todos {
+            border-left-color: #fbbf24;
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            padding-right: 15px;
+        }
+
+        .alert-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: white;
+            line-height: 1.2;
+        }
+
+        .alert-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .alert-close:hover {
+            color: white;
+        }
+
+        .alert-body {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .alert-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+            text-align: right;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+        }
     </style>
 </head>
 
 <body>
+
+    <!-- Contenedor para notificaciones de Mensajes -->
+    <div id="alertsContainer" class="alerts-container"></div>
 
     <div class="marbete-card" id="marbeteCard" style="display: none;">
         <div class="header-strip">
@@ -157,8 +383,17 @@
                 <div class="info-value" id="loteResidente">-</div>
             </div>
 
+            <!-- Mostrar Fecha de Generación -->
+            <div class="info-row"
+                style="margin-top: 1.5rem; background: rgba(255, 255, 255, 0.08); padding: 8px 15px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); display: inline-block;">
+                <div class="info-label"
+                    style="font-size: 0.65rem; font-weight: 600; letter-spacing: 1.5px; opacity: 0.8;">GENERADO EL</div>
+                <div class="info-value" id="fechaGeneracion"
+                    style="font-size: 0.85rem; font-weight: 400; margin-top: 2px; color: #f8fafc;">-</div>
+            </div>
+
             <!-- Código QR Dinámico -->
-            <div class="qr-container">
+            <div class="qr-container" style="margin-top: 1rem;">
                 <img id="qrCode" src="" alt="Código QR de Acceso">
             </div>
         </div>
@@ -171,14 +406,54 @@
 
     <div id="errorMsg" style="display: none; text-align: center; color: var(--danger-color);">
         <h2>Código no encontrado</h2>
-        <p>No se encontró ningún vecino registrado con ese código (DPI o Lote).</p>
+        <p>No se encontró ningún vecino registrado con este código. Verifica que el Código Personal sea correcto.</p>
     </div>
 
-    <a href="index.html" class="btn-back">← Volver al Inicio</a>
+    <!-- Cuadro de Diálogo para Solicitar Código si no hay en la URL (Estilo Premium) -->
+    <div id="inputDialog" style="display: none; width: 100%; max-width: 480px; margin: 0 auto;">
+        <div class="glass-panel">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div class="logo-circle">
+                    <svg class="logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                        </path>
+                    </svg>
+                </div>
+                <h1
+                    style="font-size: 2rem; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 0.5rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);">
+                    DELCO II</h1>
+                <p style="font-size: 1rem; color: var(--text-muted); font-weight: 300;">Control de Acceso y Marbetes
+                    Digitales</p>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <input type="text" id="codigoInput" placeholder="Código Personal (Ej: AK1234)"
+                    style="width: 100%; padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(255, 255, 255, 0.05); color: white; font-size: 1.1rem; font-family: inherit; outline: none; text-align: center; transition: border-color 0.2s; text-transform: uppercase;">
+
+                <button onclick="generarNuevo()" class="btn-glass btn-glass-primary">
+                    Generar Marbete (QR)
+                </button>
+
+                <button onclick="irAVisitas()" class="btn-glass btn-glass-secondary">
+                    Escanear / Ver Visitas
+                </button>
+            </div>
+
+            <div
+                style="margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.08); text-align: center;">
+                <a href="login.html"
+                    style="color: var(--primary-color); text-decoration: none; font-size: 0.9rem; display: block; margin-bottom: 0.5rem; font-weight: 600;">Acceso
+                    a Directiva / Panel Principal</a>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">&copy; 2026 Gestión de Accesos DELCO II</p>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // Simulador de BD de vecinos
-        const vecinos_db = [
+        // Simulador de BD de vecinos buscando primero en la memoria compartida
+        const vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [
             { id: 1, nombre: 'NATAN RODAS', lote: '30', dpi: '2317', status: 1, codigo: 'NR2317' },
             { id: 2, nombre: 'ALVARO TRUJILLO', lote: '60', dpi: '1234', status: 0, codigo: 'AT1234' },
             { id: 3, nombre: 'WILLIAM ARREAGA', lote: '90', dpi: '77766', status: 1, codigo: 'WA7766' },
@@ -190,8 +465,15 @@
         const codigoIngresado = urlParams.get('codigo');
 
         if (codigoIngresado) {
+            // Convertir a mayúsculas para evitar problemas si el usuario escribe en minúsculas
+            const codBusqueda = codigoIngresado.toUpperCase();
+
             // 2. Buscar al vecino por Código, DPI o por Lote
-            const vecino = vecinos_db.find(v => v.codigo === codigoIngresado || v.dpi === codigoIngresado || v.lote === codigoIngresado);
+            const vecino = vecinos_db.find(v =>
+                (v.codigo && v.codigo.toUpperCase() === codBusqueda) ||
+                (v.dpi && v.dpi.toUpperCase() === codBusqueda) ||
+                (v.lote && v.lote.toUpperCase() === codBusqueda)
+            );
 
             if (vecino) {
                 // Rellenar datos
@@ -199,25 +481,118 @@
                 document.getElementById('nombreResidente').innerText = vecino.nombre;
                 document.getElementById('loteResidente').innerText = `LOTE ${vecino.lote}`;
 
-                // Generar QR en base los datos usando la API gratuita de qrserver
-                const qrData = `DELCOII-${vecino.lote}-${vecino.codigo || vecino.dpi}`;
-                document.querySelector('#qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}&color=000000&bgcolor=ffffff`;
+                // Generar Fecha y Hora Actual
+                const ahora = new Date();
+                const fechaStr = ahora.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                const horaStr = ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('fechaGeneracion').innerText = `${fechaStr} a las ${horaStr}`;
 
-                // Configurar Estatus (Verde = Al día | Rojo = Moroso)
                 const statusStrip = document.getElementById('statusStrip');
                 if (vecino.status === 1) {
                     statusStrip.className = 'status-strip status-verde';
                     statusStrip.innerText = 'PAGOS AL DÍA';
+
+                    // Generar QR solo si está al día
+                    const qrData = `DELCOII-${vecino.lote}-${vecino.codigo || vecino.dpi}`;
+                    document.querySelector('#qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}&color=000000&bgcolor=ffffff`;
                 } else {
                     statusStrip.className = 'status-strip status-rojo';
                     statusStrip.innerText = 'NO HA PAGADO';
+
+                    // Mostrar mensaje amarillo y ocultar QR si es moroso
+                    document.querySelector('.qr-container').style.background = 'transparent';
+                    document.querySelector('.qr-container').innerHTML = `
+                        <div style="background-color: #fef08a; color: #854d0e; padding: 20px; border-radius: 8px; font-weight: 700; font-size: 1.1rem; text-align: center; border: 2px solid #eab308; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            ⚠️ USTED ESTÁ PENDIENTE DE PAGO
+                            <div style="font-size: 0.85rem; font-weight: 500; margin-top: 10px;">Su marbete digital está inactivo.</div>
+                        </div>
+                    `;
                 }
+
+                // MOSTRAR MENSAJES (Bandeja)
+                mostrarMensajes(vecino.id, codBusqueda);
+
             } else {
                 document.getElementById('errorMsg').style.display = 'block';
             }
         } else {
-            document.getElementById('errorMsg').style.display = 'block';
-            document.getElementById('errorMsg').innerHTML = '<h2>Error</h2><p>No se proporcionó ningún código.</p>';
+            // Mostrar el dialogo para ingresar código si no vino por URL
+            document.getElementById('inputDialog').style.display = 'block';
+        }
+
+        function irAVisitas() {
+            const params = new URLSearchParams(window.location.search);
+            const codigoUrl = params.get('codigo');
+            window.location.href = codigoUrl ? `visitas.html?codigo=${encodeURIComponent(codigoUrl)}` : 'visitas.html';
+        }
+
+        function generarNuevo() {
+            const codInput = document.getElementById('codigoInput').value.trim();
+            if (!codInput) {
+                alert('Por favor ingrese su código de vecino.');
+                return;
+            }
+            window.location.href = `marbete.html?codigo=${encodeURIComponent(codInput)}`;
+        }
+
+        function mostrarMensajes(vecinoId, vecinoCodigo) {
+            const mensajes_db = JSON.parse(localStorage.getItem('delco_mensajes')) || [];
+            // Usamos una variable en localStorage para recordar qué mensajes ya vio el vecino
+            const keyLeidos = `delco_leidos_${vecinoCodigo}`;
+            const mensajesMostrados = JSON.parse(localStorage.getItem(keyLeidos)) || [];
+
+            // Validar que el mensaje es para TODOS o para este vecino. Y que no esté en los ya mostrados.
+            const misMensajes = mensajes_db.filter(m =>
+                (m.id_destinatario === "TODOS" || m.id_destinatario === parseInt(vecinoId)) &&
+                !mensajesMostrados.includes(m.id)
+            );
+
+            if (misMensajes.length > 0) {
+                const container = document.getElementById('alertsContainer');
+                container.style.display = 'flex';
+                misMensajes.forEach(m => {
+                    const isTodos = m.id_destinatario === "TODOS";
+                    const alertEl = document.createElement('div');
+                    alertEl.className = `alert-card ${isTodos ? 'alert-todos' : ''}`;
+                    alertEl.id = `alert-${m.id}`;
+                    alertEl.innerHTML = `
+                        <span class="alert-close" onclick="cerrarMensaje(${m.id}, '${vecinoCodigo}')">&times;</span>
+                        <div class="alert-header">
+                            <div class="alert-title">${isTodos ? '📢 AVISO GENERAL' : '✉️ MENSAJE PRIVADO'}<br><span style="font-size:0.9rem;font-weight:400;">${m.asunto}</span></div>
+                        </div>
+                        <div class="alert-body">${m.cuerpo}</div>
+                        <div class="alert-time">${m.fecha_envio}</div>
+                    `;
+                    container.appendChild(alertEl);
+
+                    // Desaparecer automáticamente a los 2 minutos (120,000 ms)
+                    setTimeout(() => {
+                        cerrarMensaje(m.id, vecinoCodigo);
+                    }, 120000);
+                });
+            }
+        }
+
+        function cerrarMensaje(mensajeId, vecinoCodigo) {
+            const alertEl = document.getElementById(`alert-${mensajeId}`);
+            if (alertEl) {
+                alertEl.style.animation = "fadeOut 0.3s ease-out forwards";
+                setTimeout(() => {
+                    alertEl.remove();
+                    const container = document.getElementById('alertsContainer');
+                    if (container.children.length === 0) {
+                        container.style.display = 'none';
+                    }
+                }, 300);
+            }
+
+            // Guardar como leído para que no vuelva a salir la próxima vez
+            const keyLeidos = `delco_leidos_${vecinoCodigo}`;
+            const mensajesMostrados = JSON.parse(localStorage.getItem(keyLeidos)) || [];
+            if (!mensajesMostrados.includes(mensajeId)) {
+                mensajesMostrados.push(mensajeId);
+                localStorage.setItem(keyLeidos, JSON.stringify(mensajesMostrados));
+            }
         }
     </script>
 </body>

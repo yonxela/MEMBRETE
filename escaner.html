@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escáner QR - DELCO II</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Librería para el escáner QR -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 1.5rem;
+        }
+
+        .scanner-card {
+            background-color: var(--panel-bg);
+            border-radius: 1rem;
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .header-strip {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-color), #60a5fa);
+        }
+
+        .header-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        #reader {
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            display: none;
+            /* Oculto hasta que se active */
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            width: 100%;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+
+        /* --- Estilos del Resultado --- */
+        #resultadoPanel {
+            display: none;
+            margin-top: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.03);
+            text-align: center;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .res-dato {
+            padding: 1.5rem;
+        }
+
+        .res-nombre {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .res-lote {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .status-strip {
+            padding: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            font-size: 1.3rem;
+        }
+
+        .status-solvente {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .status-moroso {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-back {
+            margin-top: 2rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+        .btn-back:hover {
+            color: white;
+            text-decoration: underline;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="scanner-card">
+        <div class="header-strip">
+            <h1 class="header-title">Escanear Marbete</h1>
+        </div>
+
+        <div class="content">
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;" id="instrucciones">
+                Apunta la cámara del dispositivo hacia el código QR del marbete digital del vecino.
+            </p>
+
+            <button id="btnIniciarCamera" class="btn btn-primary" onclick="iniciarEscaneo()">
+                📷 Activar Cámara y Escanear
+            </button>
+
+            <!-- Contenedor de la cámara -->
+            <div id="reader"></div>
+
+            <!-- Panel de Resultados -->
+            <div id="resultadoPanel">
+                <div class="res-dato">
+                    <div class="res-nombre" id="resNombre">-</div>
+                    <div class="res-lote" id="resLote">-</div>
+                    <div id="resFechaHora" style="font-size: 0.9rem; color: var(--text-muted); margin-top: 10px;"></div>
+                    <div style="margin-top: 1.5rem;">
+                        <img id="resQr" src="" alt="QR de Verificación"
+                            style="width: 150px; height: 150px; border-radius: 8px; border: 4px solid white; display: none; margin: 0 auto;">
+                    </div>
+                </div>
+                <div id="resStatus" class="status-strip">
+                    Cargando...
+                </div>
+                <div style="padding: 1rem;">
+                    <button class="btn btn-primary" style="margin-bottom: 0; padding: 0.8rem;"
+                        onclick="resetEscaneo()">Escanear Otro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="index.html" class="btn-back">← Volver al Inicio</a>
+
+    <script>
+        // Simulador de BD de vecinos buscando primero en la memoria compartida
+        const vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [
+            { id: 1, nombre: 'NATAN RODAS', lote: '30', dpi: '2317', status: 1, codigo: 'NR2317' },
+            { id: 2, nombre: 'ALVARO TRUJILLO', lote: '60', dpi: '1234', status: 0, codigo: 'AT1234' },
+            { id: 3, nombre: 'WILLIAM ARREAGA', lote: '90', dpi: '77766', status: 1, codigo: 'WA7766' },
+            { id: 4, nombre: 'PROGRAMADOR', lote: '00', dpi: 'sisdel', status: 1, codigo: 'SI0000' }
+        ];
+
+        let html5QrCode;
+
+        function iniciarEscaneo() {
+            document.getElementById('btnIniciarCamera').style.display = 'none';
+            document.getElementById('instrucciones').style.display = 'none';
+            document.getElementById('reader').style.display = 'block';
+
+            html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
+                .catch(err => {
+                    alert("Error al iniciar la cámara. Verifique permisos.");
+                    console.error(err);
+                    document.getElementById('btnIniciarCamera').style.display = 'block';
+                    document.getElementById('reader').style.display = 'none';
+                });
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            // Ejemplo de texto decodificado: "DELCOII-30-NR2317"
+            // Detener el escaneo una vez detectado un código
+            html5QrCode.stop().then(() => {
+                document.getElementById('reader').style.display = 'none';
+                procesarCodigo(decodedText);
+            }).catch(err => {
+                console.error("No se pudo detener la cámara.", err);
+            });
+        }
+
+        function procesarCodigo(textoEscaneado) {
+            // Separa el string por guiones. Esperado: ["DELCOII", "LOTE", "CODIGO/DPI"]
+            const partes = textoEscaneado.split('-');
+            let vecinoEncontrado = null;
+
+            if (partes.length >= 3 && partes[0] === 'DELCOII') {
+                const loteExtraido = partes[1];
+                const codigoDpiExtraido = partes[2];
+                // Buscar por lote Y (código o dpi)
+                vecinoEncontrado = vecinos_db.find(v => v.lote === loteExtraido && (v.codigo === codigoDpiExtraido || v.dpi === codigoDpiExtraido));
+            } else if (partes.length >= 1) {
+                // Metodo de respaldo: Si el codigo no es el formato esperado, buscar en toda la bd el string competo
+                vecinoEncontrado = vecinos_db.find(v => v.codigo === textoEscaneado || v.dpi === textoEscaneado || v.lote === textoEscaneado);
+            }
+
+            mostrarResultado(vecinoEncontrado);
+        }
+
+        function mostrarResultado(vecino) {
+            const panel = document.getElementById('resultadoPanel');
+            const resNombre = document.getElementById('resNombre');
+            const resLote = document.getElementById('resLote');
+            const resStatus = document.getElementById('resStatus');
+            const resFechaHora = document.getElementById('resFechaHora');
+
+            panel.style.display = 'block';
+
+            // Obtener fecha y hora actual
+            const ahora = new Date();
+            const fechaStr = ahora.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const horaStr = ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            resFechaHora.innerText = `${fechaStr} a las ${horaStr}`;
+
+            const resQr = document.getElementById('resQr');
+
+            if (vecino) {
+                resNombre.innerText = vecino.nombre;
+                resLote.innerText = `LOTE ${vecino.lote}`;
+
+                // Generar QR de Verificación
+                const qrVal = `SCAN-${vecino.lote}-${ahora.getTime()}`;
+                resQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrVal)}&color=000000&bgcolor=ffffff`;
+                resQr.style.display = 'block';
+
+                if (vecino.status === 1) {
+                    resStatus.className = 'status-strip status-solvente';
+                    resStatus.innerText = 'SOLVENTE';
+                } else {
+                    resStatus.className = 'status-strip status-moroso';
+                    resStatus.innerText = 'NO HA PAGADO';
+                }
+            } else {
+                resNombre.innerText = "Código Inválido";
+                resLote.innerText = "No registrado en DELCO II";
+                resStatus.className = 'status-strip status-moroso';
+                resStatus.innerText = 'ACCESO DENEGADO';
+                resQr.style.display = 'none';
+            }
+        }
+
+        function resetEscaneo() {
+            document.getElementById('resultadoPanel').style.display = 'none';
+            iniciarEscaneo();
+        }
+    </script>
+
+</body>
+
+</html>

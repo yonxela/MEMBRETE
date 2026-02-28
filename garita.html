@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Garita - DELCO II</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #333333;
+            --highlight-color: #fbbf24;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .title-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header-subtitle {
+            color: var(--highlight-color);
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .clock-container {
+            text-align: right;
+        }
+
+        .clock-time {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .clock-date {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .status-text {
+            color: var(--text-main);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background-color: var(--success-color);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px var(--success-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        /* Estilos Tabla */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 1.2rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background-color: rgba(255, 255, 255, 0.03);
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            font-size: 1.05rem;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .badge-recent {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-left: 10px;
+            text-transform: uppercase;
+            border: 1px solid rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-refresh {
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-refresh:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1.5rem;
+                text-align: center;
+            }
+
+            .clock-container {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div class="title-group">
+                <h1 class="header-title">DELCO II</h1>
+                <span class="header-subtitle">VISTA DE GARITA (SEGURIDAD)</span>
+            </div>
+            <div class="clock-container">
+                <div class="clock-time" id="clockTime">00:00:00</div>
+                <div class="clock-date" id="clockDate">--</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="status-bar">
+                <div class="status-text">
+                    <span class="status-dot"></span>
+                    <span>Mostrando visitas autorizadas del <strong>día actual</strong>. Se actualiza
+                        automáticamente.</span>
+                </div>
+                <button class="btn-refresh" onclick="cargarVisitasRecientes()">
+                    ↻ Actualizar
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table id="tablaVisitas">
+                    <thead>
+                        <tr>
+                            <th>HORA REGISTRO</th>
+                            <th>VISITANTE</th>
+                            <th>NO. IDENTIFICACIÓN</th>
+                            <th>PLACA(S)</th>
+                            <th>NO. PERSONAS</th>
+                            <th>AUTORIZA (VECINO)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaBody">
+                        <!-- Visitas dinámicas -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para mantener actualizado el reloj
+        function actualizarReloj() {
+            const ahora = new Date();
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+            document.getElementById('clockTime').innerText = ahora.toLocaleTimeString('es-ES', timeOptions);
+            document.getElementById('clockDate').innerText = ahora.toLocaleDateString('es-ES', dateOptions);
+        }
+
+        // Cargar y filtrar visitas del día actual
+        function cargarVisitasRecientes() {
+            const tbody = document.getElementById('tablaBody');
+            tbody.innerHTML = '';
+
+            const visitas_db = JSON.parse(localStorage.getItem('delco_visitas')) || [];
+            if (visitas_db.length === 0) {
+                mostrarVacio(tbody);
+                return;
+            }
+
+            const hoy = new Date();
+            const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+            const startOfDay = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()).getTime();
+            const endOfDay = startOfDay + 24 * 60 * 60 * 1000;
+
+            // Filtrar visitas correspondientes al día actual
+            const visitasRecientes = visitas_db.filter(v => {
+                // Si la visita tiene programada una fecha específica (nuevo formato)
+                if (v.fecha_programada) {
+                    v.computed_ts = v.timestamp || new Date().getTime(); // Mantenemos el timestamp para ordenar
+                    return v.fecha_programada === hoyStr;
+                }
+
+                // Lógica de respaldo para los registros creados antes de tener el campo "fecha_programada"
+                let ts = v.timestamp;
+                if (!ts && v.hora) {
+                    const fallBackDate = new Date();
+                    const [hh, mm] = v.hora.split(':');
+                    if (hh && mm) {
+                        fallBackDate.setHours(parseInt(hh, 10), parseInt(mm, 10), 0, 0);
+                        ts = fallBackDate.getTime();
+                    }
+                }
+
+                if (ts) {
+                    v.computed_ts = ts;
+                    return ts >= startOfDay && ts < endOfDay;
+                }
+                return false;
+            });
+
+            if (visitasRecientes.length === 0) {
+                mostrarVacio(tbody);
+                return;
+            }
+
+            // Ordenar de más reciente a más antigua
+            visitasRecientes.sort((a, b) => b.computed_ts - a.computed_ts);
+
+            visitasRecientes.forEach(visita => {
+                const tr = document.createElement('tr');
+
+                // Mostrar "NUEVO" si tiene menos de 15 minutos en el panel por ser del dia completo
+                const esMuyReciente = (Date.now() - visita.computed_ts) < (15 * 60 * 1000);
+                const badgeExtra = esMuyReciente ? '<span class="badge-recent">¡NUEVO!</span>' : '';
+
+                tr.innerHTML = `
+                    <td style="color: var(--primary-color);">
+                        <strong style="font-size: 1.2rem; display: flex; align-items: center;">
+                            ${visita.hora} 
+                            ${badgeExtra}
+                        </strong>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">${visita.fecha}</span>
+                    </td>
+                    <td><strong style="color: white;">${visita.nombre}</strong></td>
+                    <td style="color: var(--highlight-color); font-weight: 600;">${visita.identificacion || '-'}</td>
+                    <td style="letter-spacing: 1px; color: var(--text-muted); font-weight: 600;">${visita.placa}</td>
+                    <td>${visita.cantidad}</td>
+                    <td style="color: #a1a1aa; font-weight: 500;">${visita.autoriza}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function mostrarVacio(tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-icon">🛡️</div>
+                            <h3>No hay visitas para el día de hoy</h3>
+                            <p>Las autorizaciones aparecerán aquí tan pronto como sean registradas.</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Inicializar reloj y tabla
+        setInterval(actualizarReloj, 1000);
+        actualizarReloj();
+
+        // Actualizar lista de visitas cada 10 segundos
+        setInterval(cargarVisitasRecientes, 10000);
+        cargarVisitasRecientes();
+
+    </script>
+</body>
+
+</html>

@@ -172,6 +172,38 @@
             font-size: 0.9rem;
         }
 
+        /* Modal Mensajes */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .close-btn {
+            float: right;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            line-height: 1;
+        }
+
         @media (max-width: 768px) {
             .grid-container {
                 grid-template-columns: 1fr;
@@ -184,7 +216,13 @@
 
     <div class="dashboard-header">
         <h1 class="dashboard-title">Panel de Administración - DELCO II</h1>
-        <a href="login.html" class="btn-logout">Cerrar Sesión</a>
+        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+            <button class="btn-submit" style="margin: 0; background-color: #fbbf24; color: #1e1e1e;"
+                onclick="abrirModalMensaje()">
+                ✉️ Enviar Mensaje
+            </button>
+            <a href="login.html" class="btn-logout">Cerrar Sesión</a>
+        </div>
     </div>
 
     <div class="grid-container">
@@ -225,8 +263,6 @@
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button type="submit" class="btn-submit">Guardar Registro</button>
-                    <button type="button" class="btn-submit" style="background-color: var(--success-color);"
-                        onclick="verMarbeteDesdeAdmin()">Generar Marbete</button>
                 </div>
             </form>
         </div>
@@ -244,6 +280,9 @@
                     <button type="button" class="btn-submit"
                         style="margin-top: 0; padding: 8px 15px; width: auto; background-color: var(--border-color);"
                         onclick="limpiarBusqueda()">Limpiar</button>
+                    <button type="button" class="btn-submit"
+                        style="margin-top: 0; padding: 8px 15px; width: auto; background-color: var(--success-color);"
+                        onclick="window.open('visitas.html', '_blank')">Visitas</button>
                 </div>
             </div>
             <div style="overflow-x: auto;">
@@ -267,13 +306,73 @@
         </div>
     </div>
 
+    <!-- Modal para Enviar Mensajes -->
+    <div id="modalMensaje" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn" onclick="cerrarModalMensaje()">&times;</span>
+            <h2 class="panel-title" style="margin-bottom: 1rem;">Módulo de Comunicados</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Envíe alertas o mensajes a la
+                comunidad de vecinos.</p>
+
+            <form id="mensajeForm">
+                <div class="form-group"
+                    style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px;">
+                    <input type="checkbox" id="enviarATodos" onchange="toggleDestinatarios()" checked
+                        style="width: 18px; transform: scale(1.2);">
+                    <label for="enviarATodos" style="margin: 0; color: white; font-weight: 600; cursor: pointer;">Enviar
+                        a TODOS LOS VECINOS</label>
+                </div>
+
+                <div class="form-group" id="destinatarioGroup" style="display: none;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <label style="margin-bottom: 0;">Seleccionar Vecino Específico</label>
+                        <button type="button" onclick="toggleBuscadorVecinos()"
+                            style="background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 0.85rem; text-decoration: underline; font-weight: 600;">🔍
+                            Buscar</button>
+                    </div>
+
+                    <div id="buscadorVecinosDiv" style="display: none; margin-bottom: 10px;">
+                        <input type="text" id="inputBusquedaVecinoMsj" class="input-field"
+                            placeholder="Buscar por Nombre, ID o Tel..." style="padding: 8px; font-size: 0.9rem;"
+                            onkeyup="filtrarVecinosMensaje()">
+                    </div>
+
+                    <select id="destinatario" class="select-field">
+                        <!-- Opciones dinámicas pobladas por JS -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Asunto / Título</label>
+                    <input type="text" id="asuntoMensaje" class="input-field"
+                        placeholder="Ej. Aviso de Mantenimiento..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>Mensaje Completo</label>
+                    <textarea id="cuerpoMensaje" class="input-field" rows="5" placeholder="Escriba su mensaje aquí..."
+                        required style="resize: vertical; font-family: inherit;"></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit" style="background-color: #10b981;">Enviar Mensaje 🚀</button>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // Datos simulados iniciales basados en la BD SQL
-        let vecinos_db = [
+        // Usar LocalStorage para que los datos persistan en el navegador
+        let vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [
             { id: 1, nombre: 'NATAN RODAS', lote: '30', dpi: '2317', telefono: '31001708', status: 1, codigo: 'NR2317' },
             { id: 2, nombre: 'ALVARO TRUJILLO', lote: '60', dpi: '1234', telefono: '55456655', status: 0, codigo: 'AT1234' },
             { id: 3, nombre: 'WILLIAM ARREAGA', lote: '90', dpi: '77766', telefono: '88877788', status: 1, codigo: 'WA7766' }
         ];
+
+        let editandoId = null;
+
+        function guardarDatosLocal() {
+            localStorage.setItem('delco_vecinos', JSON.stringify(vecinos_db));
+        }
 
         function generarCodigoNuevo() {
             // Generar 2 letras al azar
@@ -290,22 +389,13 @@
             document.getElementById('codigo').value = dosLetras + cuatroNumeros;
         }
 
-        function verMarbeteDesdeAdmin() {
-            const cod = document.getElementById('codigo').value.trim();
-            if (!cod) {
-                alert("Primero genere o ingrese un código para este vecino antes de ver el marbete.");
-                return;
-            }
-            // Abrir el marbete en la ventana o pestaña actual
-            window.location.href = `marbete.html?codigo=${encodeURIComponent(cod)}`;
-        }
-
         function abrirMarbeteVecino(codigo, nombre) {
             if (!codigo) {
                 alert(`El vecino ${nombre} no tiene un código generado todavía. Modifíquelo para agregar uno.`);
                 return;
             }
-            window.location.href = `marbete.html?codigo=${encodeURIComponent(codigo)}`;
+            // Abrir el marbete en una ventana nueva
+            window.open(`marbete.html?codigo=${encodeURIComponent(codigo)}`, '_blank');
         }
 
         function limpiarBusqueda() {
@@ -354,8 +444,7 @@
         document.getElementById('registroForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
-            const nuevoVecino = {
-                id: vecinos_db.length + 1,
+            const datosFormulario = {
                 nombre: document.getElementById('nombre').value.toUpperCase(),
                 lote: document.getElementById('lote').value,
                 dpi: document.getElementById('dpi').value,
@@ -364,10 +453,24 @@
                 status: parseInt(document.getElementById('status').value)
             };
 
-            vecinos_db.push(nuevoVecino);
+            if (editandoId) {
+                // Actualizar registro existente
+                const index = vecinos_db.findIndex(v => v.id === editandoId);
+                if (index !== -1) {
+                    vecinos_db[index] = { ...vecinos_db[index], ...datosFormulario };
+                }
+                alert("Vecino actualizado exitosamente.");
+                editandoId = null;
+            } else {
+                // Crear nuevo registro
+                const nuevoId = vecinos_db.length > 0 ? Math.max(...vecinos_db.map(v => v.id)) + 1 : 1;
+                vecinos_db.push({ id: nuevoId, ...datosFormulario });
+                alert("Vecino registrado exitosamente.");
+            }
+
+            guardarDatosLocal();
             renderizarTabla();
             this.reset();
-            alert("Vecino registrado exitosamente.");
         });
 
         function editarVecino(id) {
@@ -376,13 +479,115 @@
                 document.getElementById('nombre').value = vecino.nombre;
                 document.getElementById('lote').value = vecino.lote;
                 document.getElementById('dpi').value = vecino.dpi;
-                document.getElementById('telefono').value = vecino.telefono;
+                document.getElementById('telefono').value = vecino.telefono || '';
                 document.getElementById('codigo').value = vecino.codigo || '';
                 document.getElementById('status').value = vecino.status;
-                // En un sistema real aquí haríamos un PUT/UPDATE, 
-                // por ahora solo llenamos el formulario para simular la edición.
+
+                editandoId = id; // Indicar que estamos en modo edición
+                alert(`Editando al vecino: ${vecino.nombre}. Modifique los datos y presione 'Guardar Registro'.`);
             }
         }
+
+        // MÓDULO DE MENSAJERÍA
+        let mensajes_db = JSON.parse(localStorage.getItem('delco_mensajes')) || [];
+
+        function abrirModalMensaje() {
+            document.getElementById('modalMensaje').style.display = 'flex';
+            cargarVecinosMensaje();
+            toggleDestinatarios();
+        }
+
+        function cerrarModalMensaje() {
+            document.getElementById('modalMensaje').style.display = 'none';
+        }
+
+        function toggleDestinatarios() {
+            const todos = document.getElementById('enviarATodos').checked;
+            document.getElementById('destinatarioGroup').style.display = todos ? 'none' : 'block';
+        }
+
+        function cargarVecinosMensaje() {
+            const select = document.getElementById('destinatario');
+            select.innerHTML = '<option value="">-- Seleccione un vecino --</option>';
+            // Ordenar vecinos alfabéticamente
+            const vecinosOrdenados = [...vecinos_db].sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+            vecinosOrdenados.forEach(v => {
+                select.innerHTML += `<option value="${v.id}" data-search="${(v.nombre + ' ' + v.lote + ' ' + v.dpi + ' ' + (v.telefono || '')).toLowerCase()}">Lote ${v.lote} - ${v.nombre}</option>`;
+            });
+        }
+
+        function toggleBuscadorVecinos() {
+            const buscadorDiv = document.getElementById('buscadorVecinosDiv');
+            if (buscadorDiv.style.display === 'none') {
+                buscadorDiv.style.display = 'block';
+                document.getElementById('inputBusquedaVecinoMsj').focus();
+            } else {
+                buscadorDiv.style.display = 'none';
+                document.getElementById('inputBusquedaVecinoMsj').value = '';
+                filtrarVecinosMensaje(); // Restablecer select
+            }
+        }
+
+        function filtrarVecinosMensaje() {
+            const input = document.getElementById('inputBusquedaVecinoMsj').value.toLowerCase().trim();
+            const select = document.getElementById('destinatario');
+            const options = select.getElementsByTagName('option');
+
+            let primeroVisible = false;
+
+            for (let i = 1; i < options.length; i++) { // Evitar la opcion placeholder 0
+                const searchData = options[i].getAttribute('data-search');
+                if (searchData && searchData.includes(input)) {
+                    options[i].style.display = '';
+                    if (!primeroVisible && input !== '') {
+                        select.selectedIndex = i; // Auto seleccionar el primero que coincida mientras escribe
+                        primeroVisible = true;
+                    }
+                } else {
+                    options[i].style.display = 'none';
+                }
+            }
+            if (input === '') {
+                select.selectedIndex = 0;
+            }
+        }
+
+        document.getElementById('mensajeForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const enviarATodos = document.getElementById('enviarATodos').checked;
+            const destinatarioId = document.getElementById('destinatario').value;
+            const asunto = document.getElementById('asuntoMensaje').value.trim();
+            const cuerpo = document.getElementById('cuerpoMensaje').value.trim();
+
+            if (!enviarATodos && !destinatarioId) {
+                alert("Debe seleccionar un vecino específico si desmarca la casilla de todos.");
+                return;
+            }
+
+            const ahora = new Date();
+            const fechaHora = ahora.toLocaleDateString('es-ES') + ' ' + ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+            const nuevoMensaje = {
+                id: mensajes_db.length + 1,
+                id_remitente: 1, // Simulando que el ID 1 es el Admin/Directiva
+                id_destinatario: enviarATodos ? "TODOS" : parseInt(destinatarioId),
+                asunto: asunto,
+                cuerpo: cuerpo,
+                fecha_envio: fechaHora,
+                timestamp: ahora.getTime(),
+                leido: 0
+            };
+
+            mensajes_db.push(nuevoMensaje);
+            localStorage.setItem('delco_mensajes', JSON.stringify(mensajes_db));
+
+            const msjAlerta = enviarATodos ? "Se ha enviado el comunicado general a TODOS los vecinos." : "Se envió el mensaje privado correctamente.";
+            alert(msjAlerta);
+
+            this.reset();
+            cerrarModalMensaje();
+        });
 
         // Renderizar al cargar la página
         renderizarTabla();
