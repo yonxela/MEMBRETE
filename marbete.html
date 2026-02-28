@@ -404,9 +404,12 @@
         </div>
     </div>
 
-    <div id="errorMsg" style="display: none; text-align: center; color: var(--danger-color);">
-        <h2>Código no encontrado</h2>
-        <p>No se encontró ningún vecino registrado con este código. Verifica que el Código Personal sea correcto.</p>
+    <div id="errorMsg"
+        style="display: none; text-align: center; color: var(--danger-color); background: rgba(239, 68, 68, 0.1); padding: 2rem; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); max-width: 400px; margin: 2rem auto;">
+        <h2 style="margin-bottom: 15px;">Código no encontrado</h2>
+        <p style="color: var(--text-main); margin-bottom: 15px;">No se encontró ningún vecino registrado con este
+            código. Verifica que el Código Personal sea correcto.</p>
+        <div id="errorContacto" style="font-size: 0.9rem; color: var(--text-muted);"></div>
     </div>
 
     <!-- Cuadro de Diálogo para Solicitar Código si no hay en la URL (Estilo Premium) -->
@@ -446,7 +449,8 @@
                 <a href="login.html"
                     style="color: var(--primary-color); text-decoration: none; font-size: 0.9rem; display: block; margin-bottom: 0.5rem; font-weight: 600;">Acceso
                     a Directiva / Panel Principal</a>
-                <p style="font-size: 0.8rem; color: var(--text-muted);">&copy; 2026 Gestión de Accesos DELCO II</p>
+                <p id="footerTexto" style="font-size: 0.8rem; color: var(--text-muted);">&copy; 2026 Gestión de Accesos
+                    DELCO II</p>
             </div>
         </div>
     </div>
@@ -463,6 +467,27 @@
         // 1. Obtener el código de la URL (?codigo=___)
         const urlParams = new URLSearchParams(window.location.search);
         const codigoIngresado = urlParams.get('codigo');
+
+        // CARGAR CONFIGURACIÓN DEL CONDOMINIO
+        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'DELCO II', nombreMarbete: 'DELCO II', logo: '' };
+        const nombreMostrar = config_db.nombreMarbete || config_db.nombre || 'DELCO II';
+
+        document.querySelector('.header-title').innerText = nombreMostrar;
+        document.querySelector('title').innerText = `Marbete Generado - ${nombreMostrar}`;
+
+        // Si hay logo configurado, podemos mostrarlo en el inputDialog
+        if (config_db.logo) {
+            const logoContainer = document.querySelector('.logo-circle');
+            if (logoContainer) {
+                logoContainer.innerHTML = `<img src="${config_db.logo}" alt="Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+            }
+        }
+
+        // TITULO DEL INPUT DIALOG (si existe)
+        const inputDialogTitle = document.querySelector('#inputDialog h1');
+        if (inputDialogTitle) {
+            inputDialogTitle.innerText = nombreMostrar;
+        }
 
         if (codigoIngresado) {
             // Convertir a mayúsculas para evitar problemas si el usuario escribe en minúsculas
@@ -499,12 +524,22 @@
                     statusStrip.className = 'status-strip status-rojo';
                     statusStrip.innerText = 'NO HA PAGADO';
 
+                    // Info de contacto
+                    let contactoHTML = '';
+                    if (config_db.correo || config_db.telefono) {
+                        contactoHTML = `<div style="font-size: 0.8rem; font-weight: normal; margin-top: 8px; color: #713f12;">
+                            Contacte a la Junta Directiva:<br>
+                            ${config_db.telefono ? '📞 ' + config_db.telefono : ''} ${config_db.correo ? '✉️ ' + config_db.correo : ''}
+                        </div>`;
+                    }
+
                     // Mostrar mensaje amarillo y ocultar QR si es moroso
                     document.querySelector('.qr-container').style.background = 'transparent';
                     document.querySelector('.qr-container').innerHTML = `
                         <div style="background-color: #fef08a; color: #854d0e; padding: 20px; border-radius: 8px; font-weight: 700; font-size: 1.1rem; text-align: center; border: 2px solid #eab308; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                             ⚠️ USTED ESTÁ PENDIENTE DE PAGO
                             <div style="font-size: 0.85rem; font-weight: 500; margin-top: 10px;">Su marbete digital está inactivo.</div>
+                            ${contactoHTML}
                         </div>
                     `;
                 }
@@ -514,10 +549,21 @@
 
             } else {
                 document.getElementById('errorMsg').style.display = 'block';
+                const errContact = document.getElementById('errorContacto');
+                if (errContact && (config_db.correo || config_db.telefono)) {
+                    errContact.innerHTML = `¿Problemas? Contacte a la Junta Directiva:<br>
+                    ${config_db.telefono ? '📞 ' + config_db.telefono : ''} <br> ${config_db.correo ? '✉️ ' + config_db.correo : ''}`;
+                }
             }
         } else {
             // Mostrar el dialogo para ingresar código si no vino por URL
             document.getElementById('inputDialog').style.display = 'block';
+
+            const footerTxt = document.getElementById('footerTexto');
+            if (footerTxt) {
+                const nombreFooter = config_db.nombreMarbete || config_db.nombre || 'DELCO II';
+                footerTxt.innerHTML = `&copy; 2026 Gestión de Accesos - ${nombreFooter}`;
+            }
         }
 
         function irAVisitas() {

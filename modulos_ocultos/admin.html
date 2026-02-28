@@ -189,19 +189,30 @@
         .modal-content {
             background-color: var(--panel-bg);
             border-radius: 12px;
-            padding: 2rem;
+            padding: 2.5rem 2rem 2rem 2rem;
             width: 90%;
             max-width: 500px;
             border: 1px solid var(--border-color);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
         }
 
         .close-btn {
-            float: right;
+            position: absolute;
+            top: 15px;
+            right: 20px;
             cursor: pointer;
-            font-size: 1.5rem;
-            color: var(--text-muted);
+            font-size: 2rem;
+            color: #ef4444;
             line-height: 1;
+            transition: color 0.2s;
+            z-index: 100;
+        }
+
+        .close-btn:hover {
+            color: #ff6b6b;
         }
 
         @media (max-width: 768px) {
@@ -221,7 +232,12 @@
                 onclick="abrirModalMensaje()">
                 ✉️ Enviar Mensaje
             </button>
-            <a href="login.html" class="btn-logout">Cerrar Sesión</a>
+            <button class="btn-submit"
+                style="margin: 0; background-color: var(--panel-bg); color: var(--text-main); border: 1px solid var(--border-color); width: auto; padding: 0.5rem 1rem;"
+                onclick="abrirModalConfig()">
+                ⚙️
+            </button>
+            <button onclick="cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
         </div>
     </div>
 
@@ -266,7 +282,6 @@
                 </div>
             </form>
         </div>
-
         <!-- Panel Tabla -->
         <div class="panel">
             <div
@@ -279,10 +294,14 @@
                         onclick="renderizarTabla()">Buscar</button>
                     <button type="button" class="btn-submit"
                         style="margin-top: 0; padding: 8px 15px; width: auto; background-color: var(--border-color);"
-                        onclick="limpiarBusqueda()">Limpiar</button>
+                        onclick="limpiarBusqueda()" title="Borrar texto del buscador">Limpiar Filtro</button>
                     <button type="button" class="btn-submit"
                         style="margin-top: 0; padding: 8px 15px; width: auto; background-color: var(--success-color);"
                         onclick="window.open('visitas.html', '_blank')">Visitas</button>
+                    <button type="button" class="btn-submit"
+                        style="margin-top: 0; padding: 8px 15px; width: auto; background-color: var(--danger-color);"
+                        onclick="limpiarBaseDeDatos()" title="Eliminar todos los vecinos permanentemente">⚠️ Limpiar
+                        BD</button>
                 </div>
             </div>
             <div style="overflow-x: auto;">
@@ -303,6 +322,50 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal para Configuración -->
+    <div id="modalConfig" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn" onclick="cerrarModalConfig()">&times;</span>
+            <h2 class="panel-title" style="margin-bottom: 1rem;">Configuración del Condominio</h2>
+            <form id="configForm">
+                <div class="form-group">
+                    <label>Nombre del Condominio</label>
+                    <input type="text" id="configNombre" class="input-field" placeholder="Ej. DELCO II" required>
+                </div>
+                <div class="form-group">
+                    <label>Nombre para Marbete</label>
+                    <input type="text" id="configNombreMarbete" class="input-field" placeholder="Opción Corta Ej. DELCO"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label>Logotipo (URL de imagen)</label>
+                    <input type="url" id="configLogo" class="input-field" placeholder="https://ejemplo.com/logo.png">
+                </div>
+                <div class="form-group">
+                    <label>Correo Electrónico (Junta Directiva)</label>
+                    <input type="email" id="configCorreo" class="input-field" placeholder="junta@condominio.com">
+                </div>
+                <div class="form-group">
+                    <label>Teléfono (Junta Directiva)</label>
+                    <input type="text" id="configTelefono" class="input-field" placeholder="Ej. 1234-5678">
+                </div>
+
+                <hr style="border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
+                <h3 style="color: var(--text-main); font-size: 1.1rem; margin-bottom: 1rem;">Seguridad</h3>
+
+                <div class="form-group">
+                    <label>Cambiar Contraseña (Usuario: DIRECTIVA)</label>
+                    <input type="password" id="configPassword" class="input-field"
+                        placeholder="Dejar en blanco para conservar actual">
+                </div>
+
+                <button type="submit" class="btn-submit"
+                    style="background-color: var(--primary-color); margin-top: 1.5rem;">Guardar
+                    Configuración</button>
+            </form>
         </div>
     </div>
 
@@ -355,12 +418,31 @@
                         required style="resize: vertical; font-family: inherit;"></textarea>
                 </div>
 
-                <button type="submit" class="btn-submit" style="background-color: #10b981;">Enviar Mensaje 🚀</button>
+                <div class="form-group"
+                    style="display: flex; align-items: center; gap: 10px; background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 6px; border: 1px dashed #10b981; margin-top: 15px; margin-bottom: 20px;">
+                    <input type="checkbox" id="enviarPorWhatsapp" checked style="width: 18px; transform: scale(1.2);">
+                    <label for="enviarPorWhatsapp"
+                        style="margin: 0; color: #10b981; font-weight: 600; cursor: pointer;">📲 Abrir Aplicación de
+                        WhatsApp al Enviar</label>
+                </div>
+
+                <button type="submit" class="btn-submit" style="background-color: #10b981; font-size: 1.1rem;">Enviar
+                    Mensaje 🚀</button>
             </form>
         </div>
     </div>
 
     <script>
+        // SEGURIDAD: Verificar si inició sesión, de lo contrario echarlo al login
+        if (localStorage.getItem('admin_logged_in') !== 'true') {
+            window.location.href = '../login.html';
+        }
+
+        function cerrarSesion() {
+            localStorage.removeItem('admin_logged_in');
+            window.location.href = '../login.html';
+        }
+
         // Usar LocalStorage para que los datos persistan en el navegador
         let vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [
             { id: 1, nombre: 'NATAN RODAS', lote: '30', dpi: '2317', telefono: '31001708', status: 1, codigo: 'NR2317' },
@@ -405,6 +487,29 @@
             renderizarTabla();
         }
 
+        function limpiarBaseDeDatos() {
+            // Verificar contraseña de administrador (DIRECTIVA)
+            const claveIngresada = prompt("⚠️ ATENCIÓN ⚠️\nEstá a punto de ELIMINAR TODOS los vecinos de la base de datos de este dispositivo.\n\nPara confirmar, ingrese la clave administrativa (DIRECTIVA):");
+
+            if (claveIngresada === null) return; // Cancelado
+
+            let usuarios_db = JSON.parse(localStorage.getItem('delco_usuarios')) || [];
+            let adminDirectiva = usuarios_db.find(u => u.username === 'DIRECTIVA');
+
+            // Revisa si la clave escrita coincide con la real
+            if (adminDirectiva && claveIngresada === adminDirectiva.password_hash) {
+                // Proceder a formatear
+                if (confirm("Clave correcta. ¿Está 100% seguro de que desea VACIAR el directorio de forma permanente?\nEsta acción no se puede deshacer.")) {
+                    vecinos_db = []; // Vaciar el arreglo en RAM
+                    guardarDatosLocal(); // Guardar el arreglo vacío en LocalStorage
+                    renderizarTabla();   // Refrescar la tabla
+                    alert("✅ Base de datos vaciada exitosamente.");
+                }
+            } else {
+                alert("❌ Clave administrativa incorrecta. Acción bloqueada.");
+            }
+        }
+
         function renderizarTabla() {
             const tbody = document.getElementById('tablaBody');
             tbody.innerHTML = '';
@@ -430,15 +535,42 @@
                     <td>${vecino.nombre}</td>
                     <td><span style="color: var(--primary-color); font-weight: 600; letter-spacing: 1px;">${vecino.codigo || '-'}</span></td>
                     <td>${vecino.dpi}</td>
-                    <td>${vecino.telefono}</td>
+                    <td>
+                        <input type="text" value="${vecino.telefono || ''}" class="input-field" 
+                            style="padding: 6px; width: 120px; font-size: 0.9rem; background-color: rgba(0,0,0,0.2); border: 1px solid var(--border-color); text-align: center;" 
+                            placeholder="Sin Teléfono"
+                            onchange="actualizarTelefonoLocal(${vecino.id}, this.value)">
+                    </td>
                     <td>${statusHtml}</td>
                     <td>
                         <button class="action-btn" onclick="editarVecino(${vecino.id})">Editar</button> | 
-                        <button class="action-btn" style="color: var(--success-color);" onclick="abrirMarbeteVecino('${vecino.codigo || vecino.dpi}', '${vecino.nombre}')">Marbete</button>
+                        <button class="action-btn" style="color: var(--success-color);" onclick="abrirMarbeteVecino('${vecino.codigo || vecino.dpi}', '${vecino.nombre}')">Marbete</button> |
+                        <button class="action-btn" style="color: var(--danger-color);" onclick="eliminarVecino(${vecino.id}, '${vecino.nombre}')" title="Eliminar Vecino">Eliminar</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        function actualizarTelefonoLocal(id, nuevoTelefono) {
+            const index = vecinos_db.findIndex(v => v.id === id);
+            if (index !== -1) {
+                vecinos_db[index].telefono = nuevoTelefono.trim();
+                guardarDatosLocal();
+                // Reflejar cambios visualmente si se necesita, aunque el onchange ya lo hace
+            }
+        }
+
+        function eliminarVecino(id, nombre) {
+            if (confirm(`¿Estás seguro que deseas ELIMINAR permanentemente a ${nombre} de la base de datos?`)) {
+                const index = vecinos_db.findIndex(v => v.id === id);
+                if (index !== -1) {
+                    vecinos_db.splice(index, 1);
+                    guardarDatosLocal();
+                    renderizarTabla();
+                    alert(`Vecino ${nombre} eliminado exitosamente.`);
+                }
+            }
         }
 
         document.getElementById('registroForm').addEventListener('submit', function (e) {
@@ -559,6 +691,7 @@
             const destinatarioId = document.getElementById('destinatario').value;
             const asunto = document.getElementById('asuntoMensaje').value.trim();
             const cuerpo = document.getElementById('cuerpoMensaje').value.trim();
+            const usarWhatsapp = document.getElementById('enviarPorWhatsapp').checked;
 
             if (!enviarATodos && !destinatarioId) {
                 alert("Debe seleccionar un vecino específico si desmarca la casilla de todos.");
@@ -582,15 +715,101 @@
             mensajes_db.push(nuevoMensaje);
             localStorage.setItem('delco_mensajes', JSON.stringify(mensajes_db));
 
-            const msjAlerta = enviarATodos ? "Se ha enviado el comunicado general a TODOS los vecinos." : "Se envió el mensaje privado correctamente.";
+            let msjAlerta = "Comunicado guardado en la plataforma interna exitosamente.";
+
+            if (usarWhatsapp) {
+                if (enviarATodos) {
+                    // Prepara el texto universal
+                    const textoWapp = encodeURIComponent(`📢 *${asunto}*\n\nEstimados vecinos,\n${cuerpo}\n\n_Atte. La Administración_`);
+                    // Redirige al WhatsApp genérico para que elija los grupos o contactos (lista de difusión)
+                    window.open(`https://api.whatsapp.com/send?text=${textoWapp}`, '_blank');
+                    msjAlerta += "\n\nSe abrirá WhatsApp. Selecciona tu grupo de vecinos o tu lista de difusión para pegar este mensaje.";
+                } else {
+                    const vecino = vecinos_db.find(v => v.id == destinatarioId);
+                    if (vecino && vecino.telefono) {
+                        let telLimpio = vecino.telefono.replace(/\D/g, '');
+                        // Si el teléfono tiene 8 dígitos, asume Guatemala y le pone 502. Sino, usa tal cual.
+                        if (telLimpio.length === 8) telLimpio = '502' + telLimpio;
+
+                        const textoWapp = encodeURIComponent(`📢 *${asunto}*\n\nHola ${vecino.nombre},\n${cuerpo}\n\n_Atte. La Administración_`);
+                        window.open(`https://wa.me/${telLimpio}?text=${textoWapp}`, '_blank');
+                        msjAlerta += `\n\nAbriendo chat de WhatsApp con ${vecino.nombre}...`;
+                    } else {
+                        msjAlerta += "\n\n⚠️ El vecino seleccionado no tiene un número de teléfono registrado, por lo que no se pudo abrir WhatsApp.";
+                    }
+                }
+            }
+
             alert(msjAlerta);
 
             this.reset();
             cerrarModalMensaje();
         });
 
+        // MÓDULO DE CONFIGURACIÓN
+        let config_db = JSON.parse(localStorage.getItem('delco_config')) || {
+            nombre: 'DELCO II',
+            nombreMarbete: 'DELCO II',
+            logo: '',
+            correo: '',
+            telefono: ''
+        };
+
+        function abrirModalConfig() {
+            document.getElementById('modalConfig').style.display = 'flex';
+        }
+
+        function cerrarModalConfig() {
+            document.getElementById('modalConfig').style.display = 'none';
+        }
+
+        function cargarConfiguracion() {
+            document.getElementById('configNombre').value = config_db.nombre || '';
+            document.getElementById('configNombreMarbete').value = config_db.nombreMarbete || config_db.nombre || '';
+            document.getElementById('configLogo').value = config_db.logo || '';
+            document.getElementById('configCorreo').value = config_db.correo || '';
+            document.getElementById('configTelefono').value = config_db.telefono || '';
+            document.getElementById('configPassword').value = ''; // limpiar siempre
+
+            document.querySelector('.dashboard-title').innerText = `Panel de Administración - ${config_db.nombre}`;
+            document.title = `Panel de Administración - ${config_db.nombre}`;
+        }
+
+        document.getElementById('configForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            config_db = {
+                nombre: document.getElementById('configNombre').value.trim(),
+                nombreMarbete: document.getElementById('configNombreMarbete').value.trim(),
+                logo: document.getElementById('configLogo').value.trim(),
+                correo: document.getElementById('configCorreo').value.trim(),
+                telefono: document.getElementById('configTelefono').value.trim()
+            };
+            localStorage.setItem('delco_config', JSON.stringify(config_db));
+
+            // Gestión de cambio de clave para el usuario DIRECTIVA
+            const nuevaClave = document.getElementById('configPassword').value.trim();
+            if (nuevaClave) {
+                let usuarios_db = JSON.parse(localStorage.getItem('delco_usuarios')) || [];
+                let indexDirectiva = usuarios_db.findIndex(u => u.username === 'DIRECTIVA');
+
+                if (indexDirectiva !== -1) {
+                    usuarios_db[indexDirectiva].password_hash = nuevaClave;
+                    localStorage.setItem('delco_usuarios', JSON.stringify(usuarios_db));
+                    alert(`Configuración guardada.\nContraseña de acceso para 'DIRECTIVA' actualizada con éxito a: ${nuevaClave}`);
+                } else {
+                    alert('Configuración guardada.\nNo se encontró el usuario DIRECTIVA en la base de datos para cambiar su clave.');
+                }
+            } else {
+                alert('Configuración guardada exitosamente.');
+            }
+
+            cargarConfiguracion();
+            cerrarModalConfig();
+        });
+
         // Renderizar al cargar la página
         renderizarTabla();
+        cargarConfiguracion();
     </script>
 </body>
 

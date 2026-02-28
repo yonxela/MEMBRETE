@@ -120,6 +120,76 @@
             min-height: 20px;
             display: none;
         }
+
+        .signup-link {
+            display: block;
+            margin-top: 20px;
+            color: #10b981;
+            /* Emerald Green */
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 15px;
+            cursor: pointer;
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .signup-link:hover {
+            color: #34d399;
+            /* Emerald Light */
+            text-decoration: underline;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            padding: 2.5rem 2rem 2rem 2rem;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid #3f3f3f;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            color: #ef4444;
+            cursor: pointer;
+            transition: color 0.2s;
+            z-index: 100;
+        }
+
+        .close-btn:hover {
+            color: #ff6b6b;
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #3f3f3f;
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -139,18 +209,57 @@
 
             <button type="submit" class="btn-login">Ingresar</button>
             <div id="errorMsg" class="error-message">Usuario o clave incorrectos</div>
+
+            <a onclick="abrirRegistro()" class="signup-link">¿No tienes cuenta? Registrar Nuevo Condominio</a>
         </form>
+    </div>
+
+    <!-- Modal Registro Nuevo Condominio -->
+    <div id="modalRegistro" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn" onclick="cerrarRegistro()">&times;</span>
+            <h2 class="panel-title">Registrar Nuevo Condominio</h2>
+            <form id="registroForm">
+                <div class="form-group">
+                    <input type="text" id="regNombre" class="input-field" placeholder="Nombre del Condominio" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="regPersona" class="input-field" placeholder="Nombre de Persona a Contactar"
+                        required>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="regPais" class="input-field" placeholder="País" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="regTelefono" class="input-field" placeholder="Teléfono de Contacto" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="regCorreo" class="input-field" placeholder="Correo Electrónico" required>
+                </div>
+
+                <button type="submit" class="btn-login" style="background-color: #10b981;">Enviar Solicitud a
+                    SISDEL</button>
+            </form>
+        </div>
     </div>
 
     <script>
         // Simulador de Base de Datos para el Login en el navegador
-        // Aquí están los usuarios que tenías en SQLite
-        const db_usuarios = [
+        // Usar localStorage para permitir cambios de contraseña
+        let db_usuarios = JSON.parse(localStorage.getItem('delco_usuarios')) || [
+            { username: 'DIRECTIVA', password_hash: 'M2026', rol_id: 1, nombre: 'Programador Principal' },
             { username: 'admin_delco', password_hash: 'clave_maestra_2026', rol_id: 1, nombre: 'Administrador' },
-            { username: 'NIR', password_hash: 'M2026', rol_id: 1, nombre: 'Administrador NIR' },
-            { username: 'sisdel', password_hash: 'm2026', rol_id: 1, nombre: 'Programador Principal' },
             { username: 'vecino30', password_hash: 'lote30', rol_id: 2, nombre: 'NATAN RODAS', status: 1, lote: '30' }
         ];
+
+        // Parche de actualización: forzamos el cambio de clave si el navegador había guardado la clave anterior (CLAVEM2026)
+        let dirUser = db_usuarios.find(u => u.username === 'DIRECTIVA');
+        if (dirUser && dirUser.password_hash === 'CLAVEM2026') {
+            dirUser.password_hash = 'M2026';
+        }
+
+        // Guardamos para que admin.html la pueda editar
+        localStorage.setItem('delco_usuarios', JSON.stringify(db_usuarios));
 
         document.getElementById('loginForm').addEventListener('submit', function (e) {
             e.preventDefault();
@@ -168,7 +277,8 @@
                 // Redirigir según rol
                 if (usuarioValido.rol_id === 1) {
                     // Es Directiva / Programador
-                    window.location.href = 'admin.html';
+                    localStorage.setItem('admin_logged_in', 'true');
+                    window.location.href = 'modulos_ocultos/admin.html';
                 } else {
                     // Es Vecino - Preparamos datos para la vista del Marbete/Status
                     alert(`¡Bienvenido, ${usuarioValido.nombre}! Abriendo Estatus...`);
@@ -179,6 +289,45 @@
                 // Mostrar error
                 errorMsg.style.display = 'block';
             }
+        });
+
+        // Funciones para el Modal de Registro
+        function abrirRegistro() {
+            document.getElementById('modalRegistro').style.display = 'flex';
+        }
+
+        function cerrarRegistro() {
+            document.getElementById('modalRegistro').style.display = 'none';
+        }
+
+        document.getElementById('registroForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const nombre = document.getElementById('regNombre').value.trim();
+            const persona = document.getElementById('regPersona').value.trim();
+            const pais = document.getElementById('regPais').value.trim();
+            const telefono = document.getElementById('regTelefono').value.trim();
+            const correo = document.getElementById('regCorreo').value.trim();
+
+            // Construir el cuerpo del correo
+            const asunto = encodeURIComponent(`Solicitud de Nuevo Condominio: ${nombre}`);
+            let cuerpo = `Hola SISDEL,%0D%0A%0D%0ADeseo registrar un nuevo sistema para mi condominio. Mis datos son los siguientes:%0D%0A%0D%0A`;
+            cuerpo += `- Nombre del Condominio: ${nombre}%0D%0A`;
+            cuerpo += `- Persona de Contacto: ${persona}%0D%0A`;
+            cuerpo += `- País: ${pais}%0D%0A`;
+            cuerpo += `- Teléfono: ${telefono}%0D%0A`;
+            cuerpo += `- Correo: ${correo}%0D%0A%0D%0A`;
+            cuerpo += `Quedo a la espera de sus instrucciones.`;
+
+            // Construir enlace mailto apuntando al correo de SISDEL
+            const mailtoLink = `mailto:info@sisdel.com?subject=${asunto}&body=${cuerpo}`;
+
+            // Abrir gestor de correo
+            window.location.href = mailtoLink;
+
+            // Cerrar el modal para volver al login y resetear el form
+            cerrarRegistro();
+            e.target.reset();
         });
     </script>
 </body>
