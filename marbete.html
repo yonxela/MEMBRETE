@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marbete Generado - DELCO II</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            flex-direction: column;
+        }
+
+        .marbete-card {
+            background-color: var(--panel-bg);
+            border-radius: 1rem;
+            width: 100%;
+            max-width: 400px;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .header-strip {
+            padding: 1.5rem;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-color), #60a5fa);
+        }
+
+        .header-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.2rem;
+        }
+
+        .header-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .content {
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .qr-container {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            display: inline-block;
+            margin: 1.5rem 0;
+        }
+
+        .qr-container img {
+            display: block;
+            width: 180px;
+            height: 180px;
+        }
+
+        .info-row {
+            margin-bottom: 1rem;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .status-strip {
+            padding: 1rem;
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 2px;
+            font-size: 1.2rem;
+        }
+
+        /* Colores dinámicos del status */
+        .status-verde {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .status-rojo {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-back {
+            margin-top: 2rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+        .btn-back:hover {
+            color: white;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="marbete-card" id="marbeteCard" style="display: none;">
+        <div class="header-strip">
+            <h1 class="header-title" style="font-family: 'Outfit', sans-serif; text-transform: uppercase;">DELCO II</h1>
+            <p class="header-subtitle" style="font-size: 1.1rem; font-weight: 600; margin-top: 5px;">Pase de Acceso</p>
+        </div>
+
+        <div class="content">
+            <div class="info-row">
+                <div class="info-label">Residente</div>
+                <div class="info-value" id="nombreResidente">-</div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-label">Lote</div>
+                <div class="info-value" id="loteResidente">-</div>
+            </div>
+
+            <!-- Código QR Dinámico -->
+            <div class="qr-container">
+                <img id="qrCode" src="" alt="Código QR de Acceso">
+            </div>
+        </div>
+
+        <!-- Franja inferior dinámica según el estatus -->
+        <div id="statusStrip" class="status-strip">
+            VERIFICANDO...
+        </div>
+    </div>
+
+    <div id="errorMsg" style="display: none; text-align: center; color: var(--danger-color);">
+        <h2>Código no encontrado</h2>
+        <p>No se encontró ningún vecino registrado con ese código (DPI o Lote).</p>
+    </div>
+
+    <a href="index.html" class="btn-back">← Volver al Inicio</a>
+
+    <script>
+        // Simulador de BD de vecinos
+        const vecinos_db = [
+            { id: 1, nombre: 'NATAN RODAS', lote: '30', dpi: '2317', status: 1, codigo: 'NR2317' },
+            { id: 2, nombre: 'ALVARO TRUJILLO', lote: '60', dpi: '1234', status: 0, codigo: 'AT1234' },
+            { id: 3, nombre: 'WILLIAM ARREAGA', lote: '90', dpi: '77766', status: 1, codigo: 'WA7766' },
+            { id: 4, nombre: 'PROGRAMADOR', lote: '00', dpi: 'sisdel', status: 1, codigo: 'SI0000' } // Para pruebas rápidas
+        ];
+
+        // 1. Obtener el código de la URL (?codigo=___)
+        const urlParams = new URLSearchParams(window.location.search);
+        const codigoIngresado = urlParams.get('codigo');
+
+        if (codigoIngresado) {
+            // 2. Buscar al vecino por Código, DPI o por Lote
+            const vecino = vecinos_db.find(v => v.codigo === codigoIngresado || v.dpi === codigoIngresado || v.lote === codigoIngresado);
+
+            if (vecino) {
+                // Rellenar datos
+                document.getElementById('marbeteCard').style.display = 'block';
+                document.getElementById('nombreResidente').innerText = vecino.nombre;
+                document.getElementById('loteResidente').innerText = `LOTE ${vecino.lote}`;
+
+                // Generar QR en base los datos usando la API gratuita de qrserver
+                const qrData = `DELCOII-${vecino.lote}-${vecino.codigo || vecino.dpi}`;
+                document.querySelector('#qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}&color=000000&bgcolor=ffffff`;
+
+                // Configurar Estatus (Verde = Al día | Rojo = Moroso)
+                const statusStrip = document.getElementById('statusStrip');
+                if (vecino.status === 1) {
+                    statusStrip.className = 'status-strip status-verde';
+                    statusStrip.innerText = 'PAGOS AL DÍA';
+                } else {
+                    statusStrip.className = 'status-strip status-rojo';
+                    statusStrip.innerText = 'NO HA PAGADO';
+                }
+            } else {
+                document.getElementById('errorMsg').style.display = 'block';
+            }
+        } else {
+            document.getElementById('errorMsg').style.display = 'block';
+            document.getElementById('errorMsg').innerHTML = '<h2>Error</h2><p>No se proporcionó ningún código.</p>';
+        }
+    </script>
+</body>
+
+</html>

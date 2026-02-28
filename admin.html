@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - DELCO II</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .dashboard-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+        }
+
+        .btn-logout {
+            background-color: transparent;
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-logout:hover {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .input-field,
+        .select-field {
+            width: 100%;
+            padding: 10px;
+            background-color: #2a2a2a;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: white;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--primary-hover);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+
+        .status-inactive {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--primary-color);
+            text-decoration: underline;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Panel de Administración - DELCO II</h1>
+        <a href="login.html" class="btn-logout">Cerrar Sesión</a>
+    </div>
+
+    <div class="grid-container">
+        <!-- Panel Formulario -->
+        <div class="panel">
+            <h2 class="panel-title">Registrar / Actualizar Vecino</h2>
+            <form id="registroForm">
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" id="nombre" class="input-field" required>
+                </div>
+                <div class="form-group">
+                    <label>Número de Lote</label>
+                    <input type="text" id="lote" class="input-field" required>
+                </div>
+                <div class="form-group">
+                    <label>DPI</label>
+                    <input type="text" id="dpi" class="input-field" required>
+                </div>
+                <div class="form-group">
+                    <label>Teléfono</label>
+                    <input type="text" id="telefono" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label>Estado de Pago</label>
+                    <select id="status" class="select-field">
+                        <option value="1">Pagos al Día (Verde)</option>
+                        <option value="0">No ha pagado (Rojo)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Código de Vecino (Generado)</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="codigo" class="input-field" placeholder="Ej. XY1234" required>
+                        <button type="button" class="btn-submit" style="margin-top: 0; width: auto; padding: 0 15px;"
+                            onclick="generarCodigoNuevo()">Generar</button>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn-submit">Guardar Registro</button>
+                    <button type="button" class="btn-submit" style="background-color: var(--success-color);"
+                        onclick="verMarbeteDesdeAdmin()">Generar Marbete</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Panel Tabla -->
+        <div class="panel">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px;">
+                <h2 class="panel-title" style="margin-bottom: 0;">Directorio de Vecinos</h2>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="busquedaInput" class="input-field" placeholder="Buscar por Nombre o Tel..."
+                        style="padding: 8px; width: 220px;">
+                    <button type="button" class="btn-submit" style="margin-top: 0; padding: 8px 15px; width: auto;"
+                        onclick="renderizarTabla()">Buscar</button>
+                    <button type="button" class="btn-submit"
+                        style="margin-top: 0; padding: 8px 15px; width: auto; background-color: var(--border-color);"
+                        onclick="limpiarBusqueda()">Limpiar</button>
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table id="tablaVecinos">
+                    <thead>
+                        <tr>
+                            <th>Lote</th>
+                            <th>Nombre</th>
+                            <th>Código</th>
+                            <th>DPI</th>
+                            <th>Teléfono</th>
+                            <th>Estatus</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaBody">
+                        <!-- Datos cargados dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos simulados iniciales basados en la BD SQL
+        let vecinos_db = [
+            { id: 1, nombre: 'NATAN RODAS', lote: '30', dpi: '2317', telefono: '31001708', status: 1, codigo: 'NR2317' },
+            { id: 2, nombre: 'ALVARO TRUJILLO', lote: '60', dpi: '1234', telefono: '55456655', status: 0, codigo: 'AT1234' },
+            { id: 3, nombre: 'WILLIAM ARREAGA', lote: '90', dpi: '77766', telefono: '88877788', status: 1, codigo: 'WA7766' }
+        ];
+
+        function generarCodigoNuevo() {
+            // Generar 2 letras al azar
+            const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            let dosLetras = "";
+            for (let i = 0; i < 2; i++) {
+                dosLetras += letras.charAt(Math.floor(Math.random() * letras.length));
+            }
+
+            // Generar los 4 últimos números aleatorios
+            // o tomar de otro lado si prefieres, aquí creamos 4 dígitos fijos (1000 - 9999)
+            let cuatroNumeros = Math.floor(1000 + Math.random() * 9000).toString();
+
+            document.getElementById('codigo').value = dosLetras + cuatroNumeros;
+        }
+
+        function verMarbeteDesdeAdmin() {
+            const cod = document.getElementById('codigo').value.trim();
+            if (!cod) {
+                alert("Primero genere o ingrese un código para este vecino antes de ver el marbete.");
+                return;
+            }
+            // Abrir el marbete en la ventana o pestaña actual
+            window.location.href = `marbete.html?codigo=${encodeURIComponent(cod)}`;
+        }
+
+        function abrirMarbeteVecino(codigo, nombre) {
+            if (!codigo) {
+                alert(`El vecino ${nombre} no tiene un código generado todavía. Modifíquelo para agregar uno.`);
+                return;
+            }
+            window.location.href = `marbete.html?codigo=${encodeURIComponent(codigo)}`;
+        }
+
+        function limpiarBusqueda() {
+            if (document.getElementById('busquedaInput')) {
+                document.getElementById('busquedaInput').value = '';
+            }
+            renderizarTabla();
+        }
+
+        function renderizarTabla() {
+            const tbody = document.getElementById('tablaBody');
+            tbody.innerHTML = '';
+
+            const busquedaInput = document.getElementById('busquedaInput');
+            const textoBusqueda = busquedaInput ? busquedaInput.value.toLowerCase().trim() : '';
+
+            const vecinosFiltro = vecinos_db.filter(v => {
+                if (!textoBusqueda) return true;
+                return (v.nombre.toLowerCase().includes(textoBusqueda) ||
+                    (v.telefono && v.telefono.includes(textoBusqueda)));
+            });
+
+            vecinosFiltro.forEach(vecino => {
+                const tr = document.createElement('tr');
+
+                const statusHtml = vecino.status === 1
+                    ? '<span class="status-badge status-active">AL DÍA</span>'
+                    : '<span class="status-badge status-inactive">MOROSO</span>';
+
+                tr.innerHTML = `
+                    <td><strong>${vecino.lote}</strong></td>
+                    <td>${vecino.nombre}</td>
+                    <td><span style="color: var(--primary-color); font-weight: 600; letter-spacing: 1px;">${vecino.codigo || '-'}</span></td>
+                    <td>${vecino.dpi}</td>
+                    <td>${vecino.telefono}</td>
+                    <td>${statusHtml}</td>
+                    <td>
+                        <button class="action-btn" onclick="editarVecino(${vecino.id})">Editar</button> | 
+                        <button class="action-btn" style="color: var(--success-color);" onclick="abrirMarbeteVecino('${vecino.codigo || vecino.dpi}', '${vecino.nombre}')">Marbete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('registroForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const nuevoVecino = {
+                id: vecinos_db.length + 1,
+                nombre: document.getElementById('nombre').value.toUpperCase(),
+                lote: document.getElementById('lote').value,
+                dpi: document.getElementById('dpi').value,
+                telefono: document.getElementById('telefono').value,
+                codigo: document.getElementById('codigo').value,
+                status: parseInt(document.getElementById('status').value)
+            };
+
+            vecinos_db.push(nuevoVecino);
+            renderizarTabla();
+            this.reset();
+            alert("Vecino registrado exitosamente.");
+        });
+
+        function editarVecino(id) {
+            const vecino = vecinos_db.find(v => v.id === id);
+            if (vecino) {
+                document.getElementById('nombre').value = vecino.nombre;
+                document.getElementById('lote').value = vecino.lote;
+                document.getElementById('dpi').value = vecino.dpi;
+                document.getElementById('telefono').value = vecino.telefono;
+                document.getElementById('codigo').value = vecino.codigo || '';
+                document.getElementById('status').value = vecino.status;
+                // En un sistema real aquí haríamos un PUT/UPDATE, 
+                // por ahora solo llenamos el formulario para simular la edición.
+            }
+        }
+
+        // Renderizar al cargar la página
+        renderizarTabla();
+    </script>
+</body>
+
+</html>
