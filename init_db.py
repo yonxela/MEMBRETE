@@ -31,6 +31,7 @@ def init_db():
         telefono VARCHAR(20),
         correo_electronico VARCHAR(100),
         status INTEGER NOT NULL DEFAULT 0,
+        dias_demora INTEGER NOT NULL DEFAULT 0,
         fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     ''')
@@ -65,13 +66,13 @@ def init_db():
 
     # 6. INSERCIÓN DE DATOS INICIALES
     vecinos_data = [
-        ('NATAN RODAS', '30', '2317', '31001708', 1),
-        ('ALVARO TRUJILLO', '60', '1234', '55456655', 0),
-        ('WILLIAM ARREAGA', '90', '77766', '88877788', 1)
+        ('NATAN RODAS', '30', '2317', '31001708', 1, 0),
+        ('ALVARO TRUJILLO', '60', '1234', '55456655', 0, 30),
+        ('WILLIAM ARREAGA', '90', '77766', '88877788', 1, 0)
     ]
     cursor.executemany('''
-    INSERT INTO Vecinos (nombre, numero_lote, dpi, telefono, status) 
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO Vecinos (nombre, numero_lote, dpi, telefono, status, dias_demora) 
+    VALUES (?, ?, ?, ?, ?, ?)
     ''', vecinos_data)
 
     # 7. CREACIÓN DE USUARIOS DE PRUEBA

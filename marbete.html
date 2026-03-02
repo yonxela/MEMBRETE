@@ -458,10 +458,10 @@
     <script>
         // Simulador de BD de vecinos buscando primero en la memoria compartida
         const vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [
-            { id: 1, nombre: 'NATAN RODAS', lote: '30', dpi: '2317', status: 1, codigo: 'NR2317' },
-            { id: 2, nombre: 'ALVARO TRUJILLO', lote: '60', dpi: '1234', status: 0, codigo: 'AT1234' },
-            { id: 3, nombre: 'WILLIAM ARREAGA', lote: '90', dpi: '77766', status: 1, codigo: 'WA7766' },
-            { id: 4, nombre: 'PROGRAMADOR', lote: '00', dpi: 'sisdel', status: 1, codigo: 'SI0000' } // Para pruebas rápidas
+            { id: 1, nombre: 'NATAN RODAS', lote: '30', dpi: '2317', status: 1, dias_demora: 0, codigo: 'NR2317' },
+            { id: 2, nombre: 'ALVARO TRUJILLO', lote: '60', dpi: '1234', status: 0, dias_demora: 30, codigo: 'AT1234' },
+            { id: 3, nombre: 'WILLIAM ARREAGA', lote: '90', dpi: '77766', status: 1, dias_demora: 0, codigo: 'WA7766' },
+            { id: 4, nombre: 'PROGRAMADOR', lote: '00', dpi: 'sisdel', status: 1, dias_demora: 0, codigo: 'SI0000' } // Para pruebas rápidas
         ];
 
         // 1. Obtener el código de la URL (?codigo=___)
@@ -513,7 +513,25 @@
                 document.getElementById('fechaGeneracion').innerText = `${fechaStr} a las ${horaStr}`;
 
                 const statusStrip = document.getElementById('statusStrip');
-                if (vecino.status === 1) {
+                const demora = vecino.dias_demora || 0;
+
+                let contactoHTML = '';
+                if (config_db.correo || config_db.telefono) {
+                    contactoHTML = `<div style="margin-top: 20px; font-size: 0.9rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                                ${config_db.telefono ? '📞 ' + config_db.telefono : ''} ${config_db.correo ? '<br>✉️ ' + config_db.correo : ''}
+                            </div>`;
+                }
+
+                if (vecino.status === 0 && demora > 60) {
+                    document.getElementById('marbeteCard').innerHTML = `
+                        <div style="background-color: #ef4444; color: white; padding: 30px 20px; text-align: center; border-radius: 1rem; border: 1px solid #7f1d1d; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                            <h2 style="margin-bottom: 15px; font-size: 1.5rem; letter-spacing: 1px;">🚫 ACCESO BLOQUEADO</h2>
+                            <p style="font-size: 1.1rem; line-height: 1.5; font-weight: 500;">USTED TIENE PAGOS PENDIENTES.<br>FAVOR CONTACTE A LA JUNTA DIRECTIVA.</p>
+                            ${contactoHTML}
+                            <button onclick="window.location.href='index.html'" class="btn-glass btn-glass-secondary" style="margin-top: 20px; width: auto; display: inline-block;">Volver</button>
+                        </div>
+                    `;
+                } else if (vecino.status === 1) {
                     statusStrip.className = 'status-strip status-verde';
                     statusStrip.innerText = 'PAGOS AL DÍA';
 
@@ -522,26 +540,13 @@
                     document.querySelector('#qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}&color=000000&bgcolor=ffffff`;
                 } else {
                     statusStrip.className = 'status-strip status-rojo';
-                    statusStrip.innerText = 'NO HA PAGADO';
+                    statusStrip.innerText = 'PENDIENTE DE PAGO';
 
-                    // Info de contacto
-                    let contactoHTML = '';
-                    if (config_db.correo || config_db.telefono) {
-                        contactoHTML = `<div style="font-size: 0.8rem; font-weight: normal; margin-top: 8px; color: #713f12;">
-                            Contacte a la Junta Directiva:<br>
-                            ${config_db.telefono ? '📞 ' + config_db.telefono : ''} ${config_db.correo ? '✉️ ' + config_db.correo : ''}
-                        </div>`;
-                    }
-
-                    // Mostrar mensaje amarillo y ocultar QR si es moroso
-                    document.querySelector('.qr-container').style.background = 'transparent';
-                    document.querySelector('.qr-container').innerHTML = `
-                        <div style="background-color: #fef08a; color: #854d0e; padding: 20px; border-radius: 8px; font-weight: 700; font-size: 1.1rem; text-align: center; border: 2px solid #eab308; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                            ⚠️ USTED ESTÁ PENDIENTE DE PAGO
-                            <div style="font-size: 0.85rem; font-weight: 500; margin-top: 10px;">Su marbete digital está inactivo.</div>
-                            ${contactoHTML}
-                        </div>
-                    `;
+                    // Mostrar mensaje de mora, pero SI genera QR y deja entrar
+                    document.querySelector('.qr-container').style.background = 'white';
+                    document.querySelector('.qr-container').style.padding = '10px';
+                    const qrData = `DELCOII-${vecino.lote}-${vecino.codigo || vecino.dpi}`;
+                    document.querySelector('#qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}&color=000000&bgcolor=ffffff`;
                 }
 
                 // MOSTRAR MENSAJES (Bandeja)

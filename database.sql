@@ -20,6 +20,7 @@ CREATE TABLE Vecinos (
     telefono VARCHAR(20),
     correo_electronico VARCHAR(100),
     status TINYINT(1) NOT NULL DEFAULT 0, -- 1: Pagos al día (Verde), 0: No ha pagado (Rojo)
+    dias_demora INT NOT NULL DEFAULT 0, -- Agregado para cobros y restriccion
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -49,10 +50,10 @@ CREATE TABLE Historial_Status (
 );
 
 -- 6. INSERCIÓN DE DATOS INICIALES (BASADO EN TU EXCEL)
-INSERT INTO Vecinos (nombre, numero_lote, dpi, telefono, status) VALUES 
-('NATAN RODAS', '30', '2317', '31001708', 1),
-('ALVARO TRUJILLO', '60', '1234', '55456655', 0),
-('WILLIAM ARREAGA', '90', '77766', '88877788', 1);
+INSERT INTO Vecinos (nombre, numero_lote, dpi, telefono, status, dias_demora) VALUES 
+('NATAN RODAS', '30', '2317', '31001708', 1, 0),
+('ALVARO TRUJILLO', '60', '1234', '55456655', 0, 30),
+('WILLIAM ARREAGA', '90', '77766', '88877788', 1, 0);
 
 -- 7. CREACIÓN DE USUARIOS DE PRUEBA
 -- Usuario Directiva (Acceso Total)

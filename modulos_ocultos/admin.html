@@ -270,6 +270,10 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Días de Demora</label>
+                    <input type="number" id="dias_demora" class="input-field" value="0" min="0" required>
+                </div>
+                <div class="form-group">
                     <label>Código de Vecino (Generado)</label>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="codigo" class="input-field" placeholder="Ej. XY1234" required>
@@ -297,7 +301,7 @@
                         onclick="limpiarBusqueda()" title="Borrar texto del buscador">Limpiar Filtro</button>
                     <button type="button" class="btn-submit"
                         style="margin-top: 0; padding: 8px 15px; width: auto; background-color: var(--success-color);"
-                        onclick="window.open('visitas.html', '_blank')">Visitas</button>
+                        onclick="window.open('../visitas.html', '_blank')">Visitas</button>
                     <button type="button" class="btn-submit"
                         style="margin-top: 0; padding: 8px 15px; width: auto; background-color: var(--danger-color);"
                         onclick="limpiarBaseDeDatos()" title="Eliminar todos los vecinos permanentemente">⚠️ Limpiar
@@ -314,6 +318,7 @@
                             <th>DPI</th>
                             <th>Teléfono</th>
                             <th>Estatus</th>
+                            <th>Demora</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -445,9 +450,9 @@
 
         // Usar LocalStorage para que los datos persistan en el navegador
         let vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [
-            { id: 1, nombre: 'NATAN RODAS', lote: '30', dpi: '2317', telefono: '31001708', status: 1, codigo: 'NR2317' },
-            { id: 2, nombre: 'ALVARO TRUJILLO', lote: '60', dpi: '1234', telefono: '55456655', status: 0, codigo: 'AT1234' },
-            { id: 3, nombre: 'WILLIAM ARREAGA', lote: '90', dpi: '77766', telefono: '88877788', status: 1, codigo: 'WA7766' }
+            { id: 1, nombre: 'NATAN RODAS', lote: '30', dpi: '2317', telefono: '31001708', status: 1, dias_demora: 0, codigo: 'NR2317' },
+            { id: 2, nombre: 'ALVARO TRUJILLO', lote: '60', dpi: '1234', telefono: '55456655', status: 0, dias_demora: 30, codigo: 'AT1234' },
+            { id: 3, nombre: 'WILLIAM ARREAGA', lote: '90', dpi: '77766', telefono: '88877788', status: 1, dias_demora: 0, codigo: 'WA7766' }
         ];
 
         let editandoId = null;
@@ -477,7 +482,7 @@
                 return;
             }
             // Abrir el marbete en una ventana nueva
-            window.open(`marbete.html?codigo=${encodeURIComponent(codigo)}`, '_blank');
+            window.open(`../marbete.html?codigo=${encodeURIComponent(codigo)}`, '_blank');
         }
 
         function limpiarBusqueda() {
@@ -542,6 +547,7 @@
                             onchange="actualizarTelefonoLocal(${vecino.id}, this.value)">
                     </td>
                     <td>${statusHtml}</td>
+                    <td style="color: var(--danger-color); font-weight: bold;">${vecino.dias_demora || 0} ds</td>
                     <td>
                         <button class="action-btn" onclick="editarVecino(${vecino.id})">Editar</button> | 
                         <button class="action-btn" style="color: var(--success-color);" onclick="abrirMarbeteVecino('${vecino.codigo || vecino.dpi}', '${vecino.nombre}')">Marbete</button> |
@@ -582,7 +588,8 @@
                 dpi: document.getElementById('dpi').value,
                 telefono: document.getElementById('telefono').value,
                 codigo: document.getElementById('codigo').value,
-                status: parseInt(document.getElementById('status').value)
+                status: parseInt(document.getElementById('status').value),
+                dias_demora: parseInt(document.getElementById('dias_demora').value) || 0
             };
 
             if (editandoId) {
@@ -614,6 +621,7 @@
                 document.getElementById('telefono').value = vecino.telefono || '';
                 document.getElementById('codigo').value = vecino.codigo || '';
                 document.getElementById('status').value = vecino.status;
+                document.getElementById('dias_demora').value = vecino.dias_demora !== undefined ? vecino.dias_demora : 0;
 
                 editandoId = id; // Indicar que estamos en modo edición
                 alert(`Editando al vecino: ${vecino.nombre}. Modifique los datos y presione 'Guardar Registro'.`);
