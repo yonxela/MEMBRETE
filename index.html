@@ -327,7 +327,7 @@
                     // Actualizamos solo la configuración
                     const config = JSON.parse(localStorage.getItem('delco_config')) || {};
                     config.nombre = nuevoNombre;
-                    config.nombreMarbete = nuevoNombre.split(' ')[0];
+                    config.nombreMarbete = nuevoNombre;
                     config.setup_complete = true;
                     localStorage.setItem('delco_config', JSON.stringify(config));
 
