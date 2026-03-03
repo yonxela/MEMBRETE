@@ -236,7 +236,7 @@
     <div class="container">
         <div class="header">
             <div class="title-group">
-                <h1 class="header-title">DELCO II</h1>
+                <h1 class="header-title" id="headerCondoName">DELCO II</h1>
                 <span class="header-subtitle">VISTA DE GARITA (SEGURIDAD)</span>
             </div>
             <div class="clock-container">
@@ -376,6 +376,11 @@
                 </tr>
             `;
         }
+
+        // Cargar configuración de condominio
+        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'DELCO II' };
+        document.getElementById('headerCondoName').innerText = config_db.nombre.toUpperCase();
+        document.title = `Acceso Garita - ${config_db.nombre}`;
 
         // Inicializar reloj y tabla
         setInterval(actualizarReloj, 1000);

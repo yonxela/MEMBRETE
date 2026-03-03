@@ -283,8 +283,17 @@
     <div id="alertsContainer" class="alerts-container"></div>
 
     <div class="container">
-        <h1 class="header-title">DELCO II</h1>
-        <p class="header-subtitle">Panel de Control de Visitas</p>
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem;">
+            <div>
+                <h1 class="header-title" id="headerCondoName" style="text-align: left; margin: 0;">DELCO II</h1>
+                <p class="header-subtitle" style="text-align: left; margin: 0;">Panel de Control de Visitas</p>
+            </div>
+            <button onclick="verMiMarbete()" class="btn"
+                style="background-color: var(--primary-color); color: white; border-radius: 8px; font-weight: 600;">
+                🪪 Ver Mi Marbete
+            </button>
+        </div>
 
         <div class="panel">
             <h2
@@ -390,6 +399,21 @@
     </div>
 
     <script>
+        // Cargar configuración de condominio
+        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'DELCO II' };
+        document.getElementById('headerCondoName').innerText = config_db.nombre.toUpperCase();
+        document.title = `Control de Visitas - ${config_db.nombre}`;
+
+        function verMiMarbete() {
+            const params = new URLSearchParams(window.location.search);
+            const codigoUrl = params.get('codigo');
+            if (codigoUrl) {
+                window.location.href = `../marbete.html?codigo=${encodeURIComponent(codigoUrl)}`;
+            } else {
+                window.location.href = `../index.html`;
+            }
+        }
+
         // Array de simulacion cargando de memoria
         let visitas_db = JSON.parse(localStorage.getItem('delco_visitas')) || [];
 
@@ -502,9 +526,9 @@
             } else {
                 // Pre-rellenar autorizado por con los datos del vecino
                 const inputAutoriza = document.getElementById('autorizadoPor');
-                if(inputAutoriza) {
+                if (inputAutoriza) {
                     inputAutoriza.value = `LOTE ${vecinoActivo.lote} - ${vecinoActivo.nombre}`;
-                    inputAutoriza.readOnly = true; 
+                    inputAutoriza.readOnly = true;
                     inputAutoriza.style.backgroundColor = 'rgba(255,255,255,0.05)';
                     inputAutoriza.style.color = '#94a3b8';
                 }

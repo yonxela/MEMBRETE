@@ -396,6 +396,14 @@
             <div class="qr-container" style="margin-top: 1rem;">
                 <img id="qrCode" src="" alt="Código QR de Acceso">
             </div>
+
+            <!-- Botones de Acción para el Vecino -->
+            <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 10px;">
+                <button onclick="irAVisitas()" class="btn-glass btn-glass-primary"
+                    style="background-color: var(--success-color); border: none;">
+                    ➕ Autorizar / Programar Visita
+                </button>
+            </div>
         </div>
 
         <!-- Franja inferior dinámica según el estatus -->
@@ -458,10 +466,10 @@
     <script>
         // Simulador de BD de vecinos buscando primero en la memoria compartida
         const vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [
-            { id: 1, nombre: 'NATAN RODAS', lote: '30', dpi: '2317', status: 1, dias_demora: 0, codigo: 'NR2317' },
-            { id: 2, nombre: 'ALVARO TRUJILLO', lote: '60', dpi: '1234', status: 0, dias_demora: 30, codigo: 'AT1234' },
-            { id: 3, nombre: 'WILLIAM ARREAGA', lote: '90', dpi: '77766', status: 1, dias_demora: 0, codigo: 'WA7766' },
-            { id: 4, nombre: 'PROGRAMADOR', lote: '00', dpi: 'sisdel', status: 1, dias_demora: 0, codigo: 'SI0000' } // Para pruebas rápidas
+            { id: 1, nombre: 'NATAN RODAS', lote: '30', dpi: '2317', status: 1, dias_demora: 0, codigo: 'NR2317', rol: 2 },
+            { id: 2, nombre: 'ALVARO TRUJILLO', lote: '60', dpi: '1234', status: 0, dias_demora: 30, codigo: 'AT1234', rol: 2 },
+            { id: 3, nombre: 'WILLIAM ARREAGA', lote: '90', dpi: '77766', status: 1, dias_demora: 0, codigo: 'WA7766', rol: 2 },
+            { id: 4, nombre: 'PROGRAMADOR', lote: '00', dpi: 'sisdel', status: 1, dias_demora: 0, codigo: 'SI0000', rol: 1 } // Para pruebas rápidas
         ];
 
         // 1. Obtener el código de la URL (?codigo=___)
@@ -469,8 +477,8 @@
         const codigoIngresado = urlParams.get('codigo');
 
         // CARGAR CONFIGURACIÓN DEL CONDOMINIO
-        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'DELCO II', nombreMarbete: 'DELCO II', logo: '' };
-        const nombreMostrar = config_db.nombreMarbete || config_db.nombre || 'DELCO II';
+        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'DELCO II', logo: '' };
+        const nombreMostrar = config_db.nombre || 'DELCO II';
 
         document.querySelector('.header-title').innerText = nombreMostrar;
         document.querySelector('title').innerText = `Marbete Generado - ${nombreMostrar}`;
@@ -535,8 +543,8 @@
                     statusStrip.className = 'status-strip status-verde';
                     statusStrip.innerText = 'PAGOS AL DÍA';
 
-                    // Generar QR solo si está al día
-                    const qrData = `DELCOII-${vecino.lote}-${vecino.codigo || vecino.dpi}`;
+                    const qrPrefix = (config_db.nombre || 'DELCO').replace(/\s+/g, '');
+                    const qrData = `${qrPrefix}-${vecino.lote}-${vecino.codigo || vecino.dpi}`;
                     document.querySelector('#qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}&color=000000&bgcolor=ffffff`;
                 } else {
                     statusStrip.className = 'status-strip status-rojo';
@@ -544,8 +552,8 @@
 
                     // Mostrar mensaje de mora, pero SI genera QR y deja entrar
                     document.querySelector('.qr-container').style.background = 'white';
-                    document.querySelector('.qr-container').style.padding = '10px';
-                    const qrData = `DELCOII-${vecino.lote}-${vecino.codigo || vecino.dpi}`;
+                    const qrPrefix = (config_db.nombre || 'DELCO').replace(/\s+/g, '');
+                    const qrData = `${qrPrefix}-${vecino.lote}-${vecino.codigo || vecino.dpi}`;
                     document.querySelector('#qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}&color=000000&bgcolor=ffffff`;
                 }
 
@@ -566,7 +574,7 @@
 
             const footerTxt = document.getElementById('footerTexto');
             if (footerTxt) {
-                const nombreFooter = config_db.nombreMarbete || config_db.nombre || 'DELCO II';
+                const nombreFooter = config_db.nombre || 'DELCO II';
                 footerTxt.innerHTML = `&copy; 2026 Gestión de Accesos - ${nombreFooter}`;
             }
         }
@@ -574,7 +582,7 @@
         function irAVisitas() {
             const params = new URLSearchParams(window.location.search);
             const codigoUrl = params.get('codigo');
-            window.location.href = codigoUrl ? `visitas.html?codigo=${encodeURIComponent(codigoUrl)}` : 'visitas.html';
+            window.location.href = codigoUrl ? `modulos_ocultos/visitas.html?codigo=${encodeURIComponent(codigoUrl)}` : 'modulos_ocultos/visitas.html';
         }
 
         function generarNuevo() {

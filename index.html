@@ -71,6 +71,7 @@
         }
 
         .logo-circle {
+            position: relative;
             width: 80px;
             height: 80px;
             margin: 0 auto 1.5rem auto;
@@ -205,51 +206,185 @@
 
     <div class="container">
         <div class="glass-panel">
-            <div class="header">
-                <div class="logo-circle">
-                    <svg class="logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
-                        </path>
-                    </svg>
+            <div id="loginSection">
+                <div class="header">
+                    <div class="logo-circle">
+                        <!-- Glow effect around icon -->
+                        <div
+                            style="position: absolute; width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 30px var(--primary-color); opacity: 0.6; pointer-events: none;">
+                        </div>
+                        <svg class="logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg" style="position: relative; z-index: 1;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h1 class="title" id="condoTitle">CONDOMINIO X</h1>
+                    <p class="subtitle">Control de Acceso y Marbetes Digitales</p>
                 </div>
-                <h1 class="title">DELCO II</h1>
-                <p class="subtitle">Control de Acceso y Marbetes Digitales</p>
+
+                <div class="action-buttons">
+                    <form id="entryForm" onsubmit="validarAcceso(event)">
+                        <input type="text" id="codigoInput" class="input-lote" placeholder="CÓDIGO DE ACCESO"
+                            style="text-transform: uppercase; font-weight: 700; letter-spacing: 2px; margin-bottom: 1.5rem;"
+                            required />
+
+                        <button type="submit" class="btn btn-primary">
+                            Ingresar
+                        </button>
+                    </form>
+                </div>
             </div>
 
-            <div class="action-buttons">
-                <!-- Se agregó el campo para ingresar el código y generar marbete -->
-                <input type="text" id="codigoInput" class="input-lote" placeholder="Código Personal (Ej: AK1234)" />
+            <!-- Panel de Opciones para el Vecino (Se muestra tras validar) -->
+            <div id="neighborMenu" style="display: none;">
+                <div class="header">
+                    <div class="logo-circle">
+                        <div
+                            style="position: absolute; width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 30px var(--primary-color); opacity: 0.6; pointer-events: none;">
+                        </div>
+                        <svg class="logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg" style="position: relative; z-index: 1;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h1 class="title" id="condoTitleMenu">CONDOMINIO X</h1>
+                    <p class="subtitle">Control de Acceso y Marbetes Digitales</p>
+                </div>
 
-                <button onclick="generar()" class="btn btn-primary">
-                    Generar Marbete (QR)
-                </button>
+                <div id="saludoVecino"
+                    style="font-size: 1.3rem; font-weight: 700; text-align: center; margin-bottom: 2rem; color: var(--primary-color); letter-spacing: 0.5px;">
+                </div>
 
-                <a href="escaner.html" class="btn btn-secondary">
-                    Escanear Código QR
-                </a>
+                <div class="action-buttons">
+                    <button onclick="irAMarbete()" class="btn btn-primary">
+                        Generar Marbete (QR)
+                    </button>
+
+                    <button onclick="irAVisitas()" class="btn btn-secondary"
+                        style="background-color: rgba(255,255,255,0.08); color: white;">
+                        Escanear / Ver Visitas
+                    </button>
+
+                    <button onclick="cerrarSesionVecino()" class="btn"
+                        style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted); background: none;">
+                        ← Salir / Cambiar Código
+                    </button>
+                </div>
             </div>
 
             <div class="footer">
                 <a href="login.html" class="footer-link">Acceso a Directiva / Panel Principal</a>
-                <p class="footer-text">&copy; 2026 Gestión de Accesos DELCO II</p>
+                <p class="footer-text" id="footerText">&copy; 2026 Gestión de Accesos</p>
             </div>
         </div>
     </div>
 
     <script>
-        // Redirigir siempre al formulario de acceso (login)
-        window.location.href = 'login.html';
+        // Cargar configuración inicial
+        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'DELCO II' };
+        const sistemaConfigurado = config_db.setup_complete === true;
 
-        function generar() {
-            const codigo = document.getElementById('codigoInput').value.trim();
+        document.title = `Acceso - ${config_db.nombre}`;
+        const titulos = [document.getElementById('condoTitle'), document.getElementById('condoTitleMenu')];
+        titulos.forEach(t => { if (t) t.innerText = config_db.nombre.toUpperCase(); });
+        document.getElementById('footerText').innerHTML = `&copy; 2026 Gestión de Accesos - ${config_db.nombre}`;
+
+        // Si hay un logo configurado
+        if (config_db.logo) {
+            document.querySelectorAll('.logo-circle').forEach(div => {
+                div.innerHTML = `<img src="${config_db.logo}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; box-shadow: 0 0 15px rgba(59,130,246,0.5);">`;
+            });
+        }
+
+        let codigoValidado = "";
+
+        // --- SISTEMA DE LICENCIAS MAESTRAS ---
+        const LICENCIAS_MAESTRAS = {
+            "7777": "CONDOMINIO X",
+            "1234": "CONDOMINIO EL CIELO",
+            "5555": "RESIDENCIAL ESMERALDA",
+            "8888": "CONDOMINIO EL VALLE"
+        };
+        // -------------------------------------
+
+        function validarAcceso(e) {
+            if (e) e.preventDefault();
+            const codigo = document.getElementById('codigoInput').value.trim().toUpperCase();
+
+            // --- LÓGICA DE LICENCIA POR NÚMERO ---
+            if (LICENCIAS_MAESTRAS[codigo]) {
+                if (sistemaConfigurado) {
+                    alert("❌ Esta licencia ya no es válida para reactivación.");
+                    return;
+                }
+                const nuevoNombre = LICENCIAS_MAESTRAS[codigo];
+                if (confirm(`🔑 LICENCIA VÁLIDA: ${codigo}\n\nSe actualizará el Condominio a: "${nuevoNombre}"\n✅ LOS VECINOS Y REGISTROS SE MANTENDRÁN.\n\n¿Desea continuar?`)) {
+
+                    // Actualizamos solo la configuración
+                    const config = JSON.parse(localStorage.getItem('delco_config')) || {};
+                    config.nombre = nuevoNombre;
+                    config.nombreMarbete = nuevoNombre.split(' ')[0];
+                    config.setup_complete = true;
+                    localStorage.setItem('delco_config', JSON.stringify(config));
+
+                    // Aseguramos usuarios maestros
+                    let usuarios = JSON.parse(localStorage.getItem('delco_usuarios')) || [];
+                    if (!usuarios.find(u => u.username === 'DIRECTIVA')) {
+                        usuarios.push({ username: 'DIRECTIVA', password_hash: 'M2026', rol_id: 1, nombre: 'ADMINISTRADOR' });
+                    }
+                    localStorage.setItem('delco_usuarios', JSON.stringify(usuarios));
+
+                    alert(`✅ SISTEMA ACTIVADO EXITOSAMENTE\n\nCondominio: ${nuevoNombre}`);
+                    localStorage.setItem('admin_logged_in', 'true');
+                    window.location.href = 'modulos_ocultos/admin.html';
+                    return;
+                }
+            }
+
             if (!codigo) {
-                alert("Por favor, ingrese un código válido para generar el marbete.");
+                alert("Por favor, ingrese un código de acceso válido.");
                 return;
             }
-            // Enviar el codigo introducido a la pantalla del marbete
-            window.location.href = `marbete.html?codigo=${encodeURIComponent(codigo)}`;
+
+            const usuarios_db = JSON.parse(localStorage.getItem('delco_usuarios')) || [
+                { username: 'DIRECTIVA', rol_id: 1, nombre: 'DIRECTIVA' },
+                { username: 'GARITA', rol_id: 3, nombre: 'GARITA' }
+            ];
+
+            const usuario = usuarios_db.find(u => u.username.toUpperCase() === codigo);
+
+            if (usuario) {
+                if (usuario.rol_id === 1) {
+                    localStorage.setItem('admin_logged_in', 'true');
+                    window.location.href = 'modulos_ocultos/admin.html';
+                } else if (usuario.rol_id === 3) {
+                    window.location.href = 'garita.html';
+                } else {
+                    // Es VECINO: Mostrar Menú
+                    codigoValidado = codigo;
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('neighborMenu').style.display = 'block';
+                    document.getElementById('saludoVecino').innerText = `¡Bienvenido, ${usuario.nombre.split(' ')[0]}!`;
+                }
+            } else {
+                alert("Código no reconocido. Por favor verifique sus datos.");
+            }
+        }
+
+        function irAMarbete() {
+            window.location.href = `marbete.html?codigo=${encodeURIComponent(codigoValidado)}`;
+        }
+
+        function irAVisitas() {
+            window.location.href = `modulos_ocultos/visitas.html?codigo=${encodeURIComponent(codigoValidado)}`;
+        }
+
+        function cerrarSesionVecino() {
+            location.reload();
         }
     </script>
 

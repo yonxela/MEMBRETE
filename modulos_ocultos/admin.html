@@ -228,7 +228,8 @@
     <div class="dashboard-header">
         <h1 class="dashboard-title">Panel de Administración - DELCO II</h1>
         <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-            <button class="btn-submit" style="margin: 0; background-color: #fbbf24; color: #1e1e1e;"
+            <button class="btn-submit"
+                style="margin: 0; background-color: #fbbf24; color: #1e1e1e; width: auto; padding: 0.5rem 1rem;"
                 onclick="abrirModalMensaje()">
                 ✉️ Enviar Mensaje
             </button>
@@ -249,6 +250,27 @@
                 <div class="form-group">
                     <label>Nombre Completo</label>
                     <input type="text" id="nombre" class="input-field" required>
+                </div>
+                <div class="form-group">
+                    <label>Rol del Registro</label>
+                    <div
+                        style="display: flex; gap: 15px; margin-top: 5px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; color: var(--text-main); cursor: pointer; font-size: 0.9rem;">
+                            <input type="radio" name="rol" value="2" checked
+                                style="width: 18px; accent-color: var(--primary-color);"> Vecino
+                        </label>
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; color: var(--text-main); cursor: pointer; font-size: 0.9rem;">
+                            <input type="radio" name="rol" value="3"
+                                style="width: 18px; accent-color: var(--primary-color);"> Garita
+                        </label>
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; color: var(--text-main); cursor: pointer; font-size: 0.9rem;">
+                            <input type="radio" name="rol" value="1"
+                                style="width: 18px; accent-color: var(--primary-color);"> Directiva
+                        </label>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Número de Lote</label>
@@ -301,7 +323,7 @@
                         onclick="limpiarBusqueda()" title="Borrar texto del buscador">Limpiar Filtro</button>
                     <button type="button" class="btn-submit"
                         style="margin-top: 0; padding: 8px 15px; width: auto; background-color: var(--success-color);"
-                        onclick="window.open('../visitas.html', '_blank')">Visitas</button>
+                        onclick="abrirModalGestionVisitas()">Visitas</button>
                     <button type="button" class="btn-submit"
                         style="margin-top: 0; padding: 8px 15px; width: auto; background-color: var(--danger-color);"
                         onclick="limpiarBaseDeDatos()" title="Eliminar todos los vecinos permanentemente">⚠️ Limpiar
@@ -314,6 +336,7 @@
                         <tr>
                             <th>Lote</th>
                             <th>Nombre</th>
+                            <th>Rol</th>
                             <th>Código</th>
                             <th>DPI</th>
                             <th>Teléfono</th>
@@ -334,27 +357,42 @@
     <div id="modalConfig" class="modal-overlay">
         <div class="modal-content">
             <span class="close-btn" onclick="cerrarModalConfig()">&times;</span>
-            <h2 class="panel-title" style="margin-bottom: 1rem;">Configuración del Condominio</h2>
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h2 class="panel-title" style="margin: 0;">Configuración del Condominio</h2>
+                <button type="button" onclick="event.stopPropagation(); accesoMasterSisdel(event)"
+                    style="background: transparent; border: 1px solid #3f3f3f; color: #4b5563; font-size: 10px; padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
+                    SISDEL
+                </button>
+            </div>
             <form id="configForm">
+
                 <div class="form-group">
-                    <label>Nombre del Condominio</label>
-                    <input type="text" id="configNombre" class="input-field" placeholder="Ej. DELCO II" required>
-                </div>
-                <div class="form-group">
-                    <label>Nombre para Marbete</label>
-                    <input type="text" id="configNombreMarbete" class="input-field" placeholder="Opción Corta Ej. DELCO"
-                        required>
+                    <label>Nombre del Condominio (Bloqueado 🔒)</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" id="configNombre" class="input-field" placeholder="Ej. DELCO II" required
+                            readonly style="background-color: #1a1a1a; cursor: not-allowed; color: #888;">
+                        <button type="button" onclick="desbloquearNombreMaster()"
+                            style="background: #374151; color: white; border: none; padding: 0 10px; border-radius: 6px; cursor: pointer;"
+                            title="Desbloquear con Clave Master">
+                            🔓
+                        </button>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Logotipo (URL de imagen)</label>
                     <input type="url" id="configLogo" class="input-field" placeholder="https://ejemplo.com/logo.png">
                 </div>
                 <div class="form-group">
+                    <label>Nombre del Integrante (Junta Directiva / Encargado)</label>
+                    <input type="text" id="configEncargado" class="input-field" placeholder="Ej. Juan Pérez">
+                </div>
+                <div class="form-group">
                     <label>Correo Electrónico (Junta Directiva)</label>
                     <input type="email" id="configCorreo" class="input-field" placeholder="junta@condominio.com">
                 </div>
                 <div class="form-group">
-                    <label>Teléfono (Junta Directiva)</label>
+                    <label>Teléfono del Integrante (WhatsApp)</label>
                     <input type="text" id="configTelefono" class="input-field" placeholder="Ej. 1234-5678">
                 </div>
 
@@ -373,6 +411,45 @@
             </form>
         </div>
     </div>
+
+    <!-- Modal Listado Maestro SISDEL -->
+    <div id="modalMaestroSisdel" class="modal-overlay" style="z-index: 2000;">
+        <div class="modal-content" style="max-width: 700px;">
+            <span class="close-btn" onclick="cerrarMaestroSisdel()">&times;</span>
+            <h2 class="panel-title" style="color: #10b981; border-bottom: 2px solid #10b981; padding-bottom: 10px;">
+                CONTROL MAESTRO SISDEL</h2>
+
+            <div style="overflow-x: auto; margin-top: 20px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #333; color: var(--text-muted);">
+                            <th style="padding: 10px;">CONDOMINIO</th>
+                            <th style="padding: 10px;">ENCARGADO</th>
+                            <th style="padding: 10px;">CORREO</th>
+                            <th style="padding: 10px;">TELÉFONO</th>
+                            <th style="padding: 10px;">ACCIÓN</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaCondominiosSisdel">
+                        <!-- JS Dinámico -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: center;">
+                <button onclick="crearNuevoCondominioMaster()"
+                    style="background: #10b981; color: white; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit;">
+                    + NUEVO CONDOMINIO
+                </button>
+            </div>
+
+            <p
+                style="margin-top: 20px; font-size: 11px; color: #10b981; text-align: center; font-weight: bold; opacity: 0.8;">
+                ✅ Los datos de vecinos y registros se mantienen seguros al conectar proyectos existentes.
+            </p>
+        </div>
+    </div>
+
 
     <!-- Modal para Enviar Mensajes -->
     <div id="modalMensaje" class="modal-overlay">
@@ -425,7 +502,7 @@
 
                 <div class="form-group"
                     style="display: flex; align-items: center; gap: 10px; background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 6px; border: 1px dashed #10b981; margin-top: 15px; margin-bottom: 20px;">
-                    <input type="checkbox" id="enviarPorWhatsapp" checked style="width: 18px; transform: scale(1.2);">
+                    <input type="checkbox" id="enviarPorWhatsapp" style="width: 18px; transform: scale(1.2);">
                     <label for="enviarPorWhatsapp"
                         style="margin: 0; color: #10b981; font-weight: 600; cursor: pointer;">📲 Abrir Aplicación de
                         WhatsApp al Enviar</label>
@@ -433,6 +510,66 @@
 
                 <button type="submit" class="btn-submit" style="background-color: #10b981; font-size: 1.1rem;">Enviar
                     Mensaje 🚀</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Gestión de Visitas (Administración) -->
+    <div id="modalGestionVisitas" class="modal-overlay">
+        <div class="modal-content" style="max-width: 900px;">
+            <span class="close-btn" onclick="cerrarModalGestionVisitas()">&times;</span>
+            <h2 class="panel-title" style="margin-bottom: 1rem;">Gestión de Visitas Autorizadas</h2>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 1.5rem;">
+                <input type="text" id="busquedaVisitaAdmin" class="input-field"
+                    placeholder="Buscar por Nombre, Placa o Residente..." onkeyup="renderizarTablaVisitas()">
+                <button class="btn-submit" style="margin-top: 0; width: auto; background-color: var(--success-color);"
+                    onclick="window.open('visitas.html', '_blank')">➕ Nueva</button>
+            </div>
+
+            <div
+                style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--border-color);">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha/Hora</th>
+                            <th>Visitante</th>
+                            <th>Placa</th>
+                            <th>Residente</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaVisitasAdminBody">
+                        <!-- Cargado dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Secundario para Editar Visita -->
+    <div id="modalEditarVisita" class="modal-overlay" style="z-index: 1100;">
+        <div class="modal-content">
+            <span class="close-btn" onclick="cerrarModalEditarVisita()">&times;</span>
+            <h2 class="panel-title">Editar Autorización</h2>
+            <form id="formEditarVisita">
+                <div class="form-group">
+                    <label>Nombre del Visitante</label>
+                    <input type="text" id="editVisitaNombre" class="input-field" required>
+                </div>
+                <div class="form-group">
+                    <label>Identificación</label>
+                    <input type="text" id="editVisitaDpi" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label>Placa del Vehículo</label>
+                    <input type="text" id="editVisitaPlaca" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label>Lote / Residente</label>
+                    <input type="text" id="editVisitaResidente" class="input-field" required>
+                </div>
+                <button type="submit" class="btn-submit">Actualizar Visita</button>
             </form>
         </div>
     </div>
@@ -449,11 +586,7 @@
         }
 
         // Usar LocalStorage para que los datos persistan en el navegador
-        let vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [
-            { id: 1, nombre: 'NATAN RODAS', lote: '30', dpi: '2317', telefono: '31001708', status: 1, dias_demora: 0, codigo: 'NR2317' },
-            { id: 2, nombre: 'ALVARO TRUJILLO', lote: '60', dpi: '1234', telefono: '55456655', status: 0, dias_demora: 30, codigo: 'AT1234' },
-            { id: 3, nombre: 'WILLIAM ARREAGA', lote: '90', dpi: '77766', telefono: '88877788', status: 1, dias_demora: 0, codigo: 'WA7766' }
-        ];
+        let vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [];
 
         let editandoId = null;
 
@@ -535,9 +668,15 @@
                     ? '<span class="status-badge status-active">AL DÍA</span>'
                     : '<span class="status-badge status-inactive">MOROSO</span>';
 
+                let rolBadge = '';
+                if (vecino.rol == 1) rolBadge = '<span class="status-badge" style="background: rgba(139, 92, 246, 0.2); color: #a78bfa;">DIRECTIVA</span>';
+                else if (vecino.rol == 3) rolBadge = '<span class="status-badge" style="background: rgba(251, 191, 36, 0.2); color: #fbbf24;">GARITA</span>';
+                else rolBadge = '<span class="status-badge" style="background: rgba(148, 163, 184, 0.2); color: #94a3b8;">VECINO</span>';
+
                 tr.innerHTML = `
                     <td><strong>${vecino.lote}</strong></td>
                     <td>${vecino.nombre}</td>
+                    <td>${rolBadge}</td>
                     <td><span style="color: var(--primary-color); font-weight: 600; letter-spacing: 1px;">${vecino.codigo || '-'}</span></td>
                     <td>${vecino.dpi}</td>
                     <td>
@@ -582,6 +721,8 @@
         document.getElementById('registroForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
+            const rolSeleccionado = document.querySelector('input[name="rol"]:checked').value;
+
             const datosFormulario = {
                 nombre: document.getElementById('nombre').value.toUpperCase(),
                 lote: document.getElementById('lote').value,
@@ -589,8 +730,20 @@
                 telefono: document.getElementById('telefono').value,
                 codigo: document.getElementById('codigo').value,
                 status: parseInt(document.getElementById('status').value),
-                dias_demora: parseInt(document.getElementById('dias_demora').value) || 0
+                dias_demora: parseInt(document.getElementById('dias_demora').value) || 0,
+                rol: parseInt(rolSeleccionado)
             };
+
+            if (vecinos_db.length === 0) {
+                if (rolSeleccionado != 1) {
+                    alert("⚠️ PRIMER REGISTRO OBLIGATORIO:\nAl ser un sistema nuevo, el primer registro debe ser obligatoriamente de JUNTA DIRECTIVA para configurar el acceso administrativo propietario.");
+                    return;
+                }
+
+                // Marcar configuración como completada
+                config_db.setup_complete = true;
+                localStorage.setItem('delco_config', JSON.stringify(config_db));
+            }
 
             if (editandoId) {
                 // Actualizar registro existente
@@ -598,19 +751,58 @@
                 if (index !== -1) {
                     vecinos_db[index] = { ...vecinos_db[index], ...datosFormulario };
                 }
-                alert("Vecino actualizado exitosamente.");
+                alert("Registro actualizado exitosamente.");
                 editandoId = null;
             } else {
                 // Crear nuevo registro
                 const nuevoId = vecinos_db.length > 0 ? Math.max(...vecinos_db.map(v => v.id)) + 1 : 1;
                 vecinos_db.push({ id: nuevoId, ...datosFormulario });
-                alert("Vecino registrado exitosamente.");
+                if (config_db.setup_complete && vecinos_db.length === 1) {
+                    alert("✅ SISTEMA ACTIVADO CORRECTAMENTE.\nLa Junta Directiva ha sido registrada. Ahora puede proceder con la carga de vecinos.");
+                } else {
+                    alert("Registro completado exitosamente.");
+                }
             }
+
+            // Sincronizar con delco_usuarios para permitir el login
+            actualizarUsuariosLogin(datosFormulario);
 
             guardarDatosLocal();
             renderizarTabla();
             this.reset();
+            // Resetear radio a vecino - si ya hay mas de uno
+            if (vecinos_db.length > 0) {
+                const radioV = document.querySelector('input[name="rol"][value="2"]');
+                if (radioV) radioV.checked = true;
+            }
         });
+
+        function actualizarUsuariosLogin(datos) {
+            let usuarios_db = JSON.parse(localStorage.getItem('delco_usuarios')) || [];
+
+            // El usuario será el código o DPI
+            const username = (datos.codigo || datos.dpi).toLowerCase();
+            const password = datos.lote.toLowerCase(); // La clave por defecto es el lote
+
+            const userIndex = usuarios_db.findIndex(u => u.username === username);
+
+            const userData = {
+                username: username,
+                password_hash: password,
+                rol_id: datos.rol,
+                nombre: datos.nombre,
+                status: datos.status,
+                lote: datos.lote
+            };
+
+            if (userIndex !== -1) {
+                usuarios_db[userIndex] = userData;
+            } else {
+                usuarios_db.push(userData);
+            }
+
+            localStorage.setItem('delco_usuarios', JSON.stringify(usuarios_db));
+        }
 
         function editarVecino(id) {
             const vecino = vecinos_db.find(v => v.id === id);
@@ -623,8 +815,13 @@
                 document.getElementById('status').value = vecino.status;
                 document.getElementById('dias_demora').value = vecino.dias_demora !== undefined ? vecino.dias_demora : 0;
 
+                // Marcar el radio correspondiente
+                const rol = vecino.rol || 2;
+                const radio = document.querySelector(`input[name="rol"][value="${rol}"]`);
+                if (radio) radio.checked = true;
+
                 editandoId = id; // Indicar que estamos en modo edición
-                alert(`Editando al vecino: ${vecino.nombre}. Modifique los datos y presione 'Guardar Registro'.`);
+                alert(`Editando registro: ${vecino.nombre}. Modifique los datos y presione 'Guardar Registro'.`);
             }
         }
 
@@ -633,6 +830,7 @@
 
         function abrirModalMensaje() {
             document.getElementById('modalMensaje').style.display = 'flex';
+            document.getElementById('enviarPorWhatsapp').checked = false; // Desmarcar por defecto
             cargarVecinosMensaje();
             toggleDestinatarios();
         }
@@ -772,25 +970,55 @@
         }
 
         function cargarConfiguracion() {
-            document.getElementById('configNombre').value = config_db.nombre || '';
-            document.getElementById('configNombreMarbete').value = config_db.nombreMarbete || config_db.nombre || '';
+            const inputNombre = document.getElementById('configNombre');
+            inputNombre.value = config_db.nombre || '';
+            inputNombre.readOnly = true;
+            inputNombre.style.backgroundColor = "#1a1a1a";
+            inputNombre.style.cursor = "not-allowed";
+            inputNombre.style.color = "#888";
+
             document.getElementById('configLogo').value = config_db.logo || '';
+            document.getElementById('configEncargado').value = config_db.encargado || '';
             document.getElementById('configCorreo').value = config_db.correo || '';
             document.getElementById('configTelefono').value = config_db.telefono || '';
             document.getElementById('configPassword').value = ''; // limpiar siempre
 
-            document.querySelector('.dashboard-title').innerText = `Panel de Administración - ${config_db.nombre}`;
+            // Buscar encargado en la lista maestra para mostrarlo en el título
+            const listadoMaster = DB_MAESTRA_SISDEL;
+            const infoMaster = listadoMaster.find(c => c.nombre.toUpperCase() === config_db.nombre.toUpperCase());
+            const encargadoTexto = infoMaster ? ` (${infoMaster.encargado})` : "";
+
+            const nombreEncargado = config_db.encargado || "ADMINISTRACIÓN";
+            document.querySelector('.dashboard-title').innerText = `Panel de Administración - ${config_db.nombre} (${nombreEncargado})`;
             document.title = `Panel de Administración - ${config_db.nombre}`;
+        }
+
+        function desbloquearNombreMaster() {
+            const pass = prompt("USO EXCLUSIVO DE SISDEL INTERNACIONAL:");
+            if (pass === "SISDEL 2026") {
+                const inputNombre = document.getElementById('configNombre');
+                inputNombre.readOnly = false;
+                inputNombre.style.backgroundColor = "#2a2a2a";
+                inputNombre.style.cursor = "text";
+                inputNombre.style.color = "white";
+                inputNombre.focus();
+                alert("✅ Campo Desbloqueado. Puede cambiar el nombre ahora.");
+            } else if (pass !== null) {
+                alert("❌ Clave Incorrecta");
+            }
         }
 
         document.getElementById('configForm').addEventListener('submit', function (e) {
             e.preventDefault();
+            const nombreCondo = document.getElementById('configNombre').value.trim();
             config_db = {
-                nombre: document.getElementById('configNombre').value.trim(),
-                nombreMarbete: document.getElementById('configNombreMarbete').value.trim(),
+                nombre: nombreCondo,
+                nombreMarbete: nombreCondo, // Ahora automático
                 logo: document.getElementById('configLogo').value.trim(),
+                encargado: document.getElementById('configEncargado').value.trim(),
                 correo: document.getElementById('configCorreo').value.trim(),
-                telefono: document.getElementById('configTelefono').value.trim()
+                telefono: document.getElementById('configTelefono').value.trim(),
+                setup_complete: true
             };
             localStorage.setItem('delco_config', JSON.stringify(config_db));
 
@@ -815,9 +1043,295 @@
             cerrarModalConfig();
         });
 
+        // MÓDULO DE GESTIÓN DE VISITAS
+        let visitas_db = JSON.parse(localStorage.getItem('delco_visitas')) || [];
+        let editandoVisitaId = null;
+
+        function abrirModalGestionVisitas() {
+            document.getElementById('modalGestionVisitas').style.display = 'flex';
+            renderizarTablaVisitas();
+        }
+
+        function cerrarModalGestionVisitas() {
+            document.getElementById('modalGestionVisitas').style.display = 'none';
+        }
+
+        function renderizarTablaVisitas() {
+            visitas_db = JSON.parse(localStorage.getItem('delco_visitas')) || [];
+            const tbody = document.getElementById('tablaVisitasAdminBody');
+            tbody.innerHTML = '';
+            const buscar = document.getElementById('busquedaVisitaAdmin').value.toLowerCase();
+
+            const visitasFiltradas = visitas_db.filter(v =>
+                v.nombre.toLowerCase().includes(buscar) ||
+                v.placa.toLowerCase().includes(buscar) ||
+                v.autoriza.toLowerCase().includes(buscar)
+            );
+
+            if (visitasFiltradas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">No se encontraron registros.</td></tr>';
+                return;
+            }
+
+            // Ordenar por timestamp (más reciente arriba)
+            visitasFiltradas.sort((a, b) => b.timestamp - a.timestamp);
+
+            visitasFiltradas.forEach(v => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-size: 0.85rem; color: var(--text-muted);">
+                        ${v.fecha}<br>${v.hora}
+                    </td>
+                    <td><strong>${v.nombre}</strong></td>
+                    <td style="letter-spacing: 1px;">${v.placa}</td>
+                    <td style="font-size: 0.9rem;">${v.autoriza}</td>
+                    <td>
+                        <button class="action-btn" onclick="prepararEdicionVisita(${v.id})">Editar</button> | 
+                        <button class="action-btn" style="color: var(--danger-color);" onclick="eliminarVisita(${v.id})">Borrar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function eliminarVisita(id) {
+            if (confirm("¿Seguro que desea eliminar esta autorización de visita? Esto la quitará de la pantalla de garita inmediatamente.")) {
+                const index = visitas_db.findIndex(v => v.id === id);
+                if (index !== -1) {
+                    visitas_db.splice(index, 1);
+                    localStorage.setItem('delco_visitas', JSON.stringify(visitas_db));
+                    renderizarTablaVisitas();
+                }
+            }
+        }
+
+        function prepararEdicionVisita(id) {
+            const v = visitas_db.find(vis => vis.id === id);
+            if (v) {
+                editandoVisitaId = id;
+                document.getElementById('editVisitaNombre').value = v.nombre;
+                document.getElementById('editVisitaDpi').value = v.identificacion || '';
+                document.getElementById('editVisitaPlaca').value = v.placa;
+                document.getElementById('editVisitaResidente').value = v.autoriza;
+                document.getElementById('modalEditarVisita').style.display = 'flex';
+            }
+        }
+
+        function cerrarModalEditarVisita() {
+            document.getElementById('modalEditarVisita').style.display = 'none';
+        }
+
+        document.getElementById('formEditarVisita').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const index = visitas_db.findIndex(v => v.id === editandoVisitaId);
+            if (index !== -1) {
+                visitas_db[index].nombre = document.getElementById('editVisitaNombre').value.toUpperCase();
+                visitas_db[index].identificacion = document.getElementById('editVisitaDpi').value.toUpperCase();
+                visitas_db[index].placa = document.getElementById('editVisitaPlaca').value.toUpperCase();
+                visitas_db[index].autoriza = document.getElementById('editVisitaResidente').value.toUpperCase();
+
+                localStorage.setItem('delco_visitas', JSON.stringify(visitas_db));
+                cerrarModalEditarVisita();
+                renderizarTablaVisitas();
+                alert("Autorización actualizada correctamente.");
+            }
+        });
+
+        // --- SISTEMA MAESTRO SISDEL (PARA USO DEL PROGRAMADOR) ---
+        const DB_DEFAULT_SISDEL = [
+            { nombre: "CONDOMINIO EL CIELO", encargado: "NATAN RODAS", correo: "natan@ejemplo.com", tel: "3100-1708" },
+            { nombre: "RESIDENCIAL ESMERALDA", encargado: "ALVARO TRUJILLO", correo: "alvaro@ejemplo.com", tel: "5545-6655" },
+            { nombre: "CONDOMINIO EL VALLE", encargado: "WILLIAM ARREAGA", correo: "william@ejemplo.com", tel: "8887-7788" },
+            { nombre: "DELCO II", encargado: "ADMINISTRACIÓN", correo: "info@delco.com", tel: "2323-0000" }
+        ];
+
+        let DB_MAESTRA_SISDEL = JSON.parse(localStorage.getItem('SISDEL_LISTADO_MASTER')) || DB_DEFAULT_SISDEL;
+
         // Renderizar al cargar la página
         renderizarTabla();
         cargarConfiguracion();
+
+        // Verificación de Sistema Nuevo (Solo si no se ha completado la configuración inicial)
+        if (vecinos_db.length === 0) {
+            // Intentar auto-poblar si tenemos info en el listado maestro
+            const esteCondo = DB_MAESTRA_SISDEL.find(c => c.nombre.toUpperCase() === config_db.nombre.toUpperCase());
+
+            if (esteCondo) {
+                const autoVecino = {
+                    id: Date.now(),
+                    lote: "DIR-01",
+                    nombre: esteCondo.encargado.toUpperCase(),
+                    rol: 1, // DIRECTIVA
+                    codigo: "M2026",
+                    dpi: "OFICIAL",
+                    telefono: esteCondo.tel || "----",
+                    status: 1,
+                    dias_demora: 0
+                };
+                vecinos_db = [autoVecino];
+                guardarDatosLocal();
+                renderizarTabla();
+                cargarConfiguracion(); // Volver a cargar para que el título se actualice
+            }
+
+            if (!config_db.setup_complete) {
+                setTimeout(() => {
+                    alert("🆕 SISTEMA NUEVO DETECTADO\n\nPor seguridad, el primer registro debe ser un miembro de la JUNTA DIRECTIVA.\n\nEsto activará permanentemente los módulos y deshabilitará la clave de licencia de instalación.");
+                    const radioD = document.querySelector('input[name="rol"][value="1"]');
+                    if (radioD) radioD.checked = true;
+                }, 500);
+            }
+        }
+
+        function accesoMasterSisdel(e) {
+            if (e) e.preventDefault();
+            const pass = prompt("USO EXCLUSIVO DE SISDEL INTERNACIONAL:");
+            if (pass === "SISDEL 2026") {
+                // Primero cerramos el config para evitar conflictos de overlays
+                cerrarModalConfig();
+
+                // Pequeña pausa para que el navegador limpie el primer modal antes de abrir el segundo
+                setTimeout(() => {
+                    mostrarMaestroSisdel();
+                }, 50);
+            } else if (pass !== null) {
+                alert("❌ Clave Incorrecta");
+            }
+        }
+
+        function mostrarMaestroSisdel() {
+            const tabla = document.getElementById('listaCondominiosSisdel');
+            tabla.innerHTML = '';
+
+            // Refrescar listado
+            DB_MAESTRA_SISDEL = JSON.parse(localStorage.getItem('SISDEL_LISTADO_MASTER')) || DB_MAESTRA_SISDEL;
+
+            DB_MAESTRA_SISDEL.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #333';
+                tr.innerHTML = `
+                    <td style="padding: 12px; font-weight: 600; color: white;">${c.nombre}</td>
+                    <td style="padding: 12px;">${c.encargado}</td>
+                    <td style="padding: 12px; color: var(--text-muted);">${c.correo}</td>
+                    <td style="padding: 12px;">${c.tel || '----'}</td>
+                    <td style="padding: 12px;">
+                        <button onclick="cambioRapidoSisdel('${c.nombre}')" 
+                            style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">
+                            CONECTAR
+                        </button>
+                    </td>
+                `;
+                tabla.appendChild(tr);
+            });
+
+            document.getElementById('modalMaestroSisdel').style.display = 'flex';
+        }
+
+        function crearNuevoCondominioMaster() {
+            const nombre = prompt("📝 Ingrese el NOMBRE del Nuevo Condominio:");
+            if (!nombre) return;
+
+            const encargado = prompt(`👤 Ingrese el nombre del VECINO DIRECTIVA que administrará "${nombre}":`);
+            if (!encargado) return;
+
+            if (confirm(`🌟 Se creará el proyecto: "${nombre}"\nAdministrador: ${encargado}\n\n¿Confirmar creación de Base de Datos nueva?`)) {
+                const nuevoItem = {
+                    nombre: nombre.toUpperCase(),
+                    encargado: encargado.toUpperCase(),
+                    correo: 'NUEVO@SISTEMA.COM',
+                    tel: '----'
+                };
+
+                DB_MAESTRA_SISDEL.push(nuevoItem);
+                localStorage.setItem('SISDEL_LISTADO_MASTER', JSON.stringify(DB_MAESTRA_SISDEL));
+
+                // Ejecutar cambio a base limpia pasando el nombre del administrador real
+                ejecutarCambioProyecto(nombre.toUpperCase(), 'DIRECTIVA', 'M2026', encargado.toUpperCase());
+            }
+        }
+
+        function cerrarMaestroSisdel() {
+            document.getElementById('modalMaestroSisdel').style.display = 'none';
+        }
+
+        function cambioRapidoSisdel(nuevoNombre) {
+            if (confirm(`¿Desea conectar el sistema a: ${nuevoNombre}?\n\n(Se guardarán los datos del proyecto actual y se cargarán los de este condominio)`)) {
+                ejecutarCambioProyecto(nuevoNombre);
+            }
+        }
+
+        function ejecutarCambioProyecto(nuevoNombre, nuevoAdmin = null, nuevaClave = null, nombreRealAdmin = 'ADMINISTRADOR') {
+            // 1. OBTENER ESTADO ACTUAL PARA GUARDARLO (RESPALDO)
+            const configActual = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'DELCO II' };
+            const nombreActual = configActual.nombre.toUpperCase();
+
+            const datosActuales = {
+                config: configActual,
+                vecinos: JSON.parse(localStorage.getItem('delco_vecinos')) || [],
+                usuarios: JSON.parse(localStorage.getItem('delco_usuarios')) || [],
+                visitas: JSON.parse(localStorage.getItem('delco_visitas')) || [],
+                mensajes: JSON.parse(localStorage.getItem('delco_mensajes')) || []
+            };
+
+            // 2. RESPALDAR CONDOMINIO SALIENTE EN SU PROPIO CUBO
+            localStorage.setItem(`SISDEL_DB_${nombreActual}`, JSON.stringify(datosActuales));
+
+            // 3. BUSCAR Y CARGAR DATOS DEL NUEVO CONDOMINIO
+            const datosNuevos = JSON.parse(localStorage.getItem(`SISDEL_DB_${nuevoNombre.toUpperCase()}`));
+
+            if (datosNuevos) {
+                // Restaurar base de datos existente de este cliente
+                localStorage.setItem('delco_config', JSON.stringify(datosNuevos.config));
+                localStorage.setItem('delco_vecinos', JSON.stringify(datosNuevos.vecinos || []));
+                localStorage.setItem('delco_usuarios', JSON.stringify(datosNuevos.usuarios || []));
+                localStorage.setItem('delco_visitas', JSON.stringify(datosNuevos.visitas || []));
+                localStorage.setItem('delco_mensajes', JSON.stringify(datosNuevos.mensajes || []));
+            } else {
+                // Iniciar proyecto nuevo desde cero (Pero preservando los otros)
+                // Buscar info en el listado maestro para pre-poblar
+                const esteCondo = DB_MAESTRA_SISDEL.find(c => c.nombre.toUpperCase() === nuevoNombre.toUpperCase());
+
+                const nuevaConfig = {
+                    nombre: nuevoNombre,
+                    nombreMarbete: nuevoNombre, // Sincronizado
+                    setup_complete: true,
+                    encargado: esteCondo ? esteCondo.encargado : nombreRealAdmin,
+                    correo: esteCondo ? esteCondo.correo : '',
+                    telefono: esteCondo ? esteCondo.tel : ''
+                };
+                localStorage.setItem('delco_config', JSON.stringify(nuevaConfig));
+
+                // --- AGREGAR AL ENCARGADO COMO PRIMER VECINO AUTOMÁTICAMENTE ---
+                const primerVecino = {
+                    id: Date.now(),
+                    lote: "DIR-01",
+                    nombre: nombreRealAdmin.toUpperCase(),
+                    rol: 1, // DIRECTIVA
+                    codigo: "M2026",
+                    dpi: "OFICIAL",
+                    telefono: esteCondo ? esteCondo.tel : "----",
+                    status: 1,
+                    dias_demora: 0
+                };
+                localStorage.setItem('delco_vecinos', JSON.stringify([primerVecino]));
+
+                localStorage.setItem('delco_visitas', JSON.stringify([]));
+                localStorage.setItem('delco_mensajes', JSON.stringify([]));
+
+                // Usuarios maestros por defecto
+                let usuarios = [
+                    { username: 'DIRECTIVA', password_hash: 'M2026', rol_id: 1, nombre: nombreRealAdmin },
+                    { username: 'GARITA', password_hash: 'GARITA2026', rol_id: 3, nombre: 'SEGURIDAD' }
+                ];
+                if (nuevoAdmin) {
+                    usuarios[0] = { username: nuevoAdmin.toUpperCase(), password_hash: nuevaClave, rol_id: 1, nombre: nombreRealAdmin };
+                }
+                localStorage.setItem('delco_usuarios', JSON.stringify(usuarios));
+            }
+
+            alert(`🚀 CONEXIÓN EXITOSA A: ${nuevoNombre.toUpperCase()}`);
+            window.location.reload();
+        }
     </script>
 </body>
 
