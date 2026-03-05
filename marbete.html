@@ -725,99 +725,120 @@
             inputDialogTitle.innerText = nombreMostrar;
         }
 
-        if (codigoIngresado) {
-            // Convertir a mayúsculas para evitar problemas si el usuario escribe en minúsculas
-            const codBusqueda = codigoIngresado.toUpperCase();
+        async function procesarMarbete() {
+            if (codigoIngresado) {
+                // Convertir a mayúsculas para evitar problemas si el usuario escribe en minúsculas
+                const codBusqueda = codigoIngresado.toUpperCase();
 
-            // 2. Buscar al vecino por Código, DPI o por Lote
-            const vecino = vecinos_db.find(v =>
-                (v.codigo && v.codigo.toUpperCase() === codBusqueda) ||
-                (v.dpi && v.dpi.toUpperCase() === codBusqueda) ||
-                (v.lote && v.lote.toUpperCase() === codBusqueda)
-            );
+                // 2. Buscar al vecino por Código, DPI o por Lote localmente
+                let vecino = vecinos_db.find(v =>
+                    (v.codigo && v.codigo.toUpperCase() === codBusqueda) ||
+                    (v.dpi && v.dpi.toUpperCase() === codBusqueda) ||
+                    (v.lote && v.lote.toUpperCase() === codBusqueda)
+                );
 
-            if (vecino) {
-                // Rellenar datos
-                document.getElementById('marbeteCard').style.display = 'block';
-                document.getElementById('nombreResidente').innerText = vecino.nombre;
+                // NUBE: Si no lo encuentra local, busca en Supabase
+                if (!vecino && typeof supabaseDb !== 'undefined') {
+                    try {
+                        const { data: supaData, error } = await supabaseDb
+                            .from('vecinos_universal')
+                            .select('*')
+                            .eq('codigo', codBusqueda)
+                            .maybeSingle();
 
-                let extraLote = '';
-                if (vecino.rol == 4 && vecino.autorizado_por) {
-                    extraLote = ` (TEMP)`;
+                        if (supaData) {
+                            vecino = supaData;
+                        }
+                    } catch (e) {
+                        console.error("Error nube marbete:", e);
+                    }
                 }
 
-                document.getElementById('loteResidente').innerText = `LOTE ${vecino.lote}${extraLote}`;
+                if (vecino) {
+                    // Rellenar datos
+                    document.getElementById('marbeteCard').style.display = 'block';
+                    document.getElementById('nombreResidente').innerText = vecino.nombre;
 
-                // Generar Fecha y Hora Actual
-                const ahora = new Date();
-                const fechaStr = ahora.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
-                const horaStr = ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                document.getElementById('fechaGeneracion').innerText = `${fechaStr} a las ${horaStr}`;
+                    let extraLote = '';
+                    if (vecino.rol == 4 && vecino.autorizado_por) {
+                        extraLote = ` (TEMP)`;
+                    }
 
-                // Restricción para temporales: NO pueden autorizar visitas en marbete.html
-                if (vecino.rol == 4) {
-                    const btnVisita = document.getElementById('btnAutorizarVisita');
-                    if (btnVisita) btnVisita.style.display = 'none';
-                }
+                    document.getElementById('loteResidente').innerText = `LOTE ${vecino.lote}${extraLote}`;
 
-                const statusStrip = document.getElementById('statusStrip');
-                const demora = vecino.dias_demora || 0;
+                    // Generar Fecha y Hora Actual
+                    const ahora = new Date();
+                    const fechaStr = ahora.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                    const horaStr = ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    document.getElementById('fechaGeneracion').innerText = `${fechaStr} a las ${horaStr}`;
 
-                let contactoHTML = '';
-                if (config_db.correo || config_db.telefono) {
-                    contactoHTML = `<div style="margin-top: 20px; font-size: 0.9rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
-                                ${config_db.telefono ? '📞 ' + config_db.telefono : ''} ${config_db.correo ? '<br>✉️ ' + config_db.correo : ''}
-                            </div>`;
-                }
+                    // Restricción para temporales: NO pueden autorizar visitas en marbete.html
+                    if (vecino.rol == 4) {
+                        const btnVisita = document.getElementById('btnAutorizarVisita');
+                        if (btnVisita) btnVisita.style.display = 'none';
+                    }
 
-                if (vecino.status === 0 && demora > 60) {
-                    document.getElementById('marbeteCard').innerHTML = `
-                        <div style="background-color: #ef4444; color: white; padding: 30px 20px; text-align: center; border-radius: 1rem; border: 1px solid #7f1d1d; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-                            <h2 style="margin-bottom: 15px; font-size: 1.5rem; letter-spacing: 1px;">🚫 ACCESO BLOQUEADO</h2>
-                            <p style="font-size: 1.1rem; line-height: 1.5; font-weight: 500;">USTED TIENE PAGOS PENDIENTES.<br>FAVOR CONTACTE A LA JUNTA DIRECTIVA.</p>
-                            ${contactoHTML}
-                            <button onclick="window.location.href='index.html'" class="btn-glass btn-glass-secondary" style="margin-top: 20px; width: auto; display: inline-block;">Volver</button>
-                        </div>
-                    `;
-                } else if (vecino.status === 1) {
-                    statusStrip.className = 'status-strip status-verde';
-                    statusStrip.innerText = 'PAGOS AL DÍA';
+                    const statusStrip = document.getElementById('statusStrip');
+                    const demora = vecino.dias_demora || 0;
 
-                    const qrPrefix = (config_db.nombre || 'DELCO').replace(/\s+/g, '');
-                    const qrData = `${qrPrefix}-${vecino.lote}-${vecino.codigo || vecino.dpi}`;
-                    document.querySelector('#qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}&color=000000&bgcolor=ffffff`;
+                    let contactoHTML = '';
+                    if (config_db.correo || config_db.telefono) {
+                        contactoHTML = `<div style="margin-top: 20px; font-size: 0.9rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                                    ${config_db.telefono ? '📞 ' + config_db.telefono : ''} ${config_db.correo ? '<br>✉️ ' + config_db.correo : ''}
+                                </div>`;
+                    }
+
+                    if (vecino.status === 0 && demora > 60) {
+                        document.getElementById('marbeteCard').innerHTML = `
+                            <div style="background-color: #ef4444; color: white; padding: 30px 20px; text-align: center; border-radius: 1rem; border: 1px solid #7f1d1d; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                                <h2 style="margin-bottom: 15px; font-size: 1.5rem; letter-spacing: 1px;">🚫 ACCESO BLOQUEADO</h2>
+                                <p style="font-size: 1.1rem; line-height: 1.5; font-weight: 500;">USTED TIENE PAGOS PENDIENTES.<br>FAVOR CONTACTE A LA JUNTA DIRECTIVA.</p>
+                                ${contactoHTML}
+                                <button onclick="window.location.href='index.html'" class="btn-glass btn-glass-secondary" style="margin-top: 20px; width: auto; display: inline-block;">Volver</button>
+                            </div>
+                        `;
+                    } else if (vecino.status === 1) {
+                        statusStrip.className = 'status-strip status-verde';
+                        statusStrip.innerText = 'PAGOS AL DÍA';
+
+                        const qrPrefix = (config_db.nombre || 'DELCO').replace(/\s+/g, '');
+                        const qrData = `${qrPrefix}-${vecino.lote}-${vecino.codigo || vecino.dpi}`;
+                        document.querySelector('#qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}&color=000000&bgcolor=ffffff`;
+                    } else {
+                        statusStrip.className = 'status-strip status-rojo';
+                        statusStrip.innerText = 'PENDIENTE DE PAGO';
+
+                        // Mostrar mensaje de mora, pero SI genera QR y deja entrar
+                        document.querySelector('.qr-container').style.background = 'white';
+                        const qrPrefix = (config_db.nombre || 'DELCO').replace(/\s+/g, '');
+                        const qrData = `${qrPrefix}-${vecino.lote}-${vecino.codigo || vecino.dpi}`;
+                        document.querySelector('#qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}&color=000000&bgcolor=ffffff`;
+                    }
+
+                    // MOSTRAR MENSAJES (Bandeja)
+                    mostrarMensajes(vecino.id, codBusqueda);
+
                 } else {
-                    statusStrip.className = 'status-strip status-rojo';
-                    statusStrip.innerText = 'PENDIENTE DE PAGO';
-
-                    // Mostrar mensaje de mora, pero SI genera QR y deja entrar
-                    document.querySelector('.qr-container').style.background = 'white';
-                    const qrPrefix = (config_db.nombre || 'DELCO').replace(/\s+/g, '');
-                    const qrData = `${qrPrefix}-${vecino.lote}-${vecino.codigo || vecino.dpi}`;
-                    document.querySelector('#qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}&color=000000&bgcolor=ffffff`;
+                    document.getElementById('errorMsg').style.display = 'block';
+                    const errContact = document.getElementById('errorContacto');
+                    if (errContact && (config_db.correo || config_db.telefono)) {
+                        errContact.innerHTML = `¿Problemas? Contacte a la Junta Directiva:<br>
+                        ${config_db.telefono ? '📞 ' + config_db.telefono : ''} <br> ${config_db.correo ? '✉️ ' + config_db.correo : ''}`;
+                    }
                 }
-
-                // MOSTRAR MENSAJES (Bandeja)
-                mostrarMensajes(vecino.id, codBusqueda);
-
             } else {
-                document.getElementById('errorMsg').style.display = 'block';
-                const errContact = document.getElementById('errorContacto');
-                if (errContact && (config_db.correo || config_db.telefono)) {
-                    errContact.innerHTML = `¿Problemas? Contacte a la Junta Directiva:<br>
-                    ${config_db.telefono ? '📞 ' + config_db.telefono : ''} <br> ${config_db.correo ? '✉️ ' + config_db.correo : ''}`;
-                }
-            }
-        } else {
-            // Mostrar el dialogo para ingresar código si no vino por URL
-            document.getElementById('inputDialog').style.display = 'block';
+                // Mostrar el dialogo para ingresar código si no vino por URL
+                document.getElementById('inputDialog').style.display = 'block';
 
-            const footerTxt = document.getElementById('footerTexto');
-            if (footerTxt) {
-                const nombreFooter = config_db.nombre || 'MI CONDOMINIO';
-                footerTxt.innerHTML = `&copy; 2026 Gestión de Accesos - ${nombreFooter}`;
+                const footerTxt = document.getElementById('footerTexto');
+                if (footerTxt) {
+                    const nombreFooter = config_db.nombre || 'MI CONDOMINIO';
+                    footerTxt.innerHTML = `&copy; 2026 Gestión de Accesos - ${nombreFooter}`;
+                }
             }
         }
+
+        procesarMarbete();
 
         function irAVisitas() {
             const params = new URLSearchParams(window.location.search);
