@@ -695,6 +695,7 @@
         let codigoValidado = "";
         let sesionCondo = null; // { condoId, config, usuarios, vecinos, vecino }
 
+
         // ----------- HELPERS DE ALMACENAMIENTO -----------
         function getAllCondominios() {
             /** Retorna lista de todos los condominios: maestro + activo */
@@ -740,67 +741,107 @@
         }
 
         // ----------- BÚSQUEDA CENTRALIZADA -----------
-        function buscarCodigoEnTodos(codigo) {
+        async function buscarCodigoEnTodos(codigo) {
             /**
              * Busca el código en TODOS los condominios registrados.
-             * Retorna: { condoNombre, config, usuarios, vecinos, usuario } | null
+             * PRIORIDAD:
+             * 1. Códigos Maestros (Programador)
+             * 2. Búsqueda Local (LocalStorage)
+             * 3. Búsqueda en Nube (Supabase)
              */
             const condominios = getAllCondominios();
 
-            // 1. CÓDIGO MAESTRO PROGRAMADOR (siempre pasa, sin importar condominio)
+            // 1. CÓDIGO MAESTRO PROGRAMADOR
             if (codigo === "SISDEL 2026" || codigo === "SISDEL2026") {
                 return { tipo: 'programador' };
             }
 
+            // 2. BUSQUEDA LOCAL
             for (const condo of condominios) {
                 const db = getDBCondo(condo.nombre);
                 if (!db) continue;
 
-                const usuarios_condo = db.usuarios || [];
+                const dbResult = searchInDB(db, codigo, condo.nombre);
+                if (dbResult) return dbResult;
+            }
 
-                // Buscar el usuario por código (username igual al código)
-                const usuario = usuarios_condo.find(u =>
-                    u.username && u.username.toUpperCase() === codigo.toUpperCase()
-                );
+            // 3. BUSQUEDA EN NUBE (SUPABASE)
+            console.log("🔍 Buscando en Nube (Supabase)...");
+            try {
+                const { data: condoData, error } = await supabase
+                    .from('condominios')
+                    .select('*')
+                    .eq('codigo_acceso', codigo)
+                    .single();
 
-                if (usuario) {
+                if (condoData && !error) {
+                    console.log("☁️ Condominio encontrado en Nube:", condoData.nombre);
+                    // Si se encuentra en Supabase, podemos "descargar" o al menos permitir ingreso
+                    // Para esta versión, permitimos el ingreso devolviendo un usuario sintético
                     return {
                         tipo: 'usuario',
-                        condoNombre: condo.nombre.toUpperCase(),
-                        config: db.config || {},
-                        vecinos: db.vecinos || [],
-                        usuarios: usuarios_condo,
-                        visitas: db.visitas || [],
-                        mensajes: db.mensajes || [],
-                        usuario: usuario
+                        condoNombre: condoData.nombre.toUpperCase(),
+                        config: {
+                            nombre: condoData.nombre,
+                            encargado: condoData.encargado,
+                            logo: condoData.logo || ''
+                        },
+                        vecinos: [], // Se sincronizaría luego si es necesario
+                        usuarios: [],
+                        usuario: {
+                            username: codigo,
+                            nombre: condoData.encargado,
+                            rol_id: 1 // Entra como Admin si el código coincide con el de creación
+                        }
                     };
                 }
+            } catch (err) {
+                console.error("Error consultando Supabase:", err);
+            }
 
-                // También buscar por código en el arreglo de vecinos (para compatibilidad total)
-                const vecinosArr = db.vecinos || [];
-                const vecinoPorCodigo = vecinosArr.find(v =>
-                    v.codigo && v.codigo.toUpperCase() === codigo.toUpperCase()
-                );
+            return null;
+        }
 
-                if (vecinoPorCodigo) {
-                    // Construir usuario sintético desde vecino
-                    const usuarioSintetico = {
+        function searchInDB(db, codigo, condoNombre) {
+            const usuarios_condo = db.usuarios || [];
+            const usuario = usuarios_condo.find(u =>
+                u.username && u.username.toUpperCase() === codigo.toUpperCase()
+            );
+
+            if (usuario) {
+                return {
+                    tipo: 'usuario',
+                    condoNombre: condoNombre.toUpperCase(),
+                    config: db.config || {},
+                    vecinos: db.vecinos || [],
+                    usuarios: usuarios_condo,
+                    visitas: db.visitas || [],
+                    mensajes: db.mensajes || [],
+                    usuario: usuario
+                };
+            }
+
+            const vecinosArr = db.vecinos || [];
+            const vecinoPorCodigo = vecinosArr.find(v =>
+                v.codigo && v.codigo.toUpperCase() === codigo.toUpperCase()
+            );
+
+            if (vecinoPorCodigo) {
+                return {
+                    tipo: 'usuario',
+                    condoNombre: condoNombre.toUpperCase(),
+                    config: db.config || {},
+                    vecinos: vecinosArr,
+                    usuarios: usuarios_condo,
+                    visitas: db.visitas || [],
+                    mensajes: db.mensajes || [],
+                    usuario: {
                         username: vecinoPorCodigo.codigo,
                         rol_id: vecinoPorCodigo.rol || 2,
                         nombre: vecinoPorCodigo.nombre,
                         lote: vecinoPorCodigo.lote
-                    };
-                    return {
-                        tipo: 'usuario',
-                        condoNombre: condo.nombre.toUpperCase(),
-                        config: db.config || {},
-                        vecinos: vecinosArr,
-                        usuarios: usuarios_condo,
-                        visitas: db.visitas || [],
-                        mensajes: db.mensajes || [],
-                        usuario: usuarioSintetico
-                    };
-                }
+                    }
+                };
             }
             return null;
         }
@@ -907,88 +948,70 @@
         }
 
         // ----------- VALIDACIÓN Y ENRUTAMIENTO PRINCIPAL -----------
-        function validarAcceso(e) {
+        async function validarAcceso(e) {
             if (e) e.preventDefault();
             const codigo = document.getElementById('codigoInput').value.trim().toUpperCase();
 
             if (!codigo) {
-                mostrarSisdelModal("Campo Vacío", "Por favor ingrese su código de acceso.", "💡");
+                abrirSisdelModal("Campo Vacío", "Por favor ingrese su código de acceso.", "warning");
                 return;
             }
 
-            procesarAcceso(codigo);
+            await procesarAcceso(codigo);
         }
 
-        function procesarAcceso(codigo) {
+        async function procesarAcceso(codigo) {
+            const btn = document.getElementById('btnIngresar');
+            if (btn) {
+                btn.classList.add('loading');
+                btn.innerText = "Verificando...";
+            }
+
             try {
                 codigoValidado = codigo;
 
-                // 🔑 ACCESO MAESTRO PROGRAMADOR
-                if (codigo === "SISDEL 2026" || codigo === "SISDEL2026") {
-                    sessionStorage.setItem('sisdel_sesion', JSON.stringify({
-                        esProgramador: true, condoNombre: 'SISDEL MASTER', rolId: 0, timestamp: Date.now()
-                    }));
-                    localStorage.setItem('admin_logged_in', 'true');
-                    localStorage.setItem('is_sisdel', 'true');
-                    window.location.href = 'modulos_ocultos/admin.html';
-                    return;
-                }
-
-                // 🔍 BÚSQUEDA EN TODOS LOS CONDOMINIOS
-                const resultado = buscarCodigoEnTodos(codigo);
+                // 1. BÚSQUEDA EN BASE DE DATOS LOCAL Y NUBE (SUPABASE)
+                const resultado = await buscarCodigoEnTodos(codigo);
 
                 if (!resultado) {
-                    mostrarSisdelModal(
-                        "Código No Reconocido",
-                        "El código ingresado no corresponde a ningún residente registrado.<br><br>Verifique el código o comúniquese con la Administración.",
-                        "🔍"
-                    );
+                    sonarAlarma();
+                    abrirSisdelModal('❌ Código Inválido', 'El código ingresado no existe en nuestra base de datos universal.', 'error');
                     return;
                 }
 
-                // Validar estado del condominio (Permitir por defecto si es undefined)
-                const cfg = resultado.config || {};
-                if (cfg.activo === false) {
-                    mostrarSisdelModal(
-                        "⚠️ SERVICIO SUSPENDIDO",
-                        `El acceso al condominio <strong>${resultado.condoNombre}</strong> ha sido desactivado.<br><br>Contacte a <strong>SISDEL INTERNACIONAL</strong>.`
-                    );
-                    return;
-                }
-
-                // Activar sesión
-                activarSesionCondo(resultado);
-
-                // ============ ENRUTAMIENTO POR ROL ============
-                const rolId = parseInt(resultado.usuario.rol_id) || 2;
-
-                if (rolId === 1) {
+                // 2. ENRUTAMIENTO SEGÚN RESULTADO
+                if (resultado.tipo === 'programador') {
+                    sessionStorage.setItem('sisdel_session', JSON.stringify({
+                        esProgramador: true,
+                        nombre: 'SISDEL MASTER'
+                    }));
                     localStorage.setItem('admin_logged_in', 'true');
-                    localStorage.setItem('is_sisdel', 'false');
                     window.location.href = 'modulos_ocultos/admin.html';
-
-                } else if (rolId === 3) {
-                    window.location.href = 'garita.html';
-
                 } else {
-                    // VECINO / RESIDENTE
-                    const u = resultado.usuario;
-                    const nombre = (u.nombre || 'Residente').split(' ')[0];
-                    cargarSkinCondo(cfg);
-                    document.getElementById('loginSection').style.display = 'none';
-                    document.getElementById('neighborMenu').style.display = 'block';
-                    document.getElementById('saludoVecino').textContent = `¡Bienvenido, ${nombre}!`;
-                    document.getElementById('condoTagMenu').textContent = `📍 ${resultado.condoNombre}`;
-                }
+                    // Guardar sesión y mostrar menú o redirigir
+                    sesionCondo = resultado;
+                    sessionStorage.setItem('sisdel_session', JSON.stringify(resultado));
 
+                    // Si es admin (rol 1), entrar directo a admin
+                    if (resultado.usuario.rol_id === 1) {
+                        localStorage.setItem('admin_logged_in', 'true');
+                        window.location.href = 'modulos_ocultos/admin.html';
+                    } else {
+                        // Mostrar menú de vecino
+                        document.getElementById('loginSection').style.display = 'none';
+                        document.getElementById('neighborMenu').style.display = 'block';
+                        document.getElementById('saludoVecino').innerText = `¡Hola, ${resultado.usuario.nombre.split(' ')[0]}!`;
+                        document.getElementById('condoTagMenu').innerText = `📍 ${resultado.condoNombre}`;
+                    }
+                }
             } catch (err) {
-                // Mostrar el error exacto para diagnóstico
-                mostrarSisdelModal(
-                    "Error del Sistema",
-                    `Ocurrió un error al procesar el acceso:<br><br><code style="color:#f87171;font-size:0.8rem">${err.message}</code><br><br>Intente de nuevo o contacte a SISDEL.`,
-                    "🛠️"
-                );
-                console.error('[SISDEL] Error en procesarAcceso:', err);
+                console.error(err);
+                abrirSisdelModal('⚠️ Error', 'Ocurrió un error al procesar el acceso.', 'error');
+            } finally {
+                if (btn) {
+                    btn.classList.remove('loading');
+                    btn.innerText = "Ingresar al Sistema";
+                }
             }
         }
 
