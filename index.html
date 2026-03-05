@@ -1050,6 +1050,22 @@
                 }
             }
         }
+        function sonarAlarma() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.2);
+            } catch (e) {
+                console.warn("No se pudo sonar la alarma:", e);
+            }
+        }
 
         // ----------- FUNCIONES DEL MENÚ VECINO -----------
         function irAMarbete() {
