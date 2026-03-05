@@ -767,14 +767,14 @@
 
             // 3. BUSQUEDA EN NUBE (SUPABASE)
             console.log("🔍 Buscando en Nube (Supabase)...");
-            if (typeof supabase === 'undefined') {
+            if (typeof supabaseDb === 'undefined') {
                 console.error("❌ Supabase no está inicializado.");
                 return null;
             }
 
             try {
                 // A. Buscar si es el código de un CONDOMINIO (Admin)
-                const { data: condoData, error: condoErr } = await supabase
+                const { data: condoData, error: condoErr } = await supabaseDb
                     .from('condominios')
                     .select('*')
                     .eq('codigo_acceso', codigo)
@@ -803,7 +803,7 @@
                 }
 
                 // B. Buscar si es un VECINO específico en cualquier condominio
-                const { data: vecinoData, error: vecinoErr } = await supabase
+                const { data: vecinoData, error: vecinoErr } = await supabaseDb
                     .from('vecinos_universal')
                     .select('*')
                     .eq('codigo', codigo)

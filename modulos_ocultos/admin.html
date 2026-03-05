@@ -1264,7 +1264,7 @@
 
             try {
                 // Primero intentamos actualizar si ya existe (por código)
-                const { data, error: searchError } = await supabase
+                const { data, error: searchError } = await supabaseDb
                     .from('vecinos_universal')
                     .select('id')
                     .eq('codigo', datos.codigo)
@@ -1272,7 +1272,7 @@
 
                 if (data) {
                     // Actualizar
-                    const { error: updateError } = await supabase
+                    const { error: updateError } = await supabaseDb
                         .from('vecinos_universal')
                         .update({
                             condo_nombre: condoNombre,
@@ -1288,7 +1288,7 @@
                     if (updateError) throw updateError;
                 } else {
                     // Insertar nuevo
-                    const { error: insertError } = await supabase
+                    const { error: insertError } = await supabaseDb
                         .from('vecinos_universal')
                         .insert([{
                             condo_nombre: condoNombre,
@@ -1926,7 +1926,7 @@
 
             if (confirm(`🌟 Se creará el proyecto: "${nombre}"\nAdministrador: ${encargado}\nCódigo de Acceso Generado: ${codigoAdmin}\n\n¿Confirmar creación de Base de Datos nueva?`)) {
 
-                const { data, error } = await supabase
+                const { data, error } = await supabaseDb
                     .from('condominios')
                     .insert([
                         {

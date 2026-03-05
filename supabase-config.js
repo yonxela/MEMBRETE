@@ -6,7 +6,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 // Inicialización del cliente Supabase
 const { createClient } = window.supabase;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+window.supabaseDb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 console.log('✅ SISDEL DATACENTER: Conexión con Supabase establecida.');
 
