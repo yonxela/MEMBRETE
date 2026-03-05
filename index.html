@@ -768,16 +768,15 @@
             // 3. BUSQUEDA EN NUBE (SUPABASE)
             console.log("🔍 Buscando en Nube (Supabase)...");
             try {
-                const { data: condoData, error } = await supabase
+                // A. Buscar si es el código de un CONDOMINIO (Admin)
+                const { data: condoData, error: condoErr } = await supabase
                     .from('condominios')
                     .select('*')
                     .eq('codigo_acceso', codigo)
-                    .single();
+                    .maybeSingle();
 
-                if (condoData && !error) {
+                if (condoData) {
                     console.log("☁️ Condominio encontrado en Nube:", condoData.nombre);
-                    // Si se encuentra en Supabase, podemos "descargar" o al menos permitir ingreso
-                    // Para esta versión, permitimos el ingreso devolviendo un usuario sintético
                     return {
                         tipo: 'usuario',
                         condoNombre: condoData.nombre.toUpperCase(),
@@ -786,15 +785,42 @@
                             encargado: condoData.encargado,
                             logo: condoData.logo || ''
                         },
-                        vecinos: [], // Se sincronizaría luego si es necesario
+                        vecinos: [],
                         usuarios: [],
                         usuario: {
                             username: codigo,
                             nombre: condoData.encargado,
-                            rol_id: 1 // Entra como Admin si el código coincide con el de creación
+                            rol_id: 1 // Entra como Admin
                         }
                     };
                 }
+
+                // B. Buscar si es un VECINO específico en cualquier condominio
+                const { data: vecinoData, error: vecinoErr } = await supabase
+                    .from('vecinos_universal')
+                    .select('*')
+                    .eq('codigo', codigo)
+                    .maybeSingle();
+
+                if (vecinoData) {
+                    console.log("☁️ Vecino encontrado en Nube:", vecinoData.nombre);
+                    return {
+                        tipo: 'usuario',
+                        condoNombre: vecinoData.condo_nombre.toUpperCase(),
+                        config: {
+                            nombre: vecinoData.condo_nombre,
+                        },
+                        vecinos: [], // Se sincronizaría localmente si fuera necesario
+                        usuarios: [],
+                        usuario: {
+                            username: vecinoData.codigo,
+                            nombre: vecinoData.nombre,
+                            rol_id: vecinoData.rol || 2,
+                            lote: vecinoData.lote
+                        }
+                    };
+                }
+
             } catch (err) {
                 console.error("Error consultando Supabase:", err);
             }

@@ -16,7 +16,6 @@
     <script src="../supabase-config.js"></script>
 
     <style>
-
         :root {
             --primary-color: #3b82f6;
             --primary-hover: #2563eb;
@@ -1215,6 +1214,9 @@
             // Sincronizar con delco_usuarios para permitir el login
             actualizarUsuariosLogin(datosFormulario);
 
+            // --- NUEVA SINCRONIZACIÓN UNIVERSAL (Supabase) ---
+            sincronizarVecinoSupabase(datosFormulario);
+
             guardarDatosLocal();
             renderizarTabla();
             this.reset();
@@ -1252,6 +1254,59 @@
             }
 
             localStorage.setItem('delco_usuarios', JSON.stringify(usuarios_db));
+        }
+
+        async function sincronizarVecinoSupabase(datos) {
+            const configActual = JSON.parse(localStorage.getItem('delco_config')) || {};
+            const condoNombre = (configActual.nombre || 'DESCONOCIDO').toUpperCase();
+
+            console.log("☁️ Sincronizando vecino con Supabase...", datos.nombre);
+
+            try {
+                // Primero intentamos actualizar si ya existe (por código)
+                const { data, error: searchError } = await supabase
+                    .from('vecinos_universal')
+                    .select('id')
+                    .eq('codigo', datos.codigo)
+                    .maybeSingle();
+
+                if (data) {
+                    // Actualizar
+                    const { error: updateError } = await supabase
+                        .from('vecinos_universal')
+                        .update({
+                            condo_nombre: condoNombre,
+                            nombre: datos.nombre,
+                            lote: datos.lote,
+                            rol: datos.rol,
+                            status: datos.status,
+                            telefono: datos.telefono,
+                            placas: datos.placas,
+                            dias_demora: datos.dias_demora
+                        })
+                        .eq('id', data.id);
+                    if (updateError) throw updateError;
+                } else {
+                    // Insertar nuevo
+                    const { error: insertError } = await supabase
+                        .from('vecinos_universal')
+                        .insert([{
+                            condo_nombre: condoNombre,
+                            nombre: datos.nombre,
+                            lote: datos.lote,
+                            codigo: datos.codigo,
+                            rol: datos.rol,
+                            status: datos.status,
+                            telefono: datos.telefono,
+                            placas: datos.placas,
+                            dias_demora: datos.dias_demora
+                        }]);
+                    if (insertError) throw insertError;
+                }
+                console.log("✅ Vecino sincronizado en la nube.");
+            } catch (err) {
+                console.error("❌ Error de sincronización Supabase:", err);
+            }
         }
 
         function editarVecino(id) {
@@ -1868,14 +1923,14 @@
             const codigoAdmin = generarCodigoAleatorio();
 
             if (confirm(`🌟 Se creará el proyecto: "${nombre}"\nAdministrador: ${encargado}\nCódigo de Acceso Generado: ${codigoAdmin}\n\n¿Confirmar creación de Base de Datos nueva?`)) {
-                
+
                 const { data, error } = await supabase
                     .from('condominios')
                     .insert([
-                        { 
-                            nombre: nombre.toUpperCase(), 
-                            encargado: encargado.toUpperCase(), 
-                            correo: 'NUEVO@SISTEMA.COM', 
+                        {
+                            nombre: nombre.toUpperCase(),
+                            encargado: encargado.toUpperCase(),
+                            correo: 'NUEVO@SISTEMA.COM',
                             tel: '----',
                             codigo_acceso: codigoAdmin,
                             activo: true
