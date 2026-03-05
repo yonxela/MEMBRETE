@@ -2,7 +2,7 @@
 // Este archivo centraliza la conexión para que todo el sistema esté sincronizado.
 
 const SUPABASE_URL = 'https://rxrodfskmvldozpznyrp.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_rm-U3aeXydu4W0wdSMLW5w_I4LIW5MO';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4cm9kZnNrbXZsZG96cHpueXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4ODY4MTQsImV4cCI6MjA4NzQ2MjgxNH0.A9GVR_rOnoH2pjz0ByZEMvtWfGe7FOI9C6j1_D-fTos';
 
 // Inicialización del cliente Supabase
 const { createClient } = window.supabase;
