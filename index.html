@@ -767,9 +767,14 @@
 
             // 3. BUSQUEDA EN NUBE (SUPABASE)
             console.log("🔍 Buscando en Nube (Supabase)...");
+            if (typeof supabase === 'undefined') {
+                console.error("❌ Supabase no está inicializado.");
+                return null;
+            }
+
             try {
                 // A. Buscar si es el código de un CONDOMINIO (Admin)
-                const { data: condoData, error: condoErr } = await supabase
+                const { data: condoData } = await supabase
                     .from('condominios')
                     .select('*')
                     .eq('codigo_acceso', codigo)
@@ -796,29 +801,34 @@
                 }
 
                 // B. Buscar si es un VECINO específico en cualquier condominio
-                const { data: vecinoData, error: vecinoErr } = await supabase
-                    .from('vecinos_universal')
-                    .select('*')
-                    .eq('codigo', codigo)
-                    .maybeSingle();
+                // Usamos un try-catch interno para que si la tabla no existe no rompa todo el login
+                try {
+                    const { data: vecinoData } = await supabase
+                        .from('vecinos_universal')
+                        .select('*')
+                        .eq('codigo', codigo)
+                        .maybeSingle();
 
-                if (vecinoData) {
-                    console.log("☁️ Vecino encontrado en Nube:", vecinoData.nombre);
-                    return {
-                        tipo: 'usuario',
-                        condoNombre: vecinoData.condo_nombre.toUpperCase(),
-                        config: {
-                            nombre: vecinoData.condo_nombre,
-                        },
-                        vecinos: [], // Se sincronizaría localmente si fuera necesario
-                        usuarios: [],
-                        usuario: {
-                            username: vecinoData.codigo,
-                            nombre: vecinoData.nombre,
-                            rol_id: vecinoData.rol || 2,
-                            lote: vecinoData.lote
-                        }
-                    };
+                    if (vecinoData) {
+                        console.log("☁️ Vecino encontrado en Nube:", vecinoData.nombre);
+                        return {
+                            tipo: 'usuario',
+                            condoNombre: (vecinoData.condo_nombre || "CONDOMINIO").toUpperCase(),
+                            config: {
+                                nombre: vecinoData.condo_nombre,
+                            },
+                            vecinos: [],
+                            usuarios: [],
+                            usuario: {
+                                username: vecinoData.codigo,
+                                nombre: vecinoData.nombre,
+                                rol_id: vecinoData.rol || 2,
+                                lote: vecinoData.lote
+                            }
+                        };
+                    }
+                } catch (internalErr) {
+                    console.warn("Tabla vecinos_universal no accesible:", internalErr);
                 }
 
             } catch (err) {
@@ -887,8 +897,8 @@
                 return;
             }
 
-            previewTimeout = setTimeout(() => {
-                const resultado = buscarCodigoEnTodos(val);
+            previewTimeout = setTimeout(async () => {
+                const resultado = await buscarCodigoEnTodos(val);
                 if (resultado && resultado.tipo === 'usuario') {
                     const cfg = resultado.config || {};
                     const u = resultado.usuario;
@@ -1032,7 +1042,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                mostrarSisdelModal('⚠️ Error', 'Ocurrió un error al procesar el acceso.', 'error');
+                mostrarSisdelModal('⚠️ Error', `Ocurrió un error al procesar el acceso:<br><small>${err.message || 'Error desconocido'}</small>`, 'error');
             } finally {
                 if (btn) {
                     btn.classList.remove('loading');
