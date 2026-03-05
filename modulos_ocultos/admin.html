@@ -686,6 +686,10 @@
                     style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); padding: 10px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit;">
                     👁️ Mostrar Ocultos
                 </button>
+                <button onclick="borrarTodaLaBaseDeDatos()"
+                    style="background: #ef4444; color: white; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; margin-left: 10px;">
+                    🗑️ LIMPIAR TODO (RESET)
+                </button>
             </div>
 
             <!-- Sección de condominios ocultos -->
@@ -1795,19 +1799,43 @@
             }
         }
 
-        function mostrarMaestroSisdel() {
+        async function mostrarMaestroSisdel() {
             const tabla = document.getElementById('listaCondominiosSisdel');
-            tabla.innerHTML = '';
+            tabla.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align:center; color: #94a3b8;">Sincronizando con la Nube... ☁️</td></tr>';
+            document.getElementById('modalMaestroSisdel').style.display = 'flex';
 
-            // Refrescar listado
-            DB_MAESTRA_SISDEL = JSON.parse(localStorage.getItem('SISDEL_LISTADO_MASTER')) || DB_MAESTRA_SISDEL;
+            let condominiosNube = [];
+            try {
+                if (typeof supabaseDb !== 'undefined') {
+                    const { data, error } = await supabaseDb
+                        .from('condominios')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+                    if (data) condominiosNube = data;
+                }
+            } catch (err) {
+                console.error("Error cargando DB MAESTRA:", err);
+            }
+
+            // Actualizar local maestro para referencia
+            DB_MAESTRA_SISDEL = condominiosNube.map(c => ({
+                nombre: c.nombre,
+                encargado: c.encargado,
+                correo: c.correo,
+                tel: c.tel,
+                codigo_acceso: c.codigo_acceso
+            }));
+            localStorage.setItem('SISDEL_LISTADO_MASTER', JSON.stringify(DB_MAESTRA_SISDEL));
+
+            tabla.innerHTML = '';
             const ocultos = JSON.parse(localStorage.getItem('SISDEL_OCULTOS')) || [];
 
             // Solo mostrar los NO ocultos
-            const visibles = DB_MAESTRA_SISDEL.filter(c => !ocultos.includes(c.nombre.toUpperCase()));
+            const visibles = condominiosNube.filter(c => !ocultos.includes(c.nombre.toUpperCase()));
 
             if (visibles.length === 0) {
-                tabla.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align:center; color: #94a3b8;">Sin condominios visibles</td></tr>';
+                tabla.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align:center; color: #94a3b8;">Sin condominios visibles en la Nube</td></tr>';
+                return;
             }
 
             visibles.forEach(c => {
@@ -1836,8 +1864,19 @@
                 `;
                 tabla.appendChild(tr);
             });
+        }
 
-            document.getElementById('modalMaestroSisdel').style.display = 'flex';
+        function borrarTodaLaBaseDeDatos() {
+            if (confirm("🚨 ¡ADVERTENCIA CRÍTICA! 🚨\\n\\n¿Estás seguro de que deseas ELIMINAR TODOS los datos locales del sistema entero? Esto es un 'Hard Reset' y la computadora quedará en blanco.\\n\\nTodo debe estar en la nube para no perderse.\\n\\nDale OK para luego confirmar.")) {
+                const conf = prompt("Escribe CONFIRMAR en mayúsculas:");
+                if (conf === "CONFIRMAR") {
+                    localStorage.clear();
+                    alert("✅ SISTEMA REINICIADO. Todo ha sido borrado de esta computadora.");
+                    window.location.href = '../index.html';
+                } else {
+                    alert("❌ Acción abortada.");
+                }
+            }
         }
 
         function ocultarCondominio(nombre) {
@@ -2045,7 +2084,7 @@
             }
         }
 
-        function ejecutarCambioProyecto(nuevoNombre, nuevoAdmin = null, nuevaClave = null, nombreRealAdmin = 'ADMINISTRADOR') {
+        async function ejecutarCambioProyecto(nuevoNombre, nuevoAdmin = null, nuevaClave = null, nombreRealAdmin = 'ADMINISTRADOR') {
             // 1. OBTENER ESTADO ACTUAL PARA GUARDARLO (RESPALDO)
             const configActual = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'MI CONDOMINIO' };
             const nombreActual = configActual.nombre.toUpperCase();
@@ -2062,35 +2101,66 @@
             // 2. RESPALDAR CONDOMINIO SALIENTE EN SU PROPIO CUBO
             localStorage.setItem(`SISDEL_DB_${nombreActual}`, JSON.stringify(datosActuales));
 
-            // 3. BUSCAR Y CARGAR DATOS DEL NUEVO CONDOMINIO
-            const datosNuevos = JSON.parse(localStorage.getItem(`SISDEL_DB_${nuevoNombre.toUpperCase()}`));
+            // Buscar info en el listado maestro para pre-poblar
+            const esteCondo = DB_MAESTRA_SISDEL.find(c => c.nombre.toUpperCase() === nuevoNombre.toUpperCase());
 
-            if (datosNuevos) {
-                // Restaurar base de datos existente de este cliente
-                localStorage.setItem('delco_config', JSON.stringify(datosNuevos.config));
-                localStorage.setItem('delco_vecinos', JSON.stringify(datosNuevos.vecinos || []));
-                localStorage.setItem('delco_usuarios', JSON.stringify(datosNuevos.usuarios || []));
-                localStorage.setItem('delco_visitas', JSON.stringify(datosNuevos.visitas || []));
-                localStorage.setItem('delco_mensajes', JSON.stringify(datosNuevos.mensajes || []));
-                localStorage.setItem('delco_historial_escaneos', JSON.stringify(datosNuevos.historial || []));
+            const nuevaConfig = {
+                nombre: nuevoNombre,
+                nombreMarbete: nuevoNombre, // Sincronizado
+                setup_complete: true,
+                encargado: esteCondo ? esteCondo.encargado : nombreRealAdmin,
+                correo: esteCondo ? esteCondo.correo : '',
+                telefono: esteCondo ? esteCondo.tel : '',
+                activo: true
+            };
+            localStorage.setItem('delco_config', JSON.stringify(nuevaConfig));
+
+            // BAJAR VECINOS DESDE SUPABASE ☁️
+            let vecinosBajados = [];
+            try {
+                if (typeof supabaseDb !== 'undefined') {
+                    const { data, error } = await supabaseDb
+                        .from('vecinos_universal')
+                        .select('*')
+                        .eq('condo_nombre', nuevoNombre.toUpperCase());
+
+                    if (data && data.length > 0) {
+                        // Mapear de supabase a formato local
+                        vecinosBajados = data.map(v => ({
+                            id: Date.now() + Math.floor(Math.random() * 1000),
+                            nombre: v.nombre,
+                            lote: v.lote,
+                            dpi: v.codigo, // Usar codigo como dpi temporalmente para control
+                            telefono: v.telefono,
+                            placas: v.placas,
+                            codigo: v.codigo,
+                            status: v.status,
+                            dias_demora: v.dias_demora,
+                            rol: v.rol
+                        }));
+                    }
+                }
+            } catch (err) { console.error("Error bajando vecinos:", err); }
+
+            if (vecinosBajados.length > 0) {
+                localStorage.setItem('delco_vecinos', JSON.stringify(vecinosBajados));
+
+                // Actualizar logines también
+                let usuarios = [
+                    { username: 'GARITA', password_hash: 'GARITA2026', rol_id: 3, nombre: 'SEGURIDAD' }
+                ];
+                for (let v of vecinosBajados) {
+                    if (v.rol === 1) { // admin
+                        usuarios.push({ username: v.codigo.toLowerCase(), password_hash: v.lote.toLowerCase(), rol_id: 1, nombre: v.nombre, lote: v.lote });
+                        usuarios.push({ username: 'directiva', password_hash: v.codigo, rol_id: 1, nombre: v.nombre });
+                    } else { // vecino normal u otro
+                        usuarios.push({ username: v.codigo.toLowerCase(), password_hash: v.lote.toLowerCase(), rol_id: v.rol, nombre: v.nombre, lote: v.lote });
+                    }
+                }
+                localStorage.setItem('delco_usuarios', JSON.stringify(usuarios));
+
             } else {
-                // Iniciar proyecto nuevo desde cero (Pero preservando los otros)
-                // Buscar info en el listado maestro para pre-poblar
-                const esteCondo = DB_MAESTRA_SISDEL.find(c => c.nombre.toUpperCase() === nuevoNombre.toUpperCase());
-
-                const nuevaConfig = {
-                    nombre: nuevoNombre,
-                    nombreMarbete: nuevoNombre, // Sincronizado
-                    setup_complete: true,
-                    encargado: esteCondo ? esteCondo.encargado : nombreRealAdmin,
-                    correo: esteCondo ? esteCondo.correo : '',
-                    telefono: esteCondo ? esteCondo.tel : '',
-                    activo: true
-                };
-                localStorage.setItem('delco_config', JSON.stringify(nuevaConfig));
-
-                // --- AGREGAR AL ENCARGADO COMO PRIMER VECINO AUTOMÁTICAMENTE ---
-                // Usar el código generado que viene como parámetro, o generar uno nuevo
+                // Si no había nada en la nube (condominio nuevo real)
                 const codigoAdminFinal = nuevaClave || generarCodigoAleatorio();
                 const primerVecino = {
                     id: Date.now(),
@@ -2105,19 +2175,35 @@
                 };
                 localStorage.setItem('delco_vecinos', JSON.stringify([primerVecino]));
 
-                localStorage.setItem('delco_visitas', JSON.stringify([]));
-                localStorage.setItem('delco_mensajes', JSON.stringify([]));
-                localStorage.setItem('delco_historial_escaneos', JSON.stringify([]));
-
-                // Usuarios maestros por defecto — usar el código generado como credenciales
                 let usuarios = [
                     { username: 'DIRECTIVA', password_hash: codigoAdminFinal, rol_id: 1, nombre: nombreRealAdmin },
-                    { username: 'GARITA', password_hash: 'GARITA2026', rol_id: 3, nombre: 'SEGURIDAD' }
+                    { username: 'GARITA', password_hash: 'GARITA2026', rol_id: 3, nombre: 'SEGURIDAD' },
+                    { username: codigoAdminFinal.toLowerCase(), password_hash: 'dir-01', rol_id: 1, nombre: nombreRealAdmin, lote: 'DIR-01' }
                 ];
-                // También registrar al admin con su código como username para login directo
-                usuarios.push({ username: codigoAdminFinal.toUpperCase(), password_hash: 'dir-01', rol_id: 1, nombre: nombreRealAdmin, lote: 'DIR-01' });
                 localStorage.setItem('delco_usuarios', JSON.stringify(usuarios));
+
+                // --- Insertar primer vecino en Supabase ---
+                try {
+                    if (typeof supabaseDb !== 'undefined') {
+                        await supabaseDb.from('vecinos_universal').insert([{
+                            condo_nombre: nuevoNombre.toUpperCase(),
+                            nombre: primerVecino.nombre,
+                            lote: primerVecino.lote,
+                            codigo: primerVecino.codigo,
+                            rol: primerVecino.rol,
+                            status: primerVecino.status,
+                            telefono: primerVecino.telefono,
+                            dias_demora: 0
+                        }]);
+                    }
+                } catch (e) { console.error("Primer vecino a la nube fallido", e); }
             }
+
+            // Preservar visitas y mensajes del localStorage de ese cliente (o ponerlo en blanco si no existe)
+            const datosNuevos = JSON.parse(localStorage.getItem(`SISDEL_DB_${nuevoNombre.toUpperCase()}`));
+            localStorage.setItem('delco_visitas', JSON.stringify(datosNuevos ? (datosNuevos.visitas || []) : []));
+            localStorage.setItem('delco_mensajes', JSON.stringify(datosNuevos ? (datosNuevos.mensajes || []) : []));
+            localStorage.setItem('delco_historial_escaneos', JSON.stringify(datosNuevos ? (datosNuevos.historial || []) : []));
 
             alert(`🚀 CONEXIÓN EXITOSA A: ${nuevoNombre.toUpperCase()}`);
             window.location.reload();
