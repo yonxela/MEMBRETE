@@ -774,11 +774,13 @@
 
             try {
                 // A. Buscar si es el código de un CONDOMINIO (Admin)
-                const { data: condoData } = await supabase
+                const { data: condoData, error: condoErr } = await supabase
                     .from('condominios')
                     .select('*')
                     .eq('codigo_acceso', codigo)
                     .maybeSingle();
+
+                if (condoErr && condoErr.code !== 'PGRST116') throw condoErr; // PGRST116 = no rows found
 
                 if (condoData) {
                     console.log("☁️ Condominio encontrado en Nube:", condoData.nombre);
@@ -801,38 +803,36 @@
                 }
 
                 // B. Buscar si es un VECINO específico en cualquier condominio
-                // Usamos un try-catch interno para que si la tabla no existe no rompa todo el login
-                try {
-                    const { data: vecinoData } = await supabase
-                        .from('vecinos_universal')
-                        .select('*')
-                        .eq('codigo', codigo)
-                        .maybeSingle();
+                const { data: vecinoData, error: vecinoErr } = await supabase
+                    .from('vecinos_universal')
+                    .select('*')
+                    .eq('codigo', codigo)
+                    .maybeSingle();
 
-                    if (vecinoData) {
-                        console.log("☁️ Vecino encontrado en Nube:", vecinoData.nombre);
-                        return {
-                            tipo: 'usuario',
-                            condoNombre: (vecinoData.condo_nombre || "CONDOMINIO").toUpperCase(),
-                            config: {
-                                nombre: vecinoData.condo_nombre,
-                            },
-                            vecinos: [],
-                            usuarios: [],
-                            usuario: {
-                                username: vecinoData.codigo,
-                                nombre: vecinoData.nombre,
-                                rol_id: vecinoData.rol || 2,
-                                lote: vecinoData.lote
-                            }
-                        };
-                    }
-                } catch (internalErr) {
-                    console.warn("Tabla vecinos_universal no accesible:", internalErr);
+                if (vecinoErr && vecinoErr.code !== 'PGRST116') throw vecinoErr;
+
+                if (vecinoData) {
+                    console.log("☁️ Vecino encontrado en Nube:", vecinoData.nombre);
+                    return {
+                        tipo: 'usuario',
+                        condoNombre: (vecinoData.condo_nombre || "CONDOMINIO").toUpperCase(),
+                        config: {
+                            nombre: vecinoData.condo_nombre,
+                        },
+                        vecinos: [],
+                        usuarios: [],
+                        usuario: {
+                            username: vecinoData.codigo,
+                            nombre: vecinoData.nombre,
+                            rol_id: vecinoData.rol || 2,
+                            lote: vecinoData.lote
+                        }
+                    };
                 }
 
             } catch (err) {
                 console.error("Error consultando Supabase:", err);
+                throw err; // Lanzar para que el modal de error lo atrape
             }
 
             return null;

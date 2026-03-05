@@ -1306,8 +1306,10 @@
                 console.log("✅ Vecino sincronizado en la nube.");
             } catch (err) {
                 console.error("❌ Error de sincronización Supabase:", err);
+                alert("⚠️ Error en la nube (Supabase): " + (err.message || 'Tabla vecinos_universal no configurada.'));
             }
         }
+
 
         function editarVecino(id) {
             const vecino = vecinos_db.find(v => v.id === id);
