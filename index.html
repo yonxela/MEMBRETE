@@ -4,29 +4,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marbete Digital - DELCO II</title>
-    <!-- Integración de Google Fonts -->
+    <title>Acceso Universal - SISDEL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- CSS Nativo con diseño Premium (Glassmorphism, Dark Mode) -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+
     <style>
         :root {
             --primary-color: #3b82f6;
-            /* Blue 500 */
             --primary-hover: #2563eb;
-            /* Blue 600 */
             --bg-gradient-start: #0f172a;
-            /* Slate 900 */
             --bg-gradient-end: #1e293b;
-            /* Slate 800 */
             --text-main: #f8fafc;
-            /* Slate 50 */
             --text-muted: #94a3b8;
-            /* Slate 400 */
             --glass-bg: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(255, 255, 255, 0.08);
+            --accent: #3b82f6;
         }
 
         * {
@@ -47,24 +44,58 @@
             overflow-x: hidden;
         }
 
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+            animation: bgShift 15s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes bgShift {
+            0% {
+                transform: translate(0, 0);
+            }
+
+            100% {
+                transform: translate(2%, 2%);
+            }
+        }
+
         .container {
             width: 100%;
             max-width: 480px;
+            position: relative;
+            z-index: 1;
         }
 
+        /* --- GLASS PANEL --- */
         .glass-panel {
             background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            border-radius: 1.5rem;
+            border-radius: 1.75rem;
             padding: 2.5rem 2rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
             animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             opacity: 0;
             transform: translateY(20px);
+            transition: box-shadow 0.4s ease;
         }
 
+        .glass-panel:hover {
+            box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.7);
+        }
+
+        /* --- HEADER --- */
         .header {
             text-align: center;
             margin-bottom: 2rem;
@@ -72,126 +103,304 @@
 
         .logo-circle {
             position: relative;
-            width: 80px;
-            height: 80px;
+            width: 88px;
+            height: 88px;
             margin: 0 auto 1.5rem auto;
-            background: linear-gradient(135deg, var(--primary-color), #60a5fa);
+            background: linear-gradient(135deg, var(--accent), #818cf8);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 10px 30px -5px rgba(59, 130, 246, 0.6);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .logo-circle .glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 0 40px var(--accent);
+            opacity: 0.5;
+            animation: pulseGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                opacity: 0.4;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: scale(1.08);
+            }
         }
 
         .logo-icon {
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             color: white;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
         }
 
         .title {
-            font-size: 2rem;
-            font-weight: 700;
-            letter-spacing: -0.025em;
-            margin-bottom: 0.5rem;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-size: 1.9rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.4rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.5s ease;
         }
 
         .subtitle {
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: var(--text-muted);
             font-weight: 300;
         }
 
+        /* --- SKIN BADGE (nombre condominio detectado) --- */
+        .condo-detected-badge {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .condo-detected-badge .check-icon {
+            color: #10b981;
+            font-size: 1.3rem;
+        }
+
+        .condo-detected-badge .condo-info {
+            flex: 1;
+        }
+
+        .condo-detected-badge .condo-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #10b981;
+            letter-spacing: 0.5px;
+        }
+
+        .condo-detected-badge .condo-role {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* --- FORM + BUTTONS --- */
         .action-buttons {
             display: flex;
             flex-direction: column;
             gap: 1rem;
         }
 
+        .input-wrapper {
+            position: relative;
+        }
+
         .input-lote {
             width: 100%;
-            padding: 1rem;
-            border-radius: 0.75rem;
+            padding: 1rem 3rem 1rem 1.25rem;
+            border-radius: 0.875rem;
             border: 1px solid var(--glass-border);
             background: rgba(255, 255, 255, 0.05);
             color: white;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-family: inherit;
             outline: none;
             text-align: center;
-            transition: border-color 0.2s;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 3px;
+            transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+            margin-bottom: 1.25rem;
         }
 
         .input-lote:focus {
-            border-color: var(--primary-color);
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.06);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .input-lote::placeholder {
+            opacity: 0.5;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+        }
+
+        /* Clear button inside input */
+        .input-clear {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-60%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: none;
+            transition: color 0.2s;
+        }
+
+        .input-clear:hover {
+            color: #ef4444;
         }
 
         .btn {
             display: block;
             width: 100%;
             padding: 1rem 1.5rem;
-            border-radius: 0.75rem;
+            border-radius: 0.875rem;
             font-family: inherit;
             font-size: 1.1rem;
-            font-weight: 600;
+            font-weight: 700;
             text-align: center;
-            text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             border: none;
             outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.5px;
         }
 
         .btn-primary {
-            background-color: var(--primary-color);
+            background: linear-gradient(135deg, var(--accent), var(--primary-hover));
             color: white;
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 2px 4px -2px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 4px 15px -3px rgba(59, 130, 246, 0.4);
         }
 
         .btn-primary:hover {
-            background-color: var(--primary-hover);
             transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4), 0 4px 6px -4px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 12px 25px -4px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
         }
 
         .btn-secondary {
-            background-color: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.06);
             color: var(--text-main);
             border: 1px solid var(--glass-border);
         }
 
         .btn-secondary:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.1);
             transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
         }
 
+        /* Loading state */
+        .btn-primary.loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .btn-primary.loading::after {
+            content: '';
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: translateY(-50%) rotate(360deg);
+            }
+        }
+
+        /* --- NEIGHBOR MENU --- */
+        #neighborMenu .action-buttons .btn {
+            margin-bottom: 0;
+        }
+
+        .btn-marbete {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 15px -3px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-marbete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px -4px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-visitas {
+            background: rgba(139, 92, 246, 0.15);
+            color: #a78bfa;
+            border: 1px solid rgba(139, 92, 246, 0.25);
+        }
+
+        .btn-visitas:hover {
+            background: rgba(139, 92, 246, 0.22);
+            transform: translateY(-2px);
+        }
+
+        .saludo-vecino {
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1.75rem;
+            color: var(--accent);
+            letter-spacing: 0.3px;
+        }
+
+        .condo-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            width: 100%;
+            letter-spacing: 1px;
+        }
+
+        /* --- FOOTER --- */
         .footer {
-            margin-top: 2.5rem;
-            padding-top: 1.5rem;
+            margin-top: 2rem;
+            padding-top: 1.25rem;
             border-top: 1px solid var(--glass-border);
             text-align: center;
         }
 
-        .footer-link {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-size: 0.9rem;
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
         .footer-text {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: var(--text-muted);
         }
 
+        /* --- ANIMATIONS --- */
         @keyframes slideUpFade {
             0% {
                 opacity: 0;
-                transform: translateY(30px) scale(0.95);
+                transform: translateY(30px) scale(0.97);
             }
 
             100% {
@@ -199,182 +408,591 @@
                 transform: translateY(0) scale(1);
             }
         }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- MODAL PREMIUM SISDEL V4 (Compacto & Elegante) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 1.5rem;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: modalEntry 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent);
+            opacity: 0.8;
+            filter: blur(1px);
+        }
+
+        .modal-card.modal-success::before {
+            background: #10b981;
+        }
+
+        .modal-card.modal-error::before {
+            background: #ef4444;
+        }
+
+        .modal-card.modal-warning::before {
+            background: #f59e0b;
+        }
+
+        @keyframes modalEntry {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-icon-container {
+            width: 64px;
+            height: 64px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem auto;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: var(--accent);
+            font-size: 1.8rem;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .modal-success .modal-icon-container {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+        }
+
+        .modal-error .modal-icon-container {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
+        }
+
+        .modal-warning .modal-icon-container {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.1);
+        }
+
+        .modal-title-custom {
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin-bottom: 0.6rem;
+            color: #f8fafc;
+            letter-spacing: -0.02em;
+        }
+
+        .modal-text-custom {
+            color: #94a3b8;
+            line-height: 1.55;
+            margin-bottom: 1.75rem;
+            font-size: 0.98rem;
+        }
+
+        .modal-btn-confirm {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.9rem 2rem;
+            border-radius: 1rem;
+            font-weight: 700;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .modal-btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .modal-btn-confirm:active {
+            transform: translateY(0);
+        }
+
+        .modal-success .modal-btn-confirm {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .modal-error .modal-btn-confirm {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .modal-warning .modal-btn-confirm {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
     </style>
 </head>
 
 <body>
-
     <div class="container">
         <div class="glass-panel">
+
+            <!-- =================== PANTALLA: LOGIN =================== -->
             <div id="loginSection">
                 <div class="header">
-                    <div class="logo-circle">
-                        <!-- Glow effect around icon -->
-                        <div
-                            style="position: absolute; width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 30px var(--primary-color); opacity: 0.6; pointer-events: none;">
-                        </div>
+                    <div class="logo-circle" id="logoBadge">
+                        <div class="glow"></div>
                         <svg class="logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg" style="position: relative; z-index: 1;">
+                            xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
                             </path>
                         </svg>
                     </div>
-                    <h1 class="title" id="condoTitle">CONDOMINIO X</h1>
-                    <p class="subtitle">Control de Acceso y Marbetes Digitales</p>
+                    <h1 class="title" id="condoTitle">SISDEL</h1>
+                    <p class="subtitle">Ingrese su código de acceso universal</p>
+                </div>
+
+                <!-- Badge de condominio detectado (se muestra mientras escribe) -->
+                <div class="condo-detected-badge" id="condoBadge">
+                    <span class="check-icon">✅</span>
+                    <div class="condo-info">
+                        <div class="condo-name" id="badgeCondoName">CONDOMINIO DETECTADO</div>
+                        <div class="condo-role" id="badgeCondoRole">Verificando...</div>
+                    </div>
                 </div>
 
                 <div class="action-buttons">
                     <form id="entryForm" onsubmit="validarAcceso(event)">
-                        <input type="text" id="codigoInput" class="input-lote" placeholder="CÓDIGO DE ACCESO"
-                            style="text-transform: uppercase; font-weight: 700; letter-spacing: 2px; margin-bottom: 1.5rem;"
-                            required />
-
-                        <button type="submit" class="btn btn-primary">
-                            Ingresar
+                        <div class="input-wrapper">
+                            <input type="text" id="codigoInput" class="input-lote" placeholder="CÓDIGO DE ACCESO"
+                                autocomplete="off" required />
+                            <button type="button" class="input-clear" id="clearBtn" onclick="limpiarInput()">✕</button>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btnIngresar">
+                            Ingresar al Sistema
                         </button>
                     </form>
                 </div>
             </div>
 
-            <!-- Panel de Opciones para el Vecino (Se muestra tras validar) -->
+            <!-- =================== PANTALLA: MENÚ VECINO =================== -->
             <div id="neighborMenu" style="display: none;">
                 <div class="header">
-                    <div class="logo-circle">
-                        <div
-                            style="position: absolute; width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 30px var(--primary-color); opacity: 0.6; pointer-events: none;">
-                        </div>
+                    <div class="logo-circle" id="logoBadgeMenu">
+                        <div class="glow"></div>
                         <svg class="logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg" style="position: relative; z-index: 1;">
+                            xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
                             </path>
                         </svg>
                     </div>
-                    <h1 class="title" id="condoTitleMenu">CONDOMINIO X</h1>
-                    <p class="subtitle">Control de Acceso y Marbetes Digitales</p>
+                    <h1 class="title" id="condoTitleMenu">MI CONDOMINIO</h1>
+                    <p class="subtitle">Portal de Residentes</p>
                 </div>
 
-                <div id="saludoVecino"
-                    style="font-size: 1.3rem; font-weight: 700; text-align: center; margin-bottom: 2rem; color: var(--primary-color); letter-spacing: 0.5px;">
-                </div>
+                <div class="saludo-vecino" id="saludoVecino"></div>
+                <div class="condo-tag" id="condoTagMenu">📍 CONDOMINIO</div>
 
                 <div class="action-buttons">
-                    <button onclick="irAMarbete()" class="btn btn-primary">
-                        Generar Marbete (QR)
+                    <button onclick="irAMarbete()" class="btn btn-marbete">
+                        🪪 Generar Marbete / QR
                     </button>
-
-                    <button onclick="irAVisitas()" class="btn btn-secondary"
-                        style="background-color: rgba(255,255,255,0.08); color: white;">
-                        Escanear / Ver Visitas
+                    <button onclick="irAVisitas()" class="btn btn-visitas">
+                        👥 Escanear / Ver Visitas
                     </button>
-
-                    <button onclick="cerrarSesionVecino()" class="btn"
-                        style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted); background: none;">
+                    <button onclick="cerrarSesionVecino()" class="btn btn-secondary"
+                        style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">
                         ← Salir / Cambiar Código
                     </button>
                 </div>
             </div>
 
             <div class="footer">
-                <a href="login.html" class="footer-link">Acceso a Directiva / Panel Principal</a>
-                <p class="footer-text" id="footerText">&copy; 2026 Gestión de Accesos</p>
+                <p class="footer-text">© 2026 SISDEL INTERNACIONAL · Sistema de Gestión Residencial</p>
             </div>
         </div>
     </div>
 
+    <!-- =================== MODAL UNIVERSAL SISDEL =================== -->
+    <div id="sisdelModal" class="modal-overlay">
+        <div class="modal-card">
+            <div id="modalIconWrapper" class="modal-icon-container">⚠️</div>
+            <h2 id="modalTitleEl" class="modal-title-custom">Aviso del Sistema</h2>
+            <div id="modalMessageEl" class="modal-text-custom">Contenido...</div>
+            <button id="modalBtnEl" class="modal-btn-confirm" onclick="cerrarSisdelModal()">Entendido</button>
+        </div>
+    </div>
+
     <script>
-        // Cargar configuración inicial
-        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'DELCO II' };
-        const sistemaConfigurado = config_db.setup_complete === true;
+        // ============================================================
+        //  SISDEL — MOTOR DE ACCESO UNIFICADO CON ENRUTAMIENTO DINÁMICO
+        //  Versión: 3.0-Unified | Marzo 2026
+        // ============================================================
 
-        document.title = `Acceso - ${config_db.nombre}`;
-        const titulos = [document.getElementById('condoTitle'), document.getElementById('condoTitleMenu')];
-        titulos.forEach(t => { if (t) t.innerText = config_db.nombre.toUpperCase(); });
-        document.getElementById('footerText').innerHTML = `&copy; 2026 Gestión de Accesos - ${config_db.nombre}`;
+        // ----------- ESTADO GLOBAL -----------
+        let codigoValidado = "";
+        let sesionCondo = null; // { condoId, config, usuarios, vecinos, vecino }
 
-        // Si hay un logo configurado
-        if (config_db.logo) {
-            document.querySelectorAll('.logo-circle').forEach(div => {
-                div.innerHTML = `<img src="${config_db.logo}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; box-shadow: 0 0 15px rgba(59,130,246,0.5);">`;
-            });
+        // ----------- HELPERS DE ALMACENAMIENTO -----------
+        function getAllCondominios() {
+            /** Retorna lista de todos los condominios: maestro + activo */
+            const master = JSON.parse(localStorage.getItem('SISDEL_LISTADO_MASTER')) || [];
+            const configActual = JSON.parse(localStorage.getItem('delco_config'));
+            const nombres = master.map(c => (c.nombre || '').trim().toUpperCase());
+
+            // Asegurar que el activo esté en la lista maestra (backward compat)
+            if (configActual && configActual.nombre) {
+                const nombreActivo = configActual.nombre.trim().toUpperCase();
+                if (!nombres.includes(nombreActivo)) {
+                    master.unshift({ nombre: configActual.nombre, encargado: '', correo: '', tel: '' });
+                }
+            }
+            return master;
         }
 
-        let codigoValidado = "";
+        function getDBCondo(nombre) {
+            /** 
+             * Obtiene la base de datos de un condominio por nombre.
+             * PRIORIDAD: 
+             * 1. Si el nombre coincide con el condominio actualmente "activo" en los keys estándar.
+             * 2. Si no es el activo, buscar en los cubos de respaldo (SISDEL_DB_...)
+             */
+            const nombreBusqueda = nombre.trim().toUpperCase();
 
-        // --- SISTEMA DE LICENCIAS MAESTRAS ---
-        const LICENCIAS_MAESTRAS = {
-            "7777": "CONDOMINIO X",
-            "1234": "CONDOMINIO EL CIELO",
-            "5555": "RESIDENCIAL ESMERALDA",
-            "8888": "CONDOMINIO EL VALLE"
-        };
-        // -------------------------------------
+            // 1. PRIORIZAR EL ACTIVO (Para evitar desincronización con respaldos antiguos)
+            const cfg = JSON.parse(localStorage.getItem('delco_config'));
+            if (cfg && cfg.nombre && cfg.nombre.trim().toUpperCase() === nombreBusqueda) {
+                return {
+                    config: cfg,
+                    vecinos: JSON.parse(localStorage.getItem('delco_vecinos')) || [],
+                    usuarios: JSON.parse(localStorage.getItem('delco_usuarios')) || [],
+                    visitas: JSON.parse(localStorage.getItem('delco_visitas')) || [],
+                    mensajes: JSON.parse(localStorage.getItem('delco_mensajes')) || []
+                };
+            }
 
+            // 2. BUSCAR EN RESPALDOS
+            const KEY = `SISDEL_DB_${nombreBusqueda}`;
+            const db = JSON.parse(localStorage.getItem(KEY));
+            return db || null; // Retorna el db si existe, o null si no se encontró en ningún lado
+        }
+
+        // ----------- BÚSQUEDA CENTRALIZADA -----------
+        function buscarCodigoEnTodos(codigo) {
+            /**
+             * Busca el código en TODOS los condominios registrados.
+             * Retorna: { condoNombre, config, usuarios, vecinos, usuario } | null
+             */
+            const condominios = getAllCondominios();
+
+            // 1. CÓDIGO MAESTRO PROGRAMADOR (siempre pasa, sin importar condominio)
+            if (codigo === "SISDEL 2026" || codigo === "SISDEL2026") {
+                return { tipo: 'programador' };
+            }
+
+            for (const condo of condominios) {
+                const db = getDBCondo(condo.nombre);
+                if (!db) continue;
+
+                const usuarios_condo = db.usuarios || [];
+
+                // Buscar el usuario por código (username igual al código)
+                const usuario = usuarios_condo.find(u =>
+                    u.username && u.username.toUpperCase() === codigo.toUpperCase()
+                );
+
+                if (usuario) {
+                    return {
+                        tipo: 'usuario',
+                        condoNombre: condo.nombre.toUpperCase(),
+                        config: db.config || {},
+                        vecinos: db.vecinos || [],
+                        usuarios: usuarios_condo,
+                        visitas: db.visitas || [],
+                        mensajes: db.mensajes || [],
+                        usuario: usuario
+                    };
+                }
+
+                // También buscar por código en el arreglo de vecinos (para compatibilidad total)
+                const vecinosArr = db.vecinos || [];
+                const vecinoPorCodigo = vecinosArr.find(v =>
+                    v.codigo && v.codigo.toUpperCase() === codigo.toUpperCase()
+                );
+
+                if (vecinoPorCodigo) {
+                    // Construir usuario sintético desde vecino
+                    const usuarioSintetico = {
+                        username: vecinoPorCodigo.codigo,
+                        rol_id: vecinoPorCodigo.rol || 2,
+                        nombre: vecinoPorCodigo.nombre,
+                        lote: vecinoPorCodigo.lote
+                    };
+                    return {
+                        tipo: 'usuario',
+                        condoNombre: condo.nombre.toUpperCase(),
+                        config: db.config || {},
+                        vecinos: vecinosArr,
+                        usuarios: usuarios_condo,
+                        visitas: db.visitas || [],
+                        mensajes: db.mensajes || [],
+                        usuario: usuarioSintetico
+                    };
+                }
+            }
+            return null;
+        }
+
+        // ----------- PREVIEW DEl CONDOMINIO MIENTRAS ESCRIBE -----------
+        let previewTimeout = null;
+        document.getElementById('codigoInput').addEventListener('input', function () {
+            const val = this.value.trim().toUpperCase();
+            const clearBtn = document.getElementById('clearBtn');
+            clearBtn.style.display = val.length > 0 ? 'block' : 'none';
+
+            clearTimeout(previewTimeout);
+            const badge = document.getElementById('condoBadge');
+
+            if (val.length < 4) {
+                badge.style.display = 'none';
+                return;
+            }
+
+            previewTimeout = setTimeout(() => {
+                const resultado = buscarCodigoEnTodos(val);
+                if (resultado && resultado.tipo === 'usuario') {
+                    const cfg = resultado.config || {};
+                    const u = resultado.usuario;
+                    let rolStr = u.rol_id == 1 ? '🏛 Directiva' : u.rol_id == 3 ? '🔒 Seguridad/Garita' : '🏠 Residente';
+                    document.getElementById('badgeCondoName').textContent = resultado.condoNombre;
+                    document.getElementById('badgeCondoRole').textContent = `${rolStr} · ${u.nombre || ''}`;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }, 350);
+        });
+
+        function limpiarInput() {
+            document.getElementById('codigoInput').value = '';
+            document.getElementById('clearBtn').style.display = 'none';
+            document.getElementById('condoBadge').style.display = 'none';
+            document.getElementById('codigoInput').focus();
+        }
+
+        // ----------- CARGAR SKIN DEL CONDOMINIO -----------
+        function cargarSkinCondo(config) {
+            /** Aplica el nombre y logo del condominio a la interfaz */
+            const nombre = (config && config.nombre) ? config.nombre.toUpperCase() : 'CONDOMINIO';
+            const logo = config && config.logo;
+
+            document.getElementById('condoTitle').textContent = nombre;
+            document.getElementById('condoTitleMenu').textContent = nombre;
+            document.title = `Acceso — ${nombre}`;
+
+            if (logo) {
+                ['logoBadge', 'logoBadgeMenu'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerHTML = `<img src="${logo}" class="logo-img" alt="Logo">`;
+                });
+            }
+        }
+
+        // ----------- ACTIVAR SESIÓN EN CONTEXTO -----------
+        function activarSesionCondo(resultado) {
+            /**
+             * Guarda el contexto de sesión en sessionStorage para que
+             * admin.html y otros módulos sepan qué condominio está activo
+             * SIN modificar el localStorage del condominio activo (no-destructivo).
+             */
+            const sesion = {
+                condoNombre: resultado.condoNombre,
+                condoKey: `SISDEL_DB_${resultado.condoNombre}`,
+                config: resultado.config,
+                rolId: resultado.usuario.rol_id,
+                usuarioNombre: resultado.usuario.nombre,
+                lote: resultado.usuario.lote || '',
+                codigoAcceso: codigoValidado,
+                timestamp: Date.now()
+            };
+            sessionStorage.setItem('sisdel_sesion', JSON.stringify(sesion));
+
+            // Si este no es el condominio "activo" en localStorage, hacer swap temporal
+            // solo seteando las claves estándar para que admin.html las lea
+            const cfgActual = JSON.parse(localStorage.getItem('delco_config'));
+            const nombreActual = cfgActual ? cfgActual.nombre.toUpperCase() : '';
+
+            if (nombreActual !== resultado.condoNombre) {
+                // Guardar respaldo del activo
+                const respaldoActual = {
+                    config: cfgActual,
+                    vecinos: JSON.parse(localStorage.getItem('delco_vecinos')) || [],
+                    usuarios: JSON.parse(localStorage.getItem('delco_usuarios')) || [],
+                    visitas: JSON.parse(localStorage.getItem('delco_visitas')) || [],
+                    mensajes: JSON.parse(localStorage.getItem('delco_mensajes')) || []
+                };
+                if (nombreActual) {
+                    localStorage.setItem(`SISDEL_DB_${nombreActual}`, JSON.stringify(respaldoActual));
+                }
+
+                // Cargar el condominio detectado como activo
+                localStorage.setItem('delco_config', JSON.stringify(resultado.config));
+                localStorage.setItem('delco_vecinos', JSON.stringify(resultado.vecinos));
+                localStorage.setItem('delco_usuarios', JSON.stringify(resultado.usuarios));
+                localStorage.setItem('delco_visitas', JSON.stringify(resultado.visitas));
+                localStorage.setItem('delco_mensajes', JSON.stringify(resultado.mensajes || []));
+            }
+        }
+
+        // ----------- VALIDACIÓN Y ENRUTAMIENTO PRINCIPAL -----------
         function validarAcceso(e) {
             if (e) e.preventDefault();
             const codigo = document.getElementById('codigoInput').value.trim().toUpperCase();
 
-            // --- LÓGICA DE LICENCIA POR NÚMERO ---
-            if (LICENCIAS_MAESTRAS[codigo]) {
-                if (sistemaConfigurado) {
-                    alert("❌ Esta licencia ya no es válida para reactivación.");
-                    return;
-                }
-                const nuevoNombre = LICENCIAS_MAESTRAS[codigo];
-                if (confirm(`🔑 LICENCIA VÁLIDA: ${codigo}\n\nSe actualizará el Condominio a: "${nuevoNombre}"\n✅ LOS VECINOS Y REGISTROS SE MANTENDRÁN.\n\n¿Desea continuar?`)) {
-
-                    // Actualizamos solo la configuración
-                    const config = JSON.parse(localStorage.getItem('delco_config')) || {};
-                    config.nombre = nuevoNombre;
-                    config.nombreMarbete = nuevoNombre;
-                    config.setup_complete = true;
-                    localStorage.setItem('delco_config', JSON.stringify(config));
-
-                    // Aseguramos usuarios maestros
-                    let usuarios = JSON.parse(localStorage.getItem('delco_usuarios')) || [];
-                    if (!usuarios.find(u => u.username === 'DIRECTIVA')) {
-                        usuarios.push({ username: 'DIRECTIVA', password_hash: 'M2026', rol_id: 1, nombre: 'ADMINISTRADOR' });
-                    }
-                    localStorage.setItem('delco_usuarios', JSON.stringify(usuarios));
-
-                    alert(`✅ SISTEMA ACTIVADO EXITOSAMENTE\n\nCondominio: ${nuevoNombre}`);
-                    localStorage.setItem('admin_logged_in', 'true');
-                    window.location.href = 'modulos_ocultos/admin.html';
-                    return;
-                }
-            }
-
             if (!codigo) {
-                alert("Por favor, ingrese un código de acceso válido.");
+                mostrarSisdelModal("Campo Vacío", "Por favor ingrese su código de acceso.", "💡");
                 return;
             }
 
-            const usuarios_db = JSON.parse(localStorage.getItem('delco_usuarios')) || [
-                { username: 'DIRECTIVA', rol_id: 1, nombre: 'DIRECTIVA' },
-                { username: 'GARITA', rol_id: 3, nombre: 'GARITA' }
-            ];
+            procesarAcceso(codigo);
+        }
 
-            const usuario = usuarios_db.find(u => u.username.toUpperCase() === codigo);
+        function procesarAcceso(codigo) {
+            try {
+                codigoValidado = codigo;
 
-            if (usuario) {
-                if (usuario.rol_id === 1) {
+                // 🔑 ACCESO MAESTRO PROGRAMADOR
+                if (codigo === "SISDEL 2026" || codigo === "SISDEL2026") {
+                    sessionStorage.setItem('sisdel_sesion', JSON.stringify({
+                        esProgramador: true, condoNombre: 'SISDEL MASTER', rolId: 0, timestamp: Date.now()
+                    }));
                     localStorage.setItem('admin_logged_in', 'true');
+                    localStorage.setItem('is_sisdel', 'true');
                     window.location.href = 'modulos_ocultos/admin.html';
-                } else if (usuario.rol_id === 3) {
+                    return;
+                }
+
+                // 🔍 BÚSQUEDA EN TODOS LOS CONDOMINIOS
+                const resultado = buscarCodigoEnTodos(codigo);
+
+                if (!resultado) {
+                    mostrarSisdelModal(
+                        "Código No Reconocido",
+                        "El código ingresado no corresponde a ningún residente registrado.<br><br>Verifique el código o comúniquese con la Administración.",
+                        "🔍"
+                    );
+                    return;
+                }
+
+                // Validar estado del condominio (Permitir por defecto si es undefined)
+                const cfg = resultado.config || {};
+                if (cfg.activo === false) {
+                    mostrarSisdelModal(
+                        "⚠️ SERVICIO SUSPENDIDO",
+                        `El acceso al condominio <strong>${resultado.condoNombre}</strong> ha sido desactivado.<br><br>Contacte a <strong>SISDEL INTERNACIONAL</strong>.`
+                    );
+                    return;
+                }
+
+                // Activar sesión
+                activarSesionCondo(resultado);
+
+                // ============ ENRUTAMIENTO POR ROL ============
+                const rolId = parseInt(resultado.usuario.rol_id) || 2;
+
+                if (rolId === 1) {
+                    localStorage.setItem('admin_logged_in', 'true');
+                    localStorage.setItem('is_sisdel', 'false');
+                    window.location.href = 'modulos_ocultos/admin.html';
+
+                } else if (rolId === 3) {
                     window.location.href = 'garita.html';
+
                 } else {
-                    // Es VECINO: Mostrar Menú
-                    codigoValidado = codigo;
+                    // VECINO / RESIDENTE
+                    const u = resultado.usuario;
+                    const nombre = (u.nombre || 'Residente').split(' ')[0];
+                    cargarSkinCondo(cfg);
                     document.getElementById('loginSection').style.display = 'none';
                     document.getElementById('neighborMenu').style.display = 'block';
-                    document.getElementById('saludoVecino').innerText = `¡Bienvenido, ${usuario.nombre.split(' ')[0]}!`;
+                    document.getElementById('saludoVecino').textContent = `¡Bienvenido, ${nombre}!`;
+                    document.getElementById('condoTagMenu').textContent = `📍 ${resultado.condoNombre}`;
                 }
-            } else {
-                alert("Código no reconocido. Por favor verifique sus datos.");
+
+            } catch (err) {
+                // Mostrar el error exacto para diagnóstico
+                mostrarSisdelModal(
+                    "Error del Sistema",
+                    `Ocurrió un error al procesar el acceso:<br><br><code style="color:#f87171;font-size:0.8rem">${err.message}</code><br><br>Intente de nuevo o contacte a SISDEL.`,
+                    "🛠️"
+                );
+                console.error('[SISDEL] Error en procesarAcceso:', err);
             }
         }
 
+        // ----------- FUNCIONES DEL MENÚ VECINO -----------
         function irAMarbete() {
             window.location.href = `marbete.html?codigo=${encodeURIComponent(codigoValidado)}`;
         }
@@ -384,10 +1002,79 @@
         }
 
         function cerrarSesionVecino() {
+            sessionStorage.removeItem('sisdel_sesion');
             location.reload();
         }
-    </script>
 
+        // ----------- MODAL PREMIUM -----------
+        function mostrarSisdelModal(titulo, mensaje, icono = "⚠️") {
+            const modal = document.getElementById('sisdelModal');
+            const card = modal.querySelector('.modal-card');
+            const wrapper = document.getElementById('modalIconWrapper');
+            const btn = document.getElementById('modalBtnEl');
+
+            // Reset classes
+            card.className = 'modal-card';
+
+            // Determine type by content/icon
+            let type = 'info';
+            const msgLower = mensaje.toLowerCase();
+            if (msgLower.includes('error') || msgLower.includes('incorrecta') || msgLower.includes('denegado') || mensaje.includes('❌') || mensaje.includes('🚫')) {
+                type = 'error';
+                if (icono === "⚠️") icono = "🚫";
+            } else if (msgLower.includes('exitosamente') || msgLower.includes('guardada') || mensaje.includes('✅') || mensaje.includes('🚀')) {
+                type = 'success';
+                if (icono === "⚠️") icono = "✅";
+            } else if (mensaje.includes('⚠️') || msgLower.includes('atención') || msgLower.includes('cuidado')) {
+                type = 'warning';
+                if (icono === "⚠️") icono = "⚠️";
+            }
+
+            card.classList.add(`modal-${type}`);
+            wrapper.textContent = icono;
+
+            document.getElementById('modalTitleEl').textContent = titulo;
+            document.getElementById('modalMessageEl').innerHTML = mensaje;
+            modal.style.display = 'flex';
+
+            // Focus on button for easy closing
+            setTimeout(() => btn.focus(), 100);
+        }
+
+        function cerrarSisdelModal() {
+            document.getElementById('sisdelModal').style.display = 'none';
+        }
+
+        // Compatibilidad con alert nativo (no romper código previo)
+        window._originalAlert = window.alert;
+        window.alert = function (msg) {
+            let titulo = "Aviso del Sistema";
+            if (msg.includes('✅') || msg.toLowerCase().includes('exito')) titulo = "¡Operación Exitosa!";
+            if (msg.includes('❌') || msg.toLowerCase().includes('error')) titulo = "Ha ocurrido un error";
+            mostrarSisdelModal(titulo, msg);
+        };
+
+        // Cerrar modal con ESC
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') cerrarSisdelModal();
+        });
+
+        // ----------- INICIALIZACIÓN -----------
+        (function init() {
+            // El formulario siempre es neutro, NO muestra el condominio activo.
+            // El nombre del condominio solo aparece DESPUÉS de validar el código.
+            document.title = 'Acceso Universal — SISDEL';
+
+            // Limpiar sesión expirada (> 8 horas)
+            const sesion = JSON.parse(sessionStorage.getItem('sisdel_sesion'));
+            if (sesion && (Date.now() - sesion.timestamp > 8 * 3600 * 1000)) {
+                sessionStorage.removeItem('sisdel_sesion');
+            }
+
+            // Auto-focus al input
+            document.getElementById('codigoInput').focus();
+        })();
+    </script>
 </body>
 
 </html>

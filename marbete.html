@@ -2,9 +2,11 @@
 <html lang="es">
 
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marbete Generado - DELCO II</title>
+    <title>Marbete Generado - Control Residencial</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -358,6 +360,123 @@
                 transform: scale(0.95);
             }
         }
+
+        /* =========================================
+           ESTILOS PREMIUM SISDEL MODAL (ALERTAS)
+           ========================================= */
+        .modal-overlay-custom {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay-custom.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-card-custom {
+            background: #1e293b;
+            width: 90%;
+            max-width: 380px;
+            border-radius: 20px;
+            padding: 1.8rem;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            text-align: center;
+        }
+
+        .modal-overlay-custom.active .modal-card-custom {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-icon-container-custom {
+            width: 54px;
+            height: 54px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.2rem auto;
+            color: #3b82f6;
+            font-size: 1.5rem;
+        }
+
+        .modal-success-custom .modal-icon-container-custom {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .modal-error-custom .modal-icon-container-custom {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .modal-warning-custom .modal-icon-container-custom {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .modal-title-custom {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 0.6rem;
+            letter-spacing: -0.01em;
+        }
+
+        .modal-text-custom {
+            font-size: 0.95rem;
+            color: #94a3b8;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-btn-confirm-custom {
+            width: 100%;
+            padding: 0.8rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .modal-btn-confirm-custom:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .modal-success-custom .modal-btn-confirm-custom {
+            background: #10b981;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .modal-error-custom .modal-btn-confirm-custom {
+            background: #ef4444;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
     </style>
 </head>
 
@@ -368,7 +487,8 @@
 
     <div class="marbete-card" id="marbeteCard" style="display: none;">
         <div class="header-strip">
-            <h1 class="header-title" style="font-family: 'Outfit', sans-serif; text-transform: uppercase;">DELCO II</h1>
+            <h1 class="header-title" style="font-family: 'Outfit', sans-serif; text-transform: uppercase;">MI CONDOMINIO
+            </h1>
             <p class="header-subtitle" style="font-size: 1.1rem; font-weight: 600; margin-top: 5px;">Pase de Acceso</p>
         </div>
 
@@ -399,9 +519,13 @@
 
             <!-- Botones de Acción para el Vecino -->
             <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 10px;">
-                <button onclick="irAVisitas()" class="btn-glass btn-glass-primary"
+                <button id="btnAutorizarVisita" onclick="irAVisitas()" class="btn-glass btn-glass-primary"
                     style="background-color: var(--success-color); border: none;">
                     ➕ Autorizar / Programar Visita
+                </button>
+                <button onclick="window.location.href='index.html'" class="btn-glass btn-glass-secondary"
+                    style="font-size: 0.9rem; color: var(--text-muted);">
+                    ← Salir / Volver al Inicio
                 </button>
             </div>
         </div>
@@ -418,6 +542,10 @@
         <p style="color: var(--text-main); margin-bottom: 15px;">No se encontró ningún vecino registrado con este
             código. Verifica que el Código Personal sea correcto.</p>
         <div id="errorContacto" style="font-size: 0.9rem; color: var(--text-muted);"></div>
+        <button onclick="window.location.href='index.html'"
+            style="margin-top: 1.5rem; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.15); padding: 0.8rem 2rem; border-radius: 10px; font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer;">
+            ← Volver al Inicio
+        </button>
     </div>
 
     <!-- Cuadro de Diálogo para Solicitar Código si no hay en la URL (Estilo Premium) -->
@@ -463,7 +591,86 @@
         </div>
     </div>
 
+    <!-- =========================================
+         SISDEL PREMIUM MODAL (ALERTAS)
+         ========================================= -->
+    <div id="sisdelModal" class="modal-overlay-custom">
+        <div class="modal-card-custom" id="sisdelModalCard">
+            <div class="modal-icon-container-custom" id="modalIconContainer">
+                <span id="modalIcon">🔔</span>
+            </div>
+            <h3 class="modal-title-custom" id="modalTitle">Aviso del Sistema</h3>
+            <p class="modal-text-custom" id="modalText">Mensaje de alerta aquí.</p>
+            <button class="modal-btn-confirm-custom" id="modalBtnConfirm">Entendido</button>
+        </div>
+    </div>
+
     <script>
+        // SISDEL Modal Functionality
+        function mostrarSisdelModal(mensaje, titulo = "Aviso del Sistema", tipo = "info") {
+            const modal = document.getElementById('sisdelModal');
+            const card = document.getElementById('sisdelModalCard');
+            const iconContainer = document.getElementById('modalIconContainer');
+            const icon = document.getElementById('modalIcon');
+            const titleEl = document.getElementById('modalTitle');
+            const textEl = document.getElementById('modalText');
+            const btn = document.getElementById('modalBtnConfirm');
+
+            // Reset classes
+            card.classList.remove('modal-success-custom', 'modal-error-custom', 'modal-warning-custom');
+
+            // Set type
+            if (tipo === "success") {
+                card.classList.add('modal-success-custom');
+                icon.innerText = "✅";
+            } else if (tipo === "error") {
+                card.classList.add('modal-error-custom');
+                icon.innerText = "❌";
+            } else if (tipo === "warning") {
+                card.classList.add('modal-warning-custom');
+                icon.innerText = "⚠️";
+            } else {
+                icon.innerText = "🔔";
+            }
+
+            titleEl.innerText = titulo;
+            textEl.innerText = mensaje;
+
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+
+            // Return promise for sync-like behavior if needed
+            return new Promise((resolve) => {
+                btn.onclick = () => {
+                    modal.classList.remove('active');
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        resolve();
+                    }, 300);
+                };
+            });
+        }
+
+        // Override window.alert
+        window.alert = function (mensaje) {
+            // Analizar el mensaje para determinar el "tipo"
+            let tipo = "info";
+            let titulo = "Aviso del Sistema";
+
+            if (mensaje.includes("exitoso") || mensaje.includes("Enviado") || mensaje.includes("Correcto") || mensaje.includes("✅")) {
+                tipo = "success";
+                titulo = "Operación Exitosa";
+            } else if (mensaje.includes("error") || mensaje.includes("incorrecto") || mensaje.includes("cancelada") || mensaje.includes("❌") || mensaje.includes("Por favor ingrese")) {
+                tipo = "error";
+                titulo = "Atención";
+            } else if (mensaje.includes("⚠️") || mensaje.includes("seguro")) {
+                tipo = "warning";
+                titulo = "Aviso";
+            }
+
+            mostrarSisdelModal(mensaje, titulo, tipo);
+        };
+
         // Simulador de BD de vecinos buscando primero en la memoria compartida
         const vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [
             { id: 1, nombre: 'NATAN RODAS', lote: '30', dpi: '2317', status: 1, dias_demora: 0, codigo: 'NR2317', rol: 2 },
@@ -477,8 +684,29 @@
         const codigoIngresado = urlParams.get('codigo');
 
         // CARGAR CONFIGURACIÓN DEL CONDOMINIO
-        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'DELCO II', logo: '' };
-        const nombreMostrar = config_db.nombre || 'DELCO II';
+        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'MI CONDOMINIO', logo: '', activo: true };
+
+        if (config_db.activo === false) {
+            document.body.innerHTML = `
+                <div style="height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); color: white; font-family: 'Outfit', sans-serif; text-align: center; padding: 20px;">
+                    <div style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 2.5rem; padding: 4rem 2rem; max-width: 500px; width: 100%; box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.8);">
+                        <div style="width: 80px; height: 80px; background: rgba(239, 68, 68, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem auto; border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; font-size: 2.5rem; box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);">🛑</div>
+                        <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 1.5rem; color: #f8fafc; letter-spacing: -0.025em; line-height: 1.1;">SISTEMA <span style="color: #ef4444;">FUERA DE LÍNEA</span></h1>
+                        <p style="font-size: 1.1rem; color: #94a3b8; line-height: 1.7; margin-bottom: 2.5rem; font-weight: 300;">
+                            El servicio de marbetes digitales para <strong>${config_db.nombre.toUpperCase()}</strong> ha sido desactivado temporalmente por la administración.
+                            <br><br>
+                            Los pases QR no podrán ser generados ni validados hasta que el servicio sea reactivado por <strong>SISDEL INTERNACIONAL</strong>.
+                        </p>
+                        <button onclick="window.location.href='index.html'" style="width: 100%; background: #3b82f6; color: white; border: none; padding: 1.25rem; border-radius: 1.25rem; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.5); font-family: 'Outfit', sans-serif;">
+                            Entendido
+                        </button>
+                    </div>
+                </div>
+            `;
+            throw new Error("Sistema Desactivado");
+        }
+
+        const nombreMostrar = config_db.nombre || 'MI CONDOMINIO';
 
         document.querySelector('.header-title').innerText = nombreMostrar;
         document.querySelector('title').innerText = `Marbete Generado - ${nombreMostrar}`;
@@ -512,13 +740,25 @@
                 // Rellenar datos
                 document.getElementById('marbeteCard').style.display = 'block';
                 document.getElementById('nombreResidente').innerText = vecino.nombre;
-                document.getElementById('loteResidente').innerText = `LOTE ${vecino.lote}`;
+
+                let extraLote = '';
+                if (vecino.rol == 4 && vecino.autorizado_por) {
+                    extraLote = ` (TEMP)`;
+                }
+
+                document.getElementById('loteResidente').innerText = `LOTE ${vecino.lote}${extraLote}`;
 
                 // Generar Fecha y Hora Actual
                 const ahora = new Date();
                 const fechaStr = ahora.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
                 const horaStr = ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
                 document.getElementById('fechaGeneracion').innerText = `${fechaStr} a las ${horaStr}`;
+
+                // Restricción para temporales: NO pueden autorizar visitas en marbete.html
+                if (vecino.rol == 4) {
+                    const btnVisita = document.getElementById('btnAutorizarVisita');
+                    if (btnVisita) btnVisita.style.display = 'none';
+                }
 
                 const statusStrip = document.getElementById('statusStrip');
                 const demora = vecino.dias_demora || 0;
@@ -574,7 +814,7 @@
 
             const footerTxt = document.getElementById('footerTexto');
             if (footerTxt) {
-                const nombreFooter = config_db.nombre || 'DELCO II';
+                const nombreFooter = config_db.nombre || 'MI CONDOMINIO';
                 footerTxt.innerHTML = `&copy; 2026 Gestión de Accesos - ${nombreFooter}`;
             }
         }
@@ -582,6 +822,14 @@
         function irAVisitas() {
             const params = new URLSearchParams(window.location.search);
             const codigoUrl = params.get('codigo');
+
+            if (codigoUrl) {
+                const vec = vecinos_db.find(v => v.codigo === codigoUrl.toUpperCase() || v.dpi === codigoUrl.toUpperCase());
+                if (vec && vec.rol == 4) {
+                    alert('❌ Acción Denegada: Los residentes temporales no están autorizados para programar visitas.');
+                    return;
+                }
+            }
             window.location.href = codigoUrl ? `modulos_ocultos/visitas.html?codigo=${encodeURIComponent(codigoUrl)}` : 'modulos_ocultos/visitas.html';
         }
 

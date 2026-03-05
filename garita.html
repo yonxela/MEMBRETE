@@ -2,9 +2,11 @@
 <html lang="es">
 
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso Garita - DELCO II</title>
+    <title>Acceso Garita - Control Residencial</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -20,6 +22,7 @@
             --text-muted: #94a3b8;
             --border-color: #333333;
             --highlight-color: #fbbf24;
+            --accent: #3b82f6;
         }
 
         * {
@@ -141,7 +144,6 @@
             }
         }
 
-        /* Estilos Tabla */
         .table-responsive {
             overflow-x: auto;
         }
@@ -188,16 +190,14 @@
             opacity: 0.5;
         }
 
-        .badge-recent {
-            background-color: rgba(16, 185, 129, 0.2);
-            color: var(--success-color);
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-family: inherit;
             font-weight: 700;
-            margin-left: 10px;
-            text-transform: uppercase;
-            border: 1px solid rgba(16, 185, 129, 0.5);
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
         }
 
         .btn-refresh {
@@ -207,9 +207,7 @@
             padding: 8px 15px;
             border-radius: 6px;
             cursor: pointer;
-            font-family: inherit;
             font-weight: 600;
-            transition: all 0.2s;
         }
 
         .btn-refresh:hover {
@@ -217,31 +215,227 @@
             color: white;
         }
 
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 1.5rem;
-                text-align: center;
+        .btn-active {
+            background: rgba(59, 130, 246, 0.2) !important;
+            color: white !important;
+            border-color: var(--primary-color) !important;
+        }
+
+        /* MODAL PREMIUM SISDEL V4 (Compacto & Elegante) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 1.5rem;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
             }
 
-            .clock-container {
-                text-align: center;
+            to {
+                opacity: 1;
             }
+        }
+
+        .modal-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: modalEntry 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent);
+            opacity: 0.8;
+            filter: blur(1px);
+        }
+
+        .modal-card.modal-success::before {
+            background: #10b981;
+        }
+
+        .modal-card.modal-error::before {
+            background: #ef4444;
+        }
+
+        .modal-card.modal-warning::before {
+            background: #f59e0b;
+        }
+
+        @keyframes modalEntry {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-icon-container {
+            width: 64px;
+            height: 64px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem auto;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: var(--accent);
+            font-size: 1.8rem;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .modal-success .modal-icon-container {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+        }
+
+        .modal-error .modal-icon-container {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
+        }
+
+        .modal-title-custom {
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin-bottom: 0.6rem;
+            color: #f8fafc;
+            letter-spacing: -0.02em;
+        }
+
+        .modal-text-custom {
+            color: #94a3b8;
+            line-height: 1.55;
+            margin-bottom: 1.75rem;
+            font-size: 0.98rem;
+        }
+
+        .modal-btn-confirm {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.9rem 1.5rem;
+            border-radius: 1rem;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .modal-btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .modal-success .modal-btn-confirm {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .modal-error .modal-btn-confirm {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+
+        .modal-footer-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* MODAL MARBETE */
+        .marbete-modal-content {
+            width: 100%;
+            max-width: 380px;
+            animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(30px) scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .btn-close-modal {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 700;
         }
     </style>
 </head>
 
 <body>
-
     <div class="container">
         <div class="header">
             <div class="title-group">
-                <h1 class="header-title" id="headerCondoName">DELCO II</h1>
+                <h1 class="header-title" id="headerCondoName">MI CONDOMINIO</h1>
                 <span class="header-subtitle">VISTA DE GARITA (SEGURIDAD)</span>
             </div>
-            <div class="clock-container">
-                <div class="clock-time" id="clockTime">00:00:00</div>
-                <div class="clock-date" id="clockDate">--</div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div class="clock-container">
+                    <div class="clock-time" id="clockTime">00:00:00</div>
+                    <div class="clock-date" id="clockDate">--</div>
+                </div>
+                <button onclick="window.location.href='index.html'"
+                    style="background: rgba(239,68,68,0.05); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); padding: 0.3rem 0.7rem; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.7rem; text-transform: uppercase;">
+                    SALIR
+                </button>
             </div>
         </div>
 
@@ -249,147 +443,250 @@
             <div class="status-bar">
                 <div class="status-text">
                     <span class="status-dot"></span>
-                    <span>Mostrando visitas autorizadas del <strong>día actual</strong>. Se actualiza
-                        automáticamente.</span>
+                    <span id="statusDescription">CARGANDO ACTIVIDAD...</span>
                 </div>
-                <button class="btn-refresh" onclick="cargarVisitasRecientes()">
-                    ↻ Actualizar
-                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button id="btnVistaVisitas" class="btn-refresh btn-active" onclick="cambiarVista('visitas')">📅
+                        Visitas Hoy</button>
+                    <button id="btnVistaBitacora" class="btn-refresh" onclick="cambiarVista('bitacora')">📋 Bitácora
+                        General</button>
+                    <button class="btn-refresh" onclick="window.location.href='escaneo_placas.html?mode=placas'"
+                        style="background: rgba(59,130,246,0.15); color: #60a5fa;">🚗 ESCANEAR PLACA</button>
+                    <button class="btn-refresh" onclick="window.location.href='escaneo_placas.html?mode=qr'"
+                        style="background: rgba(139,92,246,0.15); color: #a78bfa;">📱 ESCANEAR MARBETE</button>
+                </div>
             </div>
 
             <div class="table-responsive">
                 <table id="tablaVisitas">
-                    <thead>
-                        <tr>
-                            <th>HORA REGISTRO</th>
-                            <th>VISITANTE</th>
-                            <th>NO. IDENTIFICACIÓN</th>
-                            <th>PLACA(S)</th>
-                            <th>NO. PERSONAS</th>
-                            <th>AUTORIZA (VECINO)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaBody">
-                        <!-- Visitas dinámicas -->
-                    </tbody>
+                    <thead id="tablaHead"></thead>
+                    <tbody id="tablaBody"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <script>
-        // Función para mantener actualizado el reloj
-        function actualizarReloj() {
-            const ahora = new Date();
-            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    <!-- MODAL PARA MOSTRAR MARBETE DETECTADO (RESIDENTE) -->
+    <div id="modalMarbete" class="modal-overlay">
+        <div class="marbete-modal-content" id="marbeteContainerOuter">
+            <div id="marbeteContainer"></div>
+            <button class="btn-close-modal" onclick="cerrarModalMarbete()">CERRAR VISTA</button>
+        </div>
+    </div>
 
-            document.getElementById('clockTime').innerText = ahora.toLocaleTimeString('es-ES', timeOptions);
-            document.getElementById('clockDate').innerText = ahora.toLocaleDateString('es-ES', dateOptions);
+    <!-- MODAL UNIVERSAL SISDEL -->
+    <div id="sisdelModal" class="modal-overlay">
+        <div class="modal-card">
+            <div id="modalIconWrapper" class="modal-icon-container">⚠️</div>
+            <h2 id="modalTitleEl" class="modal-title-custom">Aviso del Sistema</h2>
+            <div id="modalMessageEl" class="modal-text-custom">Contenido...</div>
+            <div id="modalFooter" class="modal-footer-btns">
+                <button id="modalBtnEl" class="modal-btn-confirm" onclick="cerrarSisdelModal()">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIG DB
+        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'CONDOMINIO', activo: true };
+
+        // MODAL LOGIC
+        function mostrarSisdelModal(titulo, mensaje, icono = "⚠️", confirmCallback = null) {
+            const modal = document.getElementById('sisdelModal');
+            const card = modal.querySelector('.modal-card');
+            const wrapper = document.getElementById('modalIconWrapper');
+            const footer = document.getElementById('modalFooter');
+
+            card.className = 'modal-card';
+            if (mensaje.includes('✅')) card.classList.add('modal-success');
+            if (mensaje.includes('❌') || mensaje.includes('¿')) card.classList.add('modal-error');
+
+            wrapper.textContent = icono;
+            document.getElementById('modalTitleEl').textContent = titulo;
+            document.getElementById('modalMessageEl').innerHTML = mensaje;
+
+            footer.innerHTML = '';
+            if (confirmCallback) {
+                const btnOk = document.createElement('button');
+                btnOk.className = 'modal-btn-confirm';
+                btnOk.textContent = 'Confirmar';
+                btnOk.onclick = () => { confirmCallback(); cerrarSisdelModal(); };
+
+                const btnCancel = document.createElement('button');
+                btnCancel.className = 'modal-btn-confirm btn-cancel';
+                btnCancel.textContent = 'Cancelar';
+                btnCancel.onclick = cerrarSisdelModal;
+
+                footer.appendChild(btnCancel);
+                footer.appendChild(btnOk);
+            } else {
+                const btnClose = document.createElement('button');
+                btnClose.className = 'modal-btn-confirm';
+                btnClose.textContent = 'Entendido';
+                btnClose.onclick = cerrarSisdelModal;
+                footer.appendChild(btnClose);
+            }
+
+            modal.style.display = 'flex';
         }
 
-        // Cargar y filtrar visitas del día actual
+        function cerrarSisdelModal() { document.getElementById('sisdelModal').style.display = 'none'; }
+        window.alert = (msg) => mostrarSisdelModal("Aviso", msg);
+
+        // CLOCK
+        function actualizarReloj() {
+            const ahora = new Date();
+            document.getElementById('clockTime').innerText = ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            document.getElementById('clockDate').innerText = ahora.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        setInterval(actualizarReloj, 1000);
+        actualizarReloj();
+
+        // TABLA Y VISTAS
+        let vistaActual = 'visitas';
+        function cambiarVista(nueva) {
+            vistaActual = nueva;
+            document.getElementById('btnVistaVisitas').classList.toggle('btn-active', vistaActual === 'visitas');
+            document.getElementById('btnVistaBitacora').classList.toggle('btn-active', vistaActual === 'bitacora');
+            actualizarTabla();
+        }
+
+        function actualizarTabla() {
+            const head = document.getElementById('tablaHead');
+            if (vistaActual === 'visitas') {
+                document.getElementById('statusDescription').innerText = "VISITAS PROGRAMADAS PENDIENTES";
+                head.innerHTML = `<tr><th>HORA</th><th>VISITANTE</th><th>ID</th><th>PLACA</th><th>PERSONAS</th><th>AUTORIZA</th><th>ACCIONES</th></tr>`;
+                cargarVisitasRecientes();
+            } else {
+                document.getElementById('statusDescription').innerText = "BITÁCORA GENERAL DE INGRESOS";
+                head.innerHTML = `<tr><th>HORA</th><th>NOMBRE</th><th>TIPO</th><th>IDENTIFICACIÓN</th><th>LOTE</th><th>AUTORIZA</th></tr>`;
+                cargarBitacoraGeneral();
+            }
+        }
+
         function cargarVisitasRecientes() {
-            const tbody = document.getElementById('tablaBody');
-            tbody.innerHTML = '';
+            const tbody = document.getElementById('tablaBody'); tbody.innerHTML = '';
+            const visitas = JSON.parse(localStorage.getItem('delco_visitas')) || [];
+            const hoy = new Date().toISOString().split('T')[0];
 
-            const visitas_db = JSON.parse(localStorage.getItem('delco_visitas')) || [];
-            if (visitas_db.length === 0) {
-                mostrarVacio(tbody);
+            const pendientes = visitas.filter(v => v.fecha_programada === hoy && !v.entró && (!v.condo || v.condo === config_db.nombre));
+
+            if (pendientes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No hay visitas para hoy</td></tr>';
                 return;
             }
 
-            const hoy = new Date();
-            const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
-            const startOfDay = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()).getTime();
-            const endOfDay = startOfDay + 24 * 60 * 60 * 1000;
-
-            // Filtrar visitas correspondientes al día actual
-            const visitasRecientes = visitas_db.filter(v => {
-                // Si la visita tiene programada una fecha específica (nuevo formato)
-                if (v.fecha_programada) {
-                    v.computed_ts = v.timestamp || new Date().getTime(); // Mantenemos el timestamp para ordenar
-                    return v.fecha_programada === hoyStr;
-                }
-
-                // Lógica de respaldo para los registros creados antes de tener el campo "fecha_programada"
-                let ts = v.timestamp;
-                if (!ts && v.hora) {
-                    const fallBackDate = new Date();
-                    const [hh, mm] = v.hora.split(':');
-                    if (hh && mm) {
-                        fallBackDate.setHours(parseInt(hh, 10), parseInt(mm, 10), 0, 0);
-                        ts = fallBackDate.getTime();
-                    }
-                }
-
-                if (ts) {
-                    v.computed_ts = ts;
-                    return ts >= startOfDay && ts < endOfDay;
-                }
-                return false;
-            });
-
-            if (visitasRecientes.length === 0) {
-                mostrarVacio(tbody);
-                return;
-            }
-
-            // Ordenar de más reciente a más antigua
-            visitasRecientes.sort((a, b) => b.computed_ts - a.computed_ts);
-
-            visitasRecientes.forEach(visita => {
+            pendientes.forEach(v => {
                 const tr = document.createElement('tr');
-
-                // Mostrar "NUEVO" si tiene menos de 15 minutos en el panel por ser del dia completo
-                const esMuyReciente = (Date.now() - visita.computed_ts) < (15 * 60 * 1000);
-                const badgeExtra = esMuyReciente ? '<span class="badge-recent">¡NUEVO!</span>' : '';
-
                 tr.innerHTML = `
-                    <td style="color: var(--primary-color);">
-                        <strong style="font-size: 1.2rem; display: flex; align-items: center;">
-                            ${visita.hora} 
-                            ${badgeExtra}
-                        </strong>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">${visita.fecha}</span>
-                    </td>
-                    <td><strong style="color: white;">${visita.nombre}</strong></td>
-                    <td style="color: var(--highlight-color); font-weight: 600;">${visita.identificacion || '-'}</td>
-                    <td style="letter-spacing: 1px; color: var(--text-muted); font-weight: 600;">${visita.placa}</td>
-                    <td>${visita.cantidad}</td>
-                    <td style="color: #a1a1aa; font-weight: 500;">${visita.autoriza}</td>
+                    <td>${v.hora}</td>
+                    <td><strong>${v.nombre}</strong></td>
+                    <td>${v.identificacion || '-'}</td>
+                    <td>${v.placa}</td>
+                    <td>${v.cantidad}</td>
+                    <td>${v.autoriza}</td>
+                    <td><button onclick='confirmarIngresoManual(${JSON.stringify(v)})' class="btn" style="background: var(--success-color); color: white;">INGRESAR</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function mostrarVacio(tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6">
-                        <div class="empty-state">
-                            <div class="empty-icon">🛡️</div>
-                            <h3>No hay visitas para el día de hoy</h3>
-                            <p>Las autorizaciones aparecerán aquí tan pronto como sean registradas.</p>
-                        </div>
-                    </td>
-                </tr>
-            `;
+        function confirmarIngresoManual(visita) {
+            mostrarSisdelModal(
+                "Confirmar Ingreso",
+                `¿Desea registrar el ingreso de <strong>${visita.nombre}</strong>?`,
+                "📥",
+                () => {
+                    procesarIngreso(visita);
+                }
+            );
         }
 
-        // Cargar configuración de condominio
-        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'DELCO II' };
+        function procesarIngreso(visita) {
+            const visitas = JSON.parse(localStorage.getItem('delco_visitas')) || [];
+            const idx = visitas.findIndex(v => v.id === visita.id);
+            if (idx !== -1) {
+                visitas[idx].entró = true;
+                localStorage.setItem('delco_visitas', JSON.stringify(visitas));
+            }
+
+            const historial = JSON.parse(localStorage.getItem('delco_historial_escaneos')) || [];
+            historial.unshift({
+                hora: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+                ts: Date.now(),
+                nombre: visita.nombre,
+                tipo: 'visitante',
+                identificacion: visita.placa || visita.identificacion,
+                lote: visita.lote || '-',
+                autoriza: visita.autoriza,
+                condo: config_db.nombre
+            });
+            localStorage.setItem('delco_historial_escaneos', JSON.stringify(historial.slice(0, 100)));
+
+            mostrarSisdelModal("Éxito", `✅ Ingreso de ${visita.nombre} registrado.`, "🚀");
+            cambiarVista('bitacora');
+        }
+
+        function cargarBitacoraGeneral() {
+            const tbody = document.getElementById('tablaBody'); tbody.innerHTML = '';
+            const log = JSON.parse(localStorage.getItem('delco_historial_escaneos')) || [];
+            const filtrados = log.filter(i => !i.condo || i.condo === config_db.nombre);
+
+            if (filtrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Sin actividad reciente</td></tr>';
+                return;
+            }
+
+            filtrados.forEach(i => {
+                const tr = document.createElement('tr');
+                const isRes = i.tipo === 'residente';
+                tr.innerHTML = `
+                    <td>${i.hora}</td>
+                    <td style="color: ${isRes ? '#60a5fa' : '#fbbf24'}"><strong>${i.nombre}</strong></td>
+                    <td>${isRes ? '🏠 RESIDENTE' : '👥 VISITANTE'}</td>
+                    <td>${i.identificacion}</td>
+                    <td>${i.lote}</td>
+                    <td>${isRes ? 'ESCÁNER' : i.autoriza}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function mostrarMarbeteModal(data) {
+            const modal = document.getElementById('modalMarbete');
+            const container = document.getElementById('marbeteContainer');
+            const v = data.vecino;
+            const alDia = v.status === 1;
+
+            container.innerHTML = `
+                <div style="background: #1c1c1c; border-radius: 20px; overflow: hidden; color: white; border: 4px solid ${alDia ? '#10b981' : '#ef4444'}">
+                    <div style="background: ${alDia ? '#10b981' : '#ef4444'}; padding: 1.5rem; font-weight: 800; font-size: 1.2rem;">
+                        ${alDia ? '✅ ACCESO AUTORIZADO' : '❌ PAGO PENDIENTE'}
+                    </div>
+                    <div style="padding: 2rem;">
+                        <div style="font-size: 0.8rem; color: #94a3b8;">RESIDENTE</div>
+                        <div style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem;">${v.nombre}</div>
+                        <div style="font-size: 0.8rem; color: #94a3b8;">LOTE</div>
+                        <div style="font-size: 1.5rem; font-weight: 800;">${v.lote}</div>
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+
+        function cerrarModalMarbete() { document.getElementById('modalMarbete').style.display = 'none'; }
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'SISDEL_ULTIMO_ESCANEO' && e.newValue) {
+                const data = JSON.parse(e.newValue);
+                if (Date.now() - data.timestamp < 5000) mostrarMarbeteModal(data);
+            }
+        });
+
+        // INIT
         document.getElementById('headerCondoName').innerText = config_db.nombre.toUpperCase();
-        document.title = `Acceso Garita - ${config_db.nombre}`;
-
-        // Inicializar reloj y tabla
-        setInterval(actualizarReloj, 1000);
-        actualizarReloj();
-
-        // Actualizar lista de visitas cada 10 segundos
-        setInterval(cargarVisitasRecientes, 10000);
-        cargarVisitasRecientes();
-
+        actualizarTabla();
+        setInterval(actualizarTabla, 10000);
     </script>
 </body>
 

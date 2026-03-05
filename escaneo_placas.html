@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escáner de Placas - Control Residencial</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tesseract.js para OCR de placas -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- html5-qrcode para escaneo de marbetes QR -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-color: #0a0a0f;
+            --panel-bg: #141420;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #2a2a3a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-color) 0%, #0f1729 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        .header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border-radius: 1rem;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .header-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .header-condo {
+            color: var(--warning-color);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        /* CÁMARA */
+        .camera-panel {
+            background: var(--panel-bg);
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            margin-bottom: 1rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #videoFeed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .scan-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .scan-frame {
+            width: 85%;
+            height: 35%;
+            border: 3px solid rgba(59, 130, 246, 0.8);
+            border-radius: 12px;
+            position: relative;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.2), inset 0 0 30px rgba(59, 130, 246, 0.05);
+        }
+
+        .scan-frame::before {
+            content: 'ENFOCAR PLACA AQUÍ';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(59, 130, 246, 0.9);
+            color: white;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+            animation: scanMove 2s linear infinite;
+        }
+
+        @keyframes scanMove {
+            0% {
+                top: 10%;
+            }
+
+            50% {
+                top: 85%;
+            }
+
+            100% {
+                top: 10%;
+            }
+        }
+
+        #canvasCapture {
+            display: none;
+        }
+
+        .camera-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+        }
+
+        .camera-placeholder span {
+            font-size: 3rem;
+        }
+
+        /* CONTROLES */
+        .controls {
+            padding: 1.2rem;
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.9rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 0.5px;
+            min-width: 140px;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-capture {
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-capture:hover {
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .btn-capture:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-manual {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-manual:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-reset {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger-color);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-reset:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-back {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+
+        /* PROGRESO OCR */
+        .progress-container {
+            display: none;
+            padding: 1rem 1.5rem;
+            text-align: center;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), #8b5cf6);
+            border-radius: 3px;
+            transition: width 0.3s;
+            width: 0%;
+        }
+
+        .progress-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        /* CAMPO MANUAL */
+        .manual-input-section {
+            display: none;
+            padding: 1rem 1.5rem;
+        }
+
+        .manual-input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-placa {
+            flex: 1;
+            padding: 0.9rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--border-color);
+            border-radius: 0.75rem;
+            color: white;
+            font-family: inherit;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-placa:focus {
+            border-color: var(--primary-color);
+        }
+
+        .btn-buscar {
+            padding: 0.9rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        /* RESULTADO */
+        .resultado-panel {
+            display: none;
+            margin-top: 1rem;
+            border-radius: 1rem;
+            overflow: hidden;
+            animation: slideUp 0.5s ease-out;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* BARRA DE ESTADO VERDE/ROJA */
+        .status-bar-result {
+            padding: 1.5rem;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .status-bar-result.al-dia {
+            background: linear-gradient(135deg, #059669, #10b981, #34d399);
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.1);
+        }
+
+        .status-bar-result.moroso {
+            background: linear-gradient(135deg, #dc2626, #ef4444, #f87171);
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.1);
+            animation: pulseRed 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseRed {
+
+            0%,
+            100% {
+                box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.1);
+            }
+
+            50% {
+                box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.2), 0 0 20px rgba(239, 68, 68, 0.4);
+            }
+        }
+
+        .status-bar-result.no-encontrado {
+            background: linear-gradient(135deg, #d97706, #f59e0b);
+            color: white;
+        }
+
+        .status-icon {
+            font-size: 1.8rem;
+        }
+
+        /* DETALLES DEL VECINO */
+        .detalles-vecino {
+            background: var(--panel-bg);
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .detalle-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.7rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            align-items: center;
+        }
+
+        .detalle-row:last-child {
+            border-bottom: none;
+        }
+
+        .detalle-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detalle-value {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .placa-detectada {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .placa-texto {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 5px;
+            color: var(--warning-color);
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+        }
+
+        .placa-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* HISTORIAL */
+        .historial {
+            margin-top: 1.5rem;
+            background: var(--panel-bg);
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .historial-title {
+            padding: 1rem 1.5rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .historial-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .historial-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .historial-placa {
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--warning-color);
+        }
+
+        .historial-estado {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .historial-estado.ok {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+
+        .historial-estado.mal {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+
+        .historial-estado.na {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning-color);
+        }
+
+        .historial-hora {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .empty-historial {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .nav-bottom {
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        /* TABS DE MODO */
+        .mode-tabs {
+            display: flex;
+            margin-bottom: 1rem;
+            background: var(--panel-bg);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .mode-tab {
+            flex: 1;
+            padding: 0.8rem;
+            text-align: center;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            transition: all 0.3s;
+            letter-spacing: 0.5px;
+        }
+
+        .mode-tab.active {
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .mode-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        /* QR READER */
+        #qrReaderContainer {
+            display: none;
+        }
+
+        #qrReader {
+            width: 100%;
+            border-radius: 0;
+        }
+
+        #qrReader video {
+            border-radius: 0 !important;
+        }
+
+        .qr-controls {
+            padding: 1.2rem;
+            text-align: center;
+        }
+
+        .qr-status {
+            padding: 0.8rem 1.2rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: rgba(139, 92, 246, 0.1);
+            border-top: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        /* =========================================
+           ESTILOS PREMIUM SISDEL MODAL (ALERTAS)
+           ========================================= */
+        .modal-overlay-custom {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay-custom.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-card-custom {
+            background: #1e293b;
+            width: 90%;
+            max-width: 380px;
+            border-radius: 20px;
+            padding: 1.8rem;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            text-align: center;
+        }
+
+        .modal-overlay-custom.active .modal-card-custom {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-icon-container-custom {
+            width: 54px;
+            height: 54px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.2rem auto;
+            color: #3b82f6;
+            font-size: 1.5rem;
+        }
+
+        .modal-success-custom .modal-icon-container-custom {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .modal-error-custom .modal-icon-container-custom {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .modal-warning-custom .modal-icon-container-custom {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .modal-title-custom {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 0.6rem;
+            letter-spacing: -0.01em;
+        }
+
+        .modal-text-custom {
+            font-size: 0.95rem;
+            color: #94a3b8;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-btn-confirm-custom {
+            width: 100%;
+            padding: 0.8rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .modal-btn-confirm-custom:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .modal-success-custom .modal-btn-confirm-custom {
+            background: #10b981;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .modal-error-custom .modal-btn-confirm-custom {
+            background: #ef4444;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="title-group">
+                <h1 class="header-title" style="margin-bottom: 0;">ESCÁNER VEHICULAR</h1>
+                <div class="header-condo" id="condoName"
+                    style="color: var(--warning-color); font-weight: 600; letter-spacing: 1px;">CARGANDO...</div>
+            </div>
+            <div style="text-align: right;">
+                <span
+                    style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">VISTA
+                    DE GARITA</span>
+            </div>
+        </div>
+
+        <!-- TABS DE MODO -->
+        <div class="mode-tabs">
+            <button class="mode-tab active" id="tabPlacas" onclick="cambiarModo('placas')">
+                🚗 ESCANEAR PLACA
+            </button>
+            <button class="mode-tab" id="tabQR" onclick="cambiarModo('qr')">
+                📱 ESCANEAR MARBETE
+            </button>
+        </div>
+
+        <!-- PANEL DE CÁMARA -->
+        <div class="camera-panel">
+            <div class="camera-container" id="cameraContainer">
+                <video id="videoFeed" autoplay playsinline></video>
+                <canvas id="canvasCapture"></canvas>
+                <div class="scan-overlay" id="scanOverlay">
+                    <div class="scan-frame">
+                        <div class="scan-line"></div>
+                    </div>
+                </div>
+                <div class="camera-placeholder" id="cameraPlaceholder" style="display: none;">
+                    <span>📷</span>
+                    <p>Presione "Iniciar Cámara" para comenzar</p>
+                </div>
+            </div>
+
+            <!-- PROGRESO OCR -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-text" id="progressText">Analizando imagen...</div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <!-- CONTROLES -->
+            <div class="controls" id="controlsPlaca">
+                <button class="btn btn-capture" id="btnCapture" onclick="capturarYEscanear()">
+                    📸 ESCANEAR PLACA
+                </button>
+                <button class="btn btn-manual" onclick="toggleManual()">
+                    ⌨️ MANUAL
+                </button>
+            </div>
+
+            <!-- ENTRADA MANUAL -->
+            <div class="manual-input-section" id="manualSection">
+                <div class="manual-input-group">
+                    <input type="text" id="inputPlacaManual" class="input-placa" placeholder="P-123ABC" maxlength="15"
+                        onkeydown="if(event.key==='Enter') buscarPlacaManual()">
+                    <button class="btn-buscar" onclick="buscarPlacaManual()">🔍</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL QR (Oculto por defecto) -->
+        <div class="camera-panel" id="qrReaderContainer">
+            <div id="qrReader"></div>
+            <div class="qr-status" id="qrStatus">
+                📱 Apunte la cámara al código QR del marbete digital
+            </div>
+            <div class="qr-controls">
+                <button class="btn btn-capture" id="btnIniciarQR" onclick="iniciarEscaneoQR()">
+                    📱 ACTIVAR ESCÁNER QR
+                </button>
+                <button class="btn btn-manual" onclick="toggleManual()" style="margin-top: 8px;">
+                    ⌨️ INGRESAR CÓDIGO MANUAL
+                </button>
+            </div>
+            <!-- ENTRADA MANUAL QR -->
+            <div class="manual-input-section" id="manualSectionQR" style="display: none;">
+                <div class="manual-input-group">
+                    <input type="text" id="inputCodigoManualQR" class="input-placa" placeholder="CÓDIGO" maxlength="20"
+                        style="letter-spacing: 2px;" onkeydown="if(event.key==='Enter') buscarCodigoManualQR()">
+                    <button class="btn-buscar" onclick="buscarCodigoManualQR()">🔍</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTADO -->
+        <div class="resultado-panel" id="resultadoPanel">
+            <div class="placa-detectada" id="placaDetectada">
+                <div class="placa-texto" id="placaTexto">---</div>
+                <div class="placa-sub">PLACA DETECTADA</div>
+            </div>
+            <div class="status-bar-result" id="statusBar">
+                <!-- Se llena dinámicamente -->
+            </div>
+            <div class="detalles-vecino" id="detallesVecino">
+                <!-- Se llena dinámicamente -->
+            </div>
+            <div style="padding: 1rem; text-align: center;">
+                <div style="padding: 1rem; text-align: center;">
+                    <button class="btn btn-reset" id="btnResetEscaneo" onclick="resetEscaneo()" style="width: 100%;">
+                        🔄 ESCANEAR OTRA PLACA
+                    </button>
+                </div>
+            </div>
+
+            <!-- HISTORIAL DE ESCANEOS -->
+            <div class="historial" id="historialPanel">
+                <div class="historial-title">📋 Historial de Escaneos (Hoy)</div>
+                <div id="historialBody">
+                    <div class="empty-historial">No se han realizado escaneos hoy</div>
+                </div>
+            </div>
+
+            <!-- NAVEGACIÓN -->
+            <div class="nav-bottom">
+                <button class="btn btn-back" onclick="window.history.back()" style="width: 100%;">
+                    ← Volver
+                </button>
+            </div>
+        </div>
+
+        <!-- =========================================
+         SISDEL PREMIUM MODAL (ALERTAS)
+         ========================================= -->
+        <div id="sisdelModal" class="modal-overlay-custom">
+            <div class="modal-card-custom" id="sisdelModalCard">
+                <div class="modal-icon-container-custom" id="modalIconContainer">
+                    <span id="modalIcon">🔔</span>
+                </div>
+                <h3 class="modal-title-custom" id="modalTitle">Aviso del Sistema</h3>
+                <p class="modal-text-custom" id="modalText">Mensaje de alerta aquí.</p>
+                <button class="modal-btn-confirm-custom" id="modalBtnConfirm">Entendido</button>
+            </div>
+        </div>
+
+        <script>
+            // SISDEL Modal Functionality
+            function mostrarSisdelModal(mensaje, titulo = "Aviso del Sistema", tipo = "info") {
+                const modal = document.getElementById('sisdelModal');
+                const card = document.getElementById('sisdelModalCard');
+                const iconContainer = document.getElementById('modalIconContainer');
+                const icon = document.getElementById('modalIcon');
+                const titleEl = document.getElementById('modalTitle');
+                const textEl = document.getElementById('modalText');
+                const btn = document.getElementById('modalBtnConfirm');
+
+                // Reset classes
+                card.classList.remove('modal-success-custom', 'modal-error-custom', 'modal-warning-custom');
+
+                // Set type
+                if (tipo === "success") {
+                    card.classList.add('modal-success-custom');
+                    icon.innerText = "✅";
+                } else if (tipo === "error") {
+                    card.classList.add('modal-error-custom');
+                    icon.innerText = "❌";
+                } else if (tipo === "warning") {
+                    card.classList.add('modal-warning-custom');
+                    icon.innerText = "⚠️";
+                } else {
+                    icon.innerText = "🔔";
+                }
+
+                titleEl.innerText = titulo;
+                textEl.innerText = mensaje;
+
+                modal.style.display = 'flex';
+                setTimeout(() => modal.classList.add('active'), 10);
+
+                // Return promise for sync-like behavior if needed
+                return new Promise((resolve) => {
+                    btn.onclick = () => {
+                        modal.classList.remove('active');
+                        setTimeout(() => {
+                            modal.style.display = 'none';
+                            resolve();
+                        }, 300);
+                    };
+                });
+            }
+
+            // Override window.alert
+            window.alert = function (mensaje) {
+                // Analizar el mensaje para determinar el "tipo"
+                let tipo = "info";
+                let titulo = "Aviso del Sistema";
+
+                if (mensaje.includes("exitoso") || mensaje.includes("Enviado") || mensaje.includes("Correcto") || mensaje.includes("✅")) {
+                    tipo = "success";
+                    titulo = "Operación Exitosa";
+                } else if (mensaje.includes("error") || mensaje.includes("Clave administrativa incorrecta") || mensaje.includes("cancelada") || mensaje.includes("❌") || mensaje.includes("No se pudo leer")) {
+                    tipo = "error";
+                    titulo = "Atención";
+                } else if (mensaje.includes("⚠️") || mensaje.includes("seguro") || mensaje.includes("cámara no está activa")) {
+                    tipo = "warning";
+                    titulo = "Aviso";
+                }
+
+                mostrarSisdelModal(mensaje, titulo, tipo);
+            };
+
+            // --- CONFIGURACIÓN INICIAL ---
+            const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'MI CONDOMINIO', activo: true };
+
+            if (config_db.activo === false) {
+                document.body.innerHTML = `
+                    <div style="height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a0f 100%); color: white; font-family: 'Outfit', sans-serif; text-align: center; padding: 20px;">
+                        <div style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 2.5rem; padding: 4rem 2rem; max-width: 500px; width: 100%; box-shadow: 0 50px 100px -20px rgba(0,0,0,0.9);">
+                            <div style="width: 85px; height: 85px; background: rgba(239, 68, 68, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem auto; border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; font-size: 2.8rem; box-shadow: 0 0 40px rgba(239, 68, 68, 0.2);">🔒</div>
+                            <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 1.5rem; color: #f8fafc; letter-spacing: -0.025em; line-height: 1.1;">SERVICIO <span style="color: #ef4444;">SUSPENDIDO</span></h1>
+                            <p style="font-size: 1.1rem; color: #94a3b8; line-height: 1.7; margin-bottom: 2.5rem; font-weight: 300;">
+                                El módulo de escaneo OCR para <strong>${config_db.nombre.toUpperCase()}</strong> no está disponible actualmente.
+                                <br><br>
+                                Por favor, contacte al soporte de <strong>SISDEL INTERNACIONAL</strong> para restaurar las funciones de reconocimiento de placas.
+                            </p>
+                            <button onclick="window.history.back()" style="width: 100%; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 1.25rem; border-radius: 1.25rem; font-weight: 600; font-size: 1.1rem; cursor: pointer; transition: all 0.3s; font-family: 'Outfit', sans-serif;">
+                                ← Regresar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                throw new Error("Sistema Desactivado");
+            }
+
+            document.getElementById('condoName').innerText = config_db.nombre.toUpperCase();
+            document.title = `Escáner Placas - ${config_db.nombre}`;
+
+            let stream = null;
+            let historialEscaneos = JSON.parse(localStorage.getItem('delco_historial_escaneos')) || [];
+
+            // --- INICIAR CÁMARA ---
+            async function iniciarCamara() {
+                try {
+                    const placeholder = document.getElementById('cameraPlaceholder');
+                    const video = document.getElementById('videoFeed');
+
+                    // Intentar con cámara trasera primero (ideal para escaneo)
+                    const constraints = {
+                        video: {
+                            facingMode: { ideal: 'environment' },
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        }
+                    };
+
+                    stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+
+                } catch (err) {
+                    console.error('Error al acceder a la cámara:', err);
+                    const placeholder = document.getElementById('cameraPlaceholder');
+                    if (placeholder) {
+                        placeholder.style.display = 'flex';
+                        placeholder.innerHTML = '<span>⚠️</span><p>No se pudo acceder a la cámara.<br>Use el modo manual.</p>';
+                    }
+                    document.getElementById('videoFeed').style.display = 'none';
+                }
+            }
+
+            // --- CAPTURAR FRAME Y EJECUTAR OCR ---
+            async function capturarYEscanear() {
+                const video = document.getElementById('videoFeed');
+                const canvas = document.getElementById('canvasCapture');
+                const btn = document.getElementById('btnCapture');
+
+                if (!stream) {
+                    alert('⚠️ La cámara no está activa. Use el modo manual para ingresar la placa.');
+                    return;
+                }
+
+                // Capturar frame del video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Recortar solo la zona central (donde debería estar la placa)
+                const cropX = canvas.width * 0.075;
+                const cropY = canvas.height * 0.325;
+                const cropW = canvas.width * 0.85;
+                const cropH = canvas.height * 0.35;
+
+                const cropCanvas = document.createElement('canvas');
+                cropCanvas.width = cropW;
+                cropCanvas.height = cropH;
+                const cropCtx = cropCanvas.getContext('2d');
+
+                // Mejorar contraste para OCR
+                cropCtx.filter = 'contrast(1.5) brightness(1.1) grayscale(1)';
+                cropCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+                btn.disabled = true;
+                btn.innerHTML = '⏳ PROCESANDO...';
+
+                // Mostrar barra de progreso
+                const progContainer = document.getElementById('progressContainer');
+                const progFill = document.getElementById('progressFill');
+                const progText = document.getElementById('progressText');
+                progContainer.style.display = 'block';
+
+                try {
+                    const result = await Tesseract.recognize(
+                        cropCanvas.toDataURL(),
+                        'eng',
+                        {
+                            logger: m => {
+                                if (m.progress) {
+                                    progFill.style.width = Math.round(m.progress * 100) + '%';
+                                    progText.innerText = m.status || 'Procesando...';
+                                }
+                            }
+                        }
+                    );
+
+                    progContainer.style.display = 'none';
+                    btn.disabled = false;
+                    btn.innerHTML = '📸 ESCANEAR PLACA';
+
+                    // Extraer texto y limpiar
+                    let textoDetectado = result.data.text.trim().toUpperCase();
+                    textoDetectado = textoDetectado.replace(/[^A-Z0-9\-\s]/g, '').trim();
+
+                    // Tomar la línea más larga (más probable de ser la placa)
+                    const lineas = textoDetectado.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    let placaFinal = lineas.reduce((a, b) => a.length >= b.length ? a : b, '');
+                    placaFinal = placaFinal.replace(/\s+/g, '-');
+
+                    if (placaFinal.length < 3) {
+                        alert('⚠️ No se pudo leer la placa claramente.\n\nInténtelo de nuevo o use el modo manual.');
+                        return;
+                    }
+
+                    procesarPlaca(placaFinal);
+
+                } catch (err) {
+                    console.error('Error OCR:', err);
+                    progContainer.style.display = 'none';
+                    btn.disabled = false;
+                    btn.innerHTML = '📸 ESCANEAR PLACA';
+                    alert('❌ Error al procesar la imagen. Intente de nuevo o use el modo manual.');
+                }
+            }
+
+            // --- MODO MANUAL --- (función definida más abajo junto con lógica QR)
+
+            function buscarPlacaManual() {
+                const input = document.getElementById('inputPlacaManual');
+                const placa = input.value.trim().toUpperCase();
+                if (!placa) {
+                    alert('⚠️ Ingrese una placa para buscar.');
+                    return;
+                }
+                procesarPlaca(placa);
+                input.value = '';
+            }
+
+            // --- PROCESAR PLACA (BUSCAR EN BD) ---
+            function procesarPlaca(placa) {
+                const vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [];
+                const visitas_db = JSON.parse(localStorage.getItem('delco_visitas')) || [];
+
+                // 1. Buscar en residentes
+                let vecinoEncontrado = null;
+                for (const vecino of vecinos_db) {
+                    if (!vecino.placas) continue;
+                    const placasDelVecino = vecino.placas.split(',').map(p => p.trim().toUpperCase());
+
+                    for (const p of placasDelVecino) {
+                        if (p === placa || placa.includes(p) || p.includes(placa)) {
+                            vecinoEncontrado = vecino;
+                            break;
+                        }
+                    }
+                    if (vecinoEncontrado) break;
+                }
+
+                // 2. Buscar en visitas (si no es residente)
+                let visitaEncontrada = null;
+                if (!vecinoEncontrado) {
+                    const hoy = new Date().toISOString().split('T')[0];
+                    const idxV = visitas_db.findIndex(v =>
+                        !v.entró &&
+                        v.placa && v.placa.toUpperCase().includes(placa) &&
+                        (v.fecha_programada === hoy || v.fecha === new Date().toLocaleDateString('es-ES'))
+                    );
+
+                    if (idxV !== -1) {
+                        visitaEncontrada = visitas_db[idxV];
+                        visitas_db[idxV].entró = true;
+                        localStorage.setItem('delco_visitas', JSON.stringify(visitas_db));
+                    }
+                }
+
+                const persona = vecinoEncontrado || visitaEncontrada;
+                const tipo = vecinoEncontrado ? 'residente' : (visitaEncontrada ? 'visitante' : null);
+
+                // Mostrar resultado
+                mostrarResultado(placa, persona, tipo);
+
+                // Guardar en historial
+                agregarAlHistorial(placa, persona, tipo || 'residente');
+
+                // Sonar alarma
+                sonarAlarma(persona ? (persona.status !== 0) : null);
+            }
+
+            // --- MOSTRAR RESULTADO ---
+            function mostrarResultado(placa, persona, tipo) {
+                const panel = document.getElementById('resultadoPanel');
+                const placaTextoEl = document.getElementById('placaTexto');
+                const statusBar = document.getElementById('statusBar');
+                const detalles = document.getElementById('detallesVecino');
+                const btnReset = document.getElementById('btnResetEscaneo');
+
+                panel.style.display = 'block';
+
+                if (modoActual === 'qr') {
+                    // MODO MARBETE (TICKET VISUAL)
+                    placaTextoEl.parentElement.style.display = 'none';
+                    statusBar.style.display = 'none';
+                    detalles.style.padding = '0';
+                    btnReset.innerHTML = '🔄 ESCANEAR OTRO MARBETE';
+
+                    if (!persona) {
+                        detalles.innerHTML = `
+                        <div style="background: #1e1e1e; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5); text-align: center; color: white;">
+                            <div style="background: linear-gradient(135deg, #ef4444, #dc2626); padding: 1.5rem; text-align: center;">
+                                <div style="font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">${config_db.nombre}</div>
+                                <div style="font-size: 0.9rem; font-weight: 600; opacity: 0.9;">CÓDIGO INVÁLIDO</div>
+                            </div>
+                            <div style="padding: 3rem 1.5rem;">
+                                <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">🚫</div>
+                                <p style="font-size: 1.1rem; font-weight: 600;">No se encontró ningún registro</p>
+                                <p style="margin-top: 8px; font-size: 0.85rem; color: #9ca3af;">Verifique el código QR escaneado.</p>
+                            </div>
+                        </div>
+                    `;
+                        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        return;
+                    }
+
+                    // Generar ticket visual
+                    const alDia = persona.status !== 0; // Para visitas siempre es "al día"
+                    const estadoColor = alDia ? '#10b981' : '#ef4444';
+                    const estadoTexto = tipo === 'visitante' ? 'VISITA AUTORIZADA' : (alDia ? 'PAGOS AL DÍA' : 'PAGOS PENDIENTES');
+
+                    const ahora = new Date();
+                    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+                    const fechaGenerado = `${ahora.getDate()} de ${meses[ahora.getMonth()]} de ${ahora.getFullYear()} a las ${ahora.getHours().toString().padStart(2, '0')}:${ahora.getMinutes().toString().padStart(2, '0')}`;
+
+                    // Generar imagen QR temporal
+                    const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + encodeURIComponent(persona.codigo || persona.placa || placa);
+
+                    detalles.innerHTML = `
+                    <div style="background: #1c1c1c; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5); text-align: center; color: white; display: flex; flex-direction: column;">
+                        <!-- HEADER -->
+                        <div style="background: linear-gradient(135deg, ${tipo === 'visitante' ? '#fbbf24, #f59e0b' : '#60a5fa, #3b82f6'}); padding: 1.2rem; text-align: center;">
+                            <div style="font-size: 1.3rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">${config_db.nombre}</div>
+                            <div style="font-size: 0.85rem; font-weight: 600; margin-top: 2px;">PASE DE ${tipo.toUpperCase()}</div>
+                        </div>
+                        
+                        <!-- BODY -->
+                        <div style="padding: 1.8rem 1.5rem; flex: 1; display: flex; flex-direction: column; align-items: center;">
+                            <div style="margin-bottom: 1rem;">
+                                <div style="font-size: 0.7rem; color: #9ca3af; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600;">${tipo === 'visitante' ? 'NOMBRE DEL VISITANTE' : 'RESIDENTE'}</div>
+                                <div style="font-size: 1.25rem; font-weight: 800; text-transform: uppercase;">${persona.nombre}</div>
+                            </div>
+                            
+                            <div style="margin-bottom: 1.5rem;">
+                                <div style="font-size: 0.7rem; color: #9ca3af; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600;">${tipo === 'visitante' ? 'AUTORIZADO POR' : 'UBICACIÓN'}</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: ${tipo === 'visitante' ? '#fbbf24' : 'white'};">${tipo === 'visitante' ? persona.autoriza : 'LOTE ' + persona.lote}</div>
+                            </div>
+                            
+                            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 0.5rem 1rem; margin-bottom: 1.5rem; width: 100%; max-width: 250px;">
+                                <div style="font-size: 0.6rem; color: #9ca3af; letter-spacing: 1px; text-transform: uppercase; font-weight: 600;">FECHA DE INGRESO</div>
+                                <div style="font-size: 0.8rem; color: white;">${fechaGenerado}</div>
+                            </div>
+                            
+                            <!-- QR -->
+                            <div style="background: white; padding: 0.6rem; border-radius: 8px; margin-bottom: 1.2rem; display: inline-block;">
+                                <img src="${qrUrl}" alt="QR" style="width: 130px; height: 130px; display: block; filter: contrast(1.1);">
+                            </div>
+                            
+                            <button onclick="window.location.href='registro_visitas.html'" style="background: rgba(255,255,255,0.1); color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; width: 100%;">
+                                <span>➕</span> Nueva Autorización
+                            </button>
+                        </div>
+                        
+                        <!-- FOOTER -->
+                        <div style="background: ${estadoColor}; padding: 1rem; text-align: center;">
+                            <div style="font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">${estadoTexto}</div>
+                        </div>
+                    </div>
+                `;
+
+                    if (persona) {
+                        localStorage.setItem('SISDEL_ULTIMO_ESCANEO', JSON.stringify({
+                            persona: persona,
+                            identificacion: placa,
+                            tipo: tipo,
+                            timestamp: Date.now()
+                        }));
+                    }
+
+                } else {
+                    // MODO PLACAS
+                    placaTextoEl.innerText = placa;
+                    placaTextoEl.parentElement.style.display = 'block';
+                    statusBar.style.display = 'flex';
+                    detalles.style.padding = '';
+                    btnReset.innerHTML = '🔄 ESCANEAR OTRA PLACA';
+
+                    if (!persona) {
+                        statusBar.className = 'status-bar-result no-encontrado';
+                        statusBar.innerHTML = '<span class="status-icon">⚠️</span> VEHÍCULO NO REGISTRADO';
+                        detalles.innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">🔍</div>
+                            <p style="font-size: 1.1rem; font-weight: 600; color: white;">No se encontró ningún registro</p>
+                            <p style="margin-top: 8px; font-size: 0.85rem;">Verifique la placa o ingrese la visita manualmente en garita.</p>
+                        </div>
+                    `;
+                        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        return;
+                    }
+
+                    const alDia = persona.status !== 0;
+
+                    if (tipo === 'visitante') {
+                        statusBar.className = 'status-bar-result al-dia';
+                        statusBar.innerHTML = '<span class="status-icon">✅</span> VISITA AUTORIZADA';
+
+                        detalles.innerHTML = `
+                        <div style="text-align: center; padding: 1.5rem; background: linear-gradient(135deg, rgba(251,191,36,0.1), rgba(245,158,11,0.1)); border-bottom: 1px solid var(--border-color);">
+                            <div style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24, #f59e0b); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem; font-size: 2rem; box-shadow: 0 4px 15px rgba(251,191,36,0.3);">
+                                🚗
+                            </div>
+                            <div style="font-size: 1.4rem; font-weight: 700; color: white; margin-bottom: 4px;">${persona.nombre}</div>
+                            <span style="display: inline-block; background: rgba(251,191,36,0.2); color: #fbbf24; padding: 3px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; border: 1px solid rgba(251,191,36,0.4);">VISITANTE</span>
+                            <div style="margin-top: 8px; font-size: 0.8rem; color: var(--text-muted);">DPI: ${persona.identificacion || '—'}</div>
+                        </div>
+                        <div style="padding: 1rem 1.5rem;">
+                            <div class="detalle-row">
+                                <span class="detalle-label">👤 Autorizado por</span>
+                                <span class="detalle-value" style="color: #fbbf24;">${persona.autoriza}</span>
+                            </div>
+                            <div class="detalle-row">
+                                <span class="detalle-label">🏘️ Ubicación Destino</span>
+                                <span class="detalle-value">LOTE ${persona.lote || persona.autoriza.split(' ')[1] || '—'}</span>
+                            </div>
+                            <div class="detalle-row">
+                                <span class="detalle-label">👥 Personas</span>
+                                <span class="detalle-value">${persona.cantidad || 1}</span>
+                            </div>
+                             <div class="detalle-row">
+                                <span class="detalle-label">📅 Fecha Programada</span>
+                                <span class="detalle-value">${persona.fecha || 'Hoy'}</span>
+                            </div>
+                        </div>
+                        `;
+                    } else {
+                        // RESIDENTE
+                        if (alDia) {
+                            statusBar.className = 'status-bar-result al-dia';
+                            statusBar.innerHTML = '<span class="status-icon">✅</span> ESTÁ AL DÍA';
+                        } else {
+                            statusBar.className = 'status-bar-result moroso';
+                            statusBar.innerHTML = '<span class="status-icon">🚫</span> TIENE PAGOS PENDIENTES';
+                        }
+
+                        let rolTexto = 'RESIDENTE';
+                        let rolColor = '#94a3b8';
+                        let rolBg = 'rgba(148, 163, 184, 0.2)';
+                        if (persona.rol == 1) { rolTexto = 'JUNTA DIRECTIVA'; rolColor = '#60a5fa'; rolBg = 'rgba(96, 165, 250, 0.2)'; }
+                        else if (persona.rol == 3) { rolTexto = 'GARITA'; rolColor = '#fbbf24'; rolBg = 'rgba(251, 191, 36, 0.2)'; }
+
+                        const placasBadges = persona.placas
+                            ? persona.placas.split(',').map(p =>
+                                `<span style="display:inline-block; background: rgba(59,130,246,0.1); color: #60a5fa; padding: 3px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 700; margin: 2px; letter-spacing: 1px; border: 1px solid rgba(59,130,246,0.2);">${p.trim()}</span>`
+                            ).join(' ')
+                            : '<span style="color: var(--text-muted);">Sin placas registradas</span>';
+
+                        detalles.innerHTML = `
+                        <div style="text-align: center; padding: 1.5rem; background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(139,92,246,0.08)); border-bottom: 1px solid var(--border-color);">
+                            <div style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), #8b5cf6); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem; font-size: 2rem; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">👤</div>
+                            <div style="font-size: 1.4rem; font-weight: 700; color: white; margin-bottom: 4px;">${persona.nombre}</div>
+                            <span style="display: inline-block; background: ${rolBg}; color: ${rolColor}; padding: 3px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; border: 1px solid ${rolColor}33;">${rolTexto}</span>
+                        </div>
+                        <div style="padding: 0 1.5rem;">
+                            <div class="detalle-row"><span class="detalle-label">🏠 Lote</span><span class="detalle-value" style="font-size: 1.1rem; color: white;">${persona.lote}</span></div>
+                            <div class="detalle-row"><span class="detalle-label">🆔 DPI</span><span class="detalle-value">${persona.dpi || '—'}</span></div>
+                            <div class="detalle-row"><span class="detalle-label">🛡️ Estado</span><span class="detalle-value" style="color: ${alDia ? 'var(--success-color)' : 'var(--danger-color)'}">${alDia ? 'AL DÍA' : 'MOROSO'}</span></div>
+                        </div>
+                        <div style="padding: 1rem 1.5rem; background: rgba(255,255,255,0.02); border-top: 1px solid var(--border-color);">
+                            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">🚗 Placas Registradas</div>
+                            <div>${placasBadges}</div>
+                        </div>
+                        `;
+                    }
+
+                    if (persona) {
+                        localStorage.setItem('SISDEL_ULTIMO_ESCANEO', JSON.stringify({
+                            persona: persona,
+                            identificacion: placa,
+                            tipo: tipo,
+                            timestamp: Date.now()
+                        }));
+                    }
+                }
+
+                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+
+            // --- RESET ---
+            function resetEscaneo() {
+                document.getElementById('resultadoPanel').style.display = 'none';
+            }
+
+            // --- HISTORIAL ---
+            function agregarAlHistorial(identificacion, persona, tipo = 'residente') {
+                const ahora = new Date();
+                const hora = ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+                const nuevoIngreso = {
+                    hora: hora,
+                    ts: ahora.getTime(),
+                    nombre: persona ? (persona.nombre || 'NO REGISTRADO') : 'NO REGISTRADO',
+                    tipo: tipo,
+                    identificacion: identificacion,
+                    lote: persona ? (persona.lote || '-') : '-',
+                    autoriza: tipo === 'residente' ? 'ESCÁNER (PROPIO)' : (persona ? (persona.autoriza || '-') : '-'),
+                    status: persona ? persona.status : null,
+                    condo: config_db.nombre
+                };
+
+                historialEscaneos.unshift(nuevoIngreso);
+
+                // Máximo 100 entries para permitir una bitácora completa del día
+                if (historialEscaneos.length > 100) historialEscaneos.pop();
+
+                localStorage.setItem('delco_historial_escaneos', JSON.stringify(historialEscaneos));
+                renderizarHistorial();
+            }
+
+            function renderizarHistorial() {
+                const body = document.getElementById('historialBody');
+
+                if (historialEscaneos.length === 0) {
+                    body.innerHTML = '<div class="empty-historial">No se han realizado escaneos hoy</div>';
+                    return;
+                }
+
+                body.innerHTML = '';
+                historialEscaneos.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'historial-item';
+
+                    let estadoClass = 'na';
+                    let estadoText = 'NO REG.';
+                    if (item.status === 1 || item.tipo === 'visitante') {
+                        estadoClass = 'ok';
+                        estadoText = item.tipo === 'visitante' ? 'VISITA' : 'AL DÍA';
+                    }
+                    else if (item.status === 0) { estadoClass = 'mal'; estadoText = 'MOROSO'; }
+
+                    div.innerHTML = `
+                    <span class="historial-placa">${item.identificacion}</span>
+                    <div style="flex: 1; margin-left: 12px; display: flex; flex-direction: column;">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: white;">${item.nombre}</span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">${item.tipo === 'residente' ? 'RESIDENTE' : 'VISITANTE'} • ${item.lote}</span>
+                    </div>
+                    <span class="historial-estado ${estadoClass}">${estadoText}</span>
+                    <span class="historial-hora" style="margin-left: 10px;">${item.hora}</span>
+                `;
+                    div.onclick = () => {
+                        if (item.tipo === 'residente') procesarPlaca(item.identificacion);
+                    };
+                    body.appendChild(div);
+                });
+            }
+
+            // --- ALARMA SONORA ---
+            function sonarAlarma(esPositivo) {
+                try {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+                    if (esPositivo === true) {
+                        // Sonido positivo (ascendente)
+                        const notas = [523.25, 659.25, 783.99];
+                        notas.forEach((freq, i) => {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.connect(gain);
+                            gain.connect(audioCtx.destination);
+                            osc.type = 'sine';
+                            osc.frequency.value = freq;
+                            gain.gain.setValueAtTime(0.25, audioCtx.currentTime + i * 0.12);
+                            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.12 + 0.25);
+                            osc.start(audioCtx.currentTime + i * 0.12);
+                            osc.stop(audioCtx.currentTime + i * 0.12 + 0.25);
+                        });
+                    } else if (esPositivo === false) {
+                        // Sonido de alerta (descendente)
+                        const notas = [440, 349.23, 261.63];
+                        notas.forEach((freq, i) => {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.connect(gain);
+                            gain.connect(audioCtx.destination);
+                            osc.type = 'square';
+                            osc.frequency.value = freq;
+                            gain.gain.setValueAtTime(0.15, audioCtx.currentTime + i * 0.2);
+                            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.2 + 0.35);
+                            osc.start(audioCtx.currentTime + i * 0.2);
+                            osc.stop(audioCtx.currentTime + i * 0.2 + 0.35);
+                        });
+                    } else {
+                        // Sonido neutro (no encontrado)
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.type = 'triangle';
+                        osc.frequency.value = 300;
+                        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                        osc.start(audioCtx.currentTime);
+                        osc.stop(audioCtx.currentTime + 0.5);
+                    }
+                } catch (e) { console.log('Audio no soportado'); }
+            }
+
+            // --- INICIALIZACIÓN ---
+            let modoActual = 'placas';
+            let html5QrCode = null;
+            let qrActivo = false;
+
+            // --- CAMBIAR MODO (PLACAS / QR) ---
+            function cambiarModo(modo) {
+                modoActual = modo;
+
+                // Actualizar tabs
+                document.getElementById('tabPlacas').classList.toggle('active', modo === 'placas');
+                document.getElementById('tabQR').classList.toggle('active', modo === 'qr');
+
+                // Mostrar/ocultar paneles
+                const panelPlaca = document.querySelector('.camera-panel:not(#qrReaderContainer)');
+                const panelQR = document.getElementById('qrReaderContainer');
+
+                if (modo === 'placas') {
+                    panelPlaca.style.display = 'block';
+                    panelQR.style.display = 'none';
+                    // Detener QR si estaba activo
+                    detenerEscaneoQR();
+                    // Reiniciar cámara de placas si no está activa
+                    if (!stream) iniciarCamara();
+                } else {
+                    panelPlaca.style.display = 'none';
+                    panelQR.style.display = 'block';
+                    // Detener la cámara de placas
+                    if (stream) {
+                        stream.getTracks().forEach(t => t.stop());
+                        stream = null;
+                    }
+                }
+
+                // Ocultar resultado al cambiar de modo
+                document.getElementById('resultadoPanel').style.display = 'none';
+            }
+
+            // --- ESCANEO QR ---
+            function iniciarEscaneoQR() {
+                const btnQR = document.getElementById('btnIniciarQR');
+                const statusEl = document.getElementById('qrStatus');
+
+                if (qrActivo) {
+                    detenerEscaneoQR();
+                    return;
+                }
+
+                btnQR.innerHTML = '⏳ INICIANDO...';
+                btnQR.disabled = true;
+
+                html5QrCode = new Html5Qrcode("qrReader");
+                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    onQRScanSuccess
+                ).then(() => {
+                    qrActivo = true;
+                    btnQR.innerHTML = '⏹️ DETENER ESCÁNER';
+                    btnQR.disabled = false;
+                    btnQR.style.background = 'rgba(239, 68, 68, 0.3)';
+                    btnQR.style.color = '#ef4444';
+                    statusEl.innerHTML = '🔍 Buscando código QR del marbete... Apunte la cámara al QR';
+                    statusEl.style.color = '#a78bfa';
+                }).catch(err => {
+                    console.error('Error QR:', err);
+                    btnQR.innerHTML = '📱 ACTIVAR ESCÁNER QR';
+                    btnQR.disabled = false;
+                    statusEl.innerHTML = '⚠️ No se pudo acceder a la cámara. Use el ingreso manual.';
+                    statusEl.style.color = '#ef4444';
+                });
+            }
+
+            function detenerEscaneoQR() {
+                if (html5QrCode && qrActivo) {
+                    html5QrCode.stop().then(() => {
+                        qrActivo = false;
+                        const btnQR = document.getElementById('btnIniciarQR');
+                        btnQR.innerHTML = '📱 ACTIVAR ESCÁNER QR';
+                        btnQR.style.background = '';
+                        btnQR.style.color = '';
+                        document.getElementById('qrStatus').innerHTML = '📱 Apunte la cámara al código QR del marbete digital';
+                        document.getElementById('qrStatus').style.color = '';
+                    }).catch(err => console.error(err));
+                }
+            }
+
+            function onQRScanSuccess(decodedText) {
+                // Detener el escáner después de leer
+                if (html5QrCode && qrActivo) {
+                    html5QrCode.stop().then(() => {
+                        qrActivo = false;
+                        const btnQR = document.getElementById('btnIniciarQR');
+                        btnQR.innerHTML = '📱 ACTIVAR ESCÁNER QR';
+                        btnQR.style.background = '';
+                        btnQR.style.color = '';
+                    }).catch(err => console.error(err));
+                }
+
+                document.getElementById('qrStatus').innerHTML = `✅ QR detectado: <strong>${decodedText}</strong>`;
+                document.getElementById('qrStatus').style.color = '#10b981';
+
+                procesarCodigoQR(decodedText);
+            }
+
+            function procesarCodigoQR(textoQR) {
+                const vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [];
+                const visitas_db = JSON.parse(localStorage.getItem('delco_visitas')) || [];
+                let vecinoEncontrado = null;
+                let visitaEncontrada = null;
+
+                // 1. Buscar en residentes (Formato Marbete)
+                const partesOriginales = textoQR.split('-');
+                if (partesOriginales.length >= 2) {
+                    vecinoEncontrado = vecinos_db.find(v =>
+                        (v.codigo && textoQR.includes(v.codigo)) ||
+                        (v.dpi && textoQR.includes(v.dpi)) ||
+                        (v.lote && partesOriginales.includes(v.lote))
+                    );
+                }
+
+                // 2. Buscar en visitas (si no es residente)
+                if (!vecinoEncontrado) {
+                    const hoy = new Date().toISOString().split('T')[0];
+                    const idxV = visitas_db.findIndex(v =>
+                        !v.entró &&
+                        ((v.identificacion && textoQR.includes(v.identificacion)) ||
+                            (v.placa && textoQR.includes(v.placa)) ||
+                            (v.nombre && textoQR.includes(v.nombre))) &&
+                        (v.fecha_programada === hoy || v.fecha === new Date().toLocaleDateString('es-ES'))
+                    );
+
+                    if (idxV !== -1) {
+                        visitaEncontrada = visitas_db[idxV];
+                        visitas_db[idxV].entró = true;
+                        localStorage.setItem('delco_visitas', JSON.stringify(visitas_db));
+                    }
+                }
+
+                const persona = vecinoEncontrado || visitaEncontrada;
+                const tipo = vecinoEncontrado ? 'residente' : (visitaEncontrada ? 'visitante' : null);
+                const identificador = persona ? (persona.codigo || persona.placa || textoQR) : textoQR;
+
+                // Mostrar resultado
+                mostrarResultado(identificador, persona, tipo);
+                document.querySelector('.placa-sub').innerText = 'MARBETE QR ESCANEADO';
+
+                // Guardar en historial
+                agregarAlHistorial(identificador, persona, tipo || 'residente');
+
+                // Sonar alarma
+                sonarAlarma(persona ? (persona.status !== 0) : null);
+            }
+
+            // --- MANUAL QR: toggle y búsqueda ---
+            function toggleManual() {
+                if (modoActual === 'qr') {
+                    const section = document.getElementById('manualSectionQR');
+                    const isVisible = section.style.display === 'block';
+                    section.style.display = isVisible ? 'none' : 'block';
+                    if (!isVisible) document.getElementById('inputCodigoManualQR').focus();
+                } else {
+                    const section = document.getElementById('manualSection');
+                    const isVisible = section.style.display === 'block';
+                    section.style.display = isVisible ? 'none' : 'block';
+                    if (!isVisible) document.getElementById('inputPlacaManual').focus();
+                }
+            }
+
+            function buscarCodigoManualQR() {
+                const input = document.getElementById('inputCodigoManualQR');
+                const codigo = input.value.trim().toUpperCase();
+                if (!codigo) {
+                    alert('⚠️ Ingrese un código para buscar.');
+                    return;
+                }
+
+                // Buscar por código directamente
+                const vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [];
+                const vecinoEncontrado = vecinos_db.find(v =>
+                    (v.codigo && v.codigo.toUpperCase() === codigo) ||
+                    (v.dpi && v.dpi.toUpperCase() === codigo) ||
+                    (v.lote && v.lote.toUpperCase() === codigo)
+                );
+
+                const identificador = `QR: ${codigo}`;
+                mostrarResultado(identificador, vecinoEncontrado);
+                document.querySelector('.placa-sub').innerText = 'CÓDIGO INGRESADO MANUALMENTE';
+                agregarAlHistorial(identificador, vecinoEncontrado);
+                sonarAlarma(vecinoEncontrado ? (vecinoEncontrado.status === 1) : null);
+
+                input.value = '';
+            }
+
+            // Al cargar, verificar si viene un modo específico por URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const modeParam = urlParams.get('mode');
+
+            if (modeParam === 'qr') {
+                cambiarModo('qr');
+                // Auto-iniciar escáner QR tras pequeño delay para asegurar carga
+                setTimeout(iniciarEscaneoQR, 500);
+            } else {
+                iniciarCamara();
+            }
+
+            renderizarHistorial();
+        </script>
+
+</body>
+
+</html>

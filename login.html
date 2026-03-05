@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INICIO DE SESIÓN - Sistema VECINOS DELCO II</title>
+    <title>INICIO DE SESIÓN - Control Residencial</title>
     <!-- Integración de Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +12,12 @@
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
         rel="stylesheet">
 
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+
     <!-- CSS Nativo con diseño Premium equivalente a CustomTkinter Dark Mode -->
+
     <style>
         :root {
             --primary-color: #3b82f6;
@@ -190,6 +195,100 @@
             border-bottom: 1px solid #3f3f3f;
             text-align: center;
         }
+
+        /* Toggle Switch para Activar/Desactivar Usuarios */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ef4444;
+            transition: 0.3s;
+            border-radius: 24px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background-color: #10b981;
+        }
+
+        .toggle-switch input:checked+.toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        .toggle-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .toggle-label span {
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Checkbox Maestro - Seleccionar Todos */
+        .master-checkbox-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+
+        .master-checkbox-container:hover {
+            background-color: rgba(16, 185, 129, 0.1);
+        }
+
+        .master-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: #10b981;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .master-checkbox-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #10b981;
+            user-select: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -362,7 +461,7 @@
 
     <!-- Modal Listado Maestro SISDEL -->
     <div id="modalMaestroSisdel" class="modal-overlay">
-        <div class="modal-content" style="max-width: 650px;">
+        <div class="modal-content" style="max-width: 750px;">
             <span class="close-btn" onclick="cerrarMaestroSisdel()">&times;</span>
             <h2 class="panel-title" style="color: #10b981; border-bottom-color: #10b981;">CONTROL MAESTRO SISDEL</h2>
 
@@ -374,6 +473,16 @@
                             <th style="padding: 10px;">ENCARGADO</th>
                             <th style="padding: 10px;">CORREO</th>
                             <th style="padding: 10px;">TELÉFONO</th>
+                            <th style="padding: 10px; text-align: center;">
+                                USUARIOS
+                                <div id="masterCheckboxArea" style="margin-top: 6px;">
+                                    <label class="master-checkbox-container">
+                                        <input type="checkbox" id="masterToggleTodos" class="master-checkbox"
+                                            onchange="toggleTodosLosCondominios(this.checked)" checked>
+                                        <span class="master-checkbox-label" id="masterToggleLabel">✅ TODOS</span>
+                                    </label>
+                                </div>
+                            </th>
                             <th style="padding: 10px;">ACCIÓN</th>
                         </tr>
                     </thead>
@@ -383,10 +492,47 @@
                 </table>
             </div>
 
-            <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: center;">
+            <!-- SECCIÓN TABLA DE VEHÍCULOS -->
+            <div style="margin-top: 30px; border-top: 2px solid #3f3f3f; padding-top: 20px;">
+                <h3 style="color: #f59e0b; font-size: 14px; margin-bottom: 15px; text-align: center;">🚗 REGISTRO DE
+                    VEHÍCULOS</h3>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; justify-content: center;">
+                    <input type="text" id="vehiculoPlaca" class="input-field" placeholder="PLACA"
+                        style="width: 120px; padding: 8px; font-size: 12px; text-transform: uppercase;">
+                    <input type="text" id="vehiculoColor" class="input-field" placeholder="COLOR"
+                        style="width: 120px; padding: 8px; font-size: 12px; text-transform: uppercase;">
+                    <input type="text" id="vehiculoVecino" class="input-field" placeholder="USADO POR VECINO"
+                        style="width: 180px; padding: 8px; font-size: 12px; text-transform: uppercase;">
+                    <button onclick="agregarVehiculo()" class="btn-login"
+                        style="width: auto; padding: 8px 15px; font-size: 12px; background-color: #f59e0b; color: #1e1e1e; margin: 0;">
+                        + AGREGAR
+                    </button>
+                </div>
+                <div style="overflow-x: auto; max-height: 200px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #3f3f3f; color: var(--text-muted);">
+                                <th style="padding: 8px;">PLACA</th>
+                                <th style="padding: 8px;">COLOR</th>
+                                <th style="padding: 8px;">USADO POR VECINO</th>
+                                <th style="padding: 8px; text-align: center;">ACCIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaVehiculosBody">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                 <button onclick="crearNuevoCondominioMaster()" class="btn-login"
                     style="background-color: #10b981; width: auto; padding: 10px 25px; font-size: 13px;">
                     + NUEVO CONDOMINIO
+                </button>
+                <button id="btnToggleOcultos" onclick="toggleOcultos()" class="btn-login"
+                    style="background-color: #4b5563; width: auto; padding: 10px 25px; font-size: 13px;">
+                    👁️ MOSTRAR OCULTOS
                 </button>
                 <button onclick="abrirProgramador(); cerrarMaestroSisdel();" class="btn-login"
                     style="background-color: var(--primary-color); width: auto; padding: 10px 25px; font-size: 13px;">
@@ -425,7 +571,7 @@
         localStorage.setItem('delco_usuarios', JSON.stringify(db_usuarios));
 
         // Cargar configuración inicial
-        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'DELCO II' };
+        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'MI CONDOMINIO' };
 
         // Bloqueo de Licencias si ya está configurado
         const sistemaConfigurado = config_db.setup_complete === true;
@@ -435,6 +581,39 @@
 
         let codigoValidado = "";
 
+        // --- FUNCIÓN DE ALARMA SONORA ---
+        function sonarAlarma() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const notas = [523.25, 659.25, 783.99, 1046.50]; // Do, Mi, Sol, Do (alto)
+                notas.forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime + i * 0.15);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.15 + 0.3);
+                    osc.start(audioCtx.currentTime + i * 0.15);
+                    osc.stop(audioCtx.currentTime + i * 0.15 + 0.3);
+                });
+            } catch (e) { console.log('Audio no soportado'); }
+        }
+
+        // --- VERIFICAR SI EL CONDOMINIO ESTÁ ACTIVO ---
+        function verificarCondominioActivo() {
+            const configActual = JSON.parse(localStorage.getItem('delco_config')) || {};
+            const nombreCondo = (configActual.nombre || '').toUpperCase();
+            const listadoMaster = JSON.parse(localStorage.getItem('SISDEL_LISTADO_MASTER')) || [];
+            const condoEnMaster = listadoMaster.find(c => c.nombre.toUpperCase() === nombreCondo);
+            // Si existe en el listado maestro y está explícitamente desactivado
+            if (condoEnMaster && condoEnMaster.activo === false) {
+                return false;
+            }
+            return true;
+        }
+
         document.getElementById('loginForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
@@ -442,7 +621,7 @@
             const errorMsg = document.getElementById('errorMsg');
 
             // --- ACCESO MAESTRO POR CÓDIGO UNIFICADO (Usuario + Clave) ---
-            if (codInput === "DIRECTIVA M2026") {
+            if (codInput === "DIRECTIVA M2026" || codInput === "SISDEL 2026" || codInput === "SISDEL2026") {
                 localStorage.setItem('admin_logged_in', 'true');
                 window.location.href = 'modulos_ocultos/admin.html';
                 return;
@@ -515,6 +694,12 @@
 
             if (usuarioValido) {
                 errorMsg.style.display = 'none';
+
+                // --- BLOQUEO POR CONDOMINIO INACTIVO (excepto programador SISDEL) ---
+                if (!verificarCondominioActivo() && usuarioValido.rol_id !== 99) {
+                    alert('🚫 SERVICIO INACTIVADO\n\nFAVOR CONSULTE CON LA ADMINISTRACIÓN DE SU CONDOMINIO');
+                    return;
+                }
 
                 if (usuarioValido.rol_id === 1) {
                     localStorage.setItem('admin_logged_in', 'true');
@@ -626,7 +811,7 @@
             { nombre: "CONDOMINIO EL CIELO", encargado: "NATAN RODAS", correo: "natan@ejemplo.com", tel: "3100-1708" },
             { nombre: "RESIDENCIAL ESMERALDA", encargado: "ALVARO TRUJILLO", correo: "alvaro@ejemplo.com", tel: "5545-6655" },
             { nombre: "CONDOMINIO EL VALLE", encargado: "WILLIAM ARREAGA", correo: "william@ejemplo.com", tel: "8887-7788" },
-            { nombre: "DELCO II", encargado: "ADMINISTRACIÓN", correo: "info@delco.com", tel: "2323-0000" }
+
         ];
 
         function accesoMasterSisdel() {
@@ -638,6 +823,26 @@
             }
         }
 
+        let viendoOcultos = false;
+        function toggleOcultos() {
+            viendoOcultos = !viendoOcultos;
+            const btn = document.getElementById('btnToggleOcultos');
+            const titulo = document.querySelector('#modalMaestroSisdel .panel-title');
+
+            if (viendoOcultos) {
+                btn.innerHTML = "📋 VER ACTIVOS";
+                btn.style.backgroundColor = "#10b981";
+                titulo.innerText = "CONDOMINIOS OCULTOS (PAPELERA)";
+                titulo.style.color = "#ef4444";
+            } else {
+                btn.innerHTML = "👁️ MOSTRAR OCULTOS";
+                btn.style.backgroundColor = "#4b5563";
+                titulo.innerText = "CONTROL MAESTRO SISDEL";
+                titulo.style.color = "#10b981";
+            }
+            mostrarMaestroSisdel();
+        }
+
         function mostrarMaestroSisdel() {
             const tabla = document.getElementById('listaCondominiosSisdel');
             tabla.innerHTML = '';
@@ -646,24 +851,273 @@
             DB_MAESTRA_SISDEL = JSON.parse(localStorage.getItem('SISDEL_LISTADO_MASTER')) || DB_MAESTRA_SISDEL;
 
             DB_MAESTRA_SISDEL.forEach(c => {
+                // Filtro según modo actual (Activos u Ocultos)
+                if (viendoOcultos) {
+                    if (!c.oculto) return;
+                } else {
+                    if (c.oculto) return;
+                }
+
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid #3f3f3f';
+
+                // Determinar estado de usuarios del condominio
+                const estaActivo = c.activo !== false; // Por defecto activo si no existe la propiedad
+                const toggleId = `toggle_${c.nombre.replace(/\s/g, '_')}`;
+
+                let botonesAccion = "";
+                let toggleUsuariosHtml = "";
+
+                if (viendoOcultos) {
+                    botonesAccion = `
+                        <button onclick="restaurarCondominioMaster('${c.nombre}')" 
+                            style="background: #3b82f6; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 10px;">
+                            RESTAURAR
+                        </button>
+                    `;
+                    toggleUsuariosHtml = `<span style="color: var(--text-muted); font-size: 10px;">—</span>`;
+                } else {
+                    botonesAccion = `
+                        <button onclick="cambioRapidoSisdel('${c.nombre}')" 
+                            style="background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 10px;">
+                            CONECTAR
+                        </button>
+                        <button onclick="eliminarCondominioMaster('${c.nombre}')" 
+                            style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 10px;">
+                            ELIMINAR
+                        </button>
+                    `;
+                    toggleUsuariosHtml = `
+                        <div class="toggle-label">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="${toggleId}" ${estaActivo ? 'checked' : ''} 
+                                    onchange="toggleUsuariosCondominio('${c.nombre}', this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span style="color: ${estaActivo ? '#10b981' : '#ef4444'};" id="label_${toggleId}">${estaActivo ? 'ACTIVOS' : 'INACTIVOS'}</span>
+                        </div>
+                    `;
+                }
+
                 tr.innerHTML = `
                     <td style="padding: 12px; font-weight: 600;">${c.nombre}</td>
                     <td style="padding: 12px;">${c.encargado}</td>
                     <td style="padding: 12px; color: var(--text-muted);">${c.correo}</td>
                     <td style="padding: 12px;">${c.tel || 'N/A'}</td>
-                    <td style="padding: 12px;">
-                        <button onclick="cambioRapidoSisdel('${c.nombre}')" 
-                            style="background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 10px;">
-                            CONECTAR
-                        </button>
+                    <td style="padding: 12px; text-align: center;">
+                        ${toggleUsuariosHtml}
+                    </td>
+                    <td style="padding: 12px; display: flex; gap: 5px;">
+                        ${botonesAccion}
                     </td>
                 `;
                 tabla.appendChild(tr);
             });
 
             document.getElementById('modalMaestroSisdel').style.display = 'flex';
+
+            // Cargar tabla de vehículos
+            renderizarTablaVehiculos();
+
+            // Actualizar el estado del checkbox maestro y ocultarlo si estamos viendo ocultos
+            const masterArea = document.getElementById('masterCheckboxArea');
+            if (masterArea) {
+                masterArea.style.display = viendoOcultos ? 'none' : 'block';
+            }
+            if (!viendoOcultos) {
+                actualizarCheckboxMaestro();
+            }
+        }
+
+        function eliminarCondominioMaster(nombre) {
+            if (confirm(`⚠️ ¿Está seguro de que desea eliminar el condominio: "${nombre}"?\n\nEsta acción lo ocultará de la vista pública, pero sus registros se mantendrán guardados por seguridad.`)) {
+                DB_MAESTRA_SISDEL = JSON.parse(localStorage.getItem('SISDEL_LISTADO_MASTER')) || DB_MAESTRA_SISDEL;
+                const index = DB_MAESTRA_SISDEL.findIndex(c => c.nombre === nombre);
+                if (index !== -1) {
+                    DB_MAESTRA_SISDEL[index].oculto = true;
+                    localStorage.setItem('SISDEL_LISTADO_MASTER', JSON.stringify(DB_MAESTRA_SISDEL));
+                    mostrarMaestroSisdel();
+                    alert(`✅ El condominio "${nombre}" ha sido ocultado exitosamente.`);
+                }
+            }
+        }
+
+        function restaurarCondominioMaster(nombre) {
+            if (confirm(`🔄 ¿Desea restaurar el condominio: "${nombre}"?\n\nVolverá a aparecer en la lista de condominios activos.`)) {
+                DB_MAESTRA_SISDEL = JSON.parse(localStorage.getItem('SISDEL_LISTADO_MASTER')) || DB_MAESTRA_SISDEL;
+                const index = DB_MAESTRA_SISDEL.findIndex(c => c.nombre === nombre);
+                if (index !== -1) {
+                    DB_MAESTRA_SISDEL[index].oculto = false;
+                    localStorage.setItem('SISDEL_LISTADO_MASTER', JSON.stringify(DB_MAESTRA_SISDEL));
+                    mostrarMaestroSisdel();
+                    alert(`✅ El condominio "${nombre}" ha sido restaurado.`);
+                }
+            }
+        }
+
+        // --- ACTIVAR / DESACTIVAR TODOS LOS USUARIOS DE UN CONDOMINIO ---
+        function toggleUsuariosCondominio(nombreCondo, activar) {
+            const nombreUpper = nombreCondo.toUpperCase();
+            const accion = activar ? 'ACTIVAR' : 'DESACTIVAR';
+            const emoji = activar ? '✅' : '🚫';
+
+            if (!confirm(`${emoji} ¿Está seguro de que desea ${accion} a TODOS los usuarios del condominio "${nombreUpper}"?\n\n${activar ? 'Los usuarios podrán acceder al sistema normalmente.' : 'Los usuarios NO podrán generar marbetes ni autorizar visitas.'}`)) {
+                // Revertir el checkbox si canceló
+                const toggleId = `toggle_${nombreCondo.replace(/\s/g, '_')}`;
+                const checkbox = document.getElementById(toggleId);
+                if (checkbox) checkbox.checked = !activar;
+                return;
+            }
+
+            // 1. Actualizar la propiedad 'activo' en el listado maestro
+            DB_MAESTRA_SISDEL = JSON.parse(localStorage.getItem('SISDEL_LISTADO_MASTER')) || DB_MAESTRA_SISDEL;
+            const index = DB_MAESTRA_SISDEL.findIndex(c => c.nombre === nombreCondo);
+            if (index !== -1) {
+                DB_MAESTRA_SISDEL[index].activo = activar;
+                localStorage.setItem('SISDEL_LISTADO_MASTER', JSON.stringify(DB_MAESTRA_SISDEL));
+            }
+
+            // 2. Actualizar el status de TODOS los vecinos en la base de datos de ese condominio
+            const datosCondo = JSON.parse(localStorage.getItem(`SISDEL_DB_${nombreUpper}`));
+            if (datosCondo && datosCondo.vecinos) {
+                datosCondo.vecinos.forEach(v => {
+                    v.status = activar ? 1 : 0;
+                });
+                localStorage.setItem(`SISDEL_DB_${nombreUpper}`, JSON.stringify(datosCondo));
+            }
+
+            // 3. Si es el condominio actualmente conectado, actualizar también delco_vecinos
+            const configActual = JSON.parse(localStorage.getItem('delco_config')) || {};
+            if (configActual.nombre && configActual.nombre.toUpperCase() === nombreUpper) {
+                const vecinosActuales = JSON.parse(localStorage.getItem('delco_vecinos')) || [];
+                vecinosActuales.forEach(v => {
+                    v.status = activar ? 1 : 0;
+                });
+                localStorage.setItem('delco_vecinos', JSON.stringify(vecinosActuales));
+            }
+
+            // 4. Actualizar la etiqueta visual
+            const toggleId = `toggle_${nombreCondo.replace(/\s/g, '_')}`;
+            const label = document.getElementById(`label_${toggleId}`);
+            if (label) {
+                label.innerText = activar ? 'ACTIVOS' : 'INACTIVOS';
+                label.style.color = activar ? '#10b981' : '#ef4444';
+            }
+
+            alert(`${emoji} Todos los usuarios del condominio "${nombreUpper}" han sido ${activar ? 'ACTIVADOS' : 'DESACTIVADOS'} exitosamente.${!activar ? '\n\nLos usuarios verán el mensaje:\n"SERVICIO INACTIVADO FAVOR CONSULTE CON LA ADMINISTRACIÓN DE SU CONDOMINIO"' : ''}`);
+
+            // 🔔 Sonar alarma al completar el proceso
+            sonarAlarma();
+
+            // Actualizar el estado del checkbox maestro después de cada cambio individual
+            actualizarCheckboxMaestro();
+        }
+
+        // --- ACTIVAR / DESACTIVAR TODOS LOS CONDOMINIOS A LA VEZ ---
+        function toggleTodosLosCondominios(activar) {
+            const accion = activar ? 'ACTIVAR' : 'DESACTIVAR';
+            const emoji = activar ? '✅' : '🚫';
+
+            // Contar condominios visibles (no ocultos)
+            DB_MAESTRA_SISDEL = JSON.parse(localStorage.getItem('SISDEL_LISTADO_MASTER')) || DB_MAESTRA_SISDEL;
+            const condominiosVisibles = DB_MAESTRA_SISDEL.filter(c => !c.oculto);
+
+            if (condominiosVisibles.length === 0) {
+                alert('⚠️ No hay condominios activos para modificar.');
+                return;
+            }
+
+            if (!confirm(`${emoji} ¿Está seguro de que desea ${accion} a TODOS los usuarios de TODOS los condominios?\n\n${activar ? 'Todos los usuarios podrán acceder al sistema normalmente.' : 'NINGÚN usuario podrá generar marbetes ni autorizar visitas.'}\n\nCondominios afectados: ${condominiosVisibles.length}`)) {
+                // Revertir el checkbox si canceló
+                const masterCb = document.getElementById('masterToggleTodos');
+                if (masterCb) masterCb.checked = !activar;
+                return;
+            }
+
+            condominiosVisibles.forEach(c => {
+                // 1. Actualizar propiedad 'activo' en el listado maestro
+                const index = DB_MAESTRA_SISDEL.findIndex(item => item.nombre === c.nombre);
+                if (index !== -1) {
+                    DB_MAESTRA_SISDEL[index].activo = activar;
+                }
+
+                const nombreUpper = c.nombre.toUpperCase();
+
+                // 2. Actualizar vecinos en la base de datos de cada condominio
+                const datosCondo = JSON.parse(localStorage.getItem(`SISDEL_DB_${nombreUpper}`));
+                if (datosCondo && datosCondo.vecinos) {
+                    datosCondo.vecinos.forEach(v => {
+                        v.status = activar ? 1 : 0;
+                    });
+                    localStorage.setItem(`SISDEL_DB_${nombreUpper}`, JSON.stringify(datosCondo));
+                }
+
+                // 3. Si es el condominio actualmente conectado, actualizar delco_vecinos
+                const configActual = JSON.parse(localStorage.getItem('delco_config')) || {};
+                if (configActual.nombre && configActual.nombre.toUpperCase() === nombreUpper) {
+                    const vecinosActuales = JSON.parse(localStorage.getItem('delco_vecinos')) || [];
+                    vecinosActuales.forEach(v => {
+                        v.status = activar ? 1 : 0;
+                    });
+                    localStorage.setItem('delco_vecinos', JSON.stringify(vecinosActuales));
+                }
+            });
+
+            // 4. Guardar cambios en el listado maestro
+            localStorage.setItem('SISDEL_LISTADO_MASTER', JSON.stringify(DB_MAESTRA_SISDEL));
+
+            // 5. Actualizar label del checkbox maestro
+            actualizarCheckboxMaestro();
+
+            // 6. Refrescar la tabla visual
+            mostrarMaestroSisdel();
+
+            // 🔔 Sonar alarma al completar el proceso
+            sonarAlarma();
+
+            alert(`${emoji} TODOS los usuarios de ${condominiosVisibles.length} condominio(s) han sido ${activar ? 'ACTIVADOS' : 'DESACTIVADOS'} exitosamente.${!activar ? '\n\nLos usuarios verán el mensaje:\n"SERVICIO INACTIVADO FAVOR CONSULTE CON LA ADMINISTRACIÓN DE SU CONDOMINIO"' : ''}`);
+        }
+
+        // Función para sincronizar el estado del checkbox maestro con los toggles individuales
+        function actualizarCheckboxMaestro() {
+            DB_MAESTRA_SISDEL = JSON.parse(localStorage.getItem('SISDEL_LISTADO_MASTER')) || DB_MAESTRA_SISDEL;
+            const condominiosVisibles = DB_MAESTRA_SISDEL.filter(c => !c.oculto);
+
+            if (condominiosVisibles.length === 0) return;
+
+            const todosActivos = condominiosVisibles.every(c => c.activo !== false);
+            const algunoActivo = condominiosVisibles.some(c => c.activo !== false);
+
+            const masterCb = document.getElementById('masterToggleTodos');
+            const masterLabel = document.getElementById('masterToggleLabel');
+
+            if (masterCb) {
+                masterCb.checked = todosActivos;
+                masterCb.indeterminate = !todosActivos && algunoActivo;
+            }
+
+            if (masterLabel) {
+                if (todosActivos) {
+                    masterLabel.innerText = '✅ TODOS';
+                    masterLabel.style.color = '#10b981';
+                } else if (!algunoActivo) {
+                    masterLabel.innerText = '🚫 NINGUNO';
+                    masterLabel.style.color = '#ef4444';
+                } else {
+                    masterLabel.innerText = '⚠️ PARCIAL';
+                    masterLabel.style.color = '#f59e0b';
+                }
+            }
+        }
+
+        // Genera un código alfanumérico aleatorio de 6 caracteres (ej: "X7K2M9")
+        function generarCodigoAleatorio() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let codigo = '';
+            for (let i = 0; i < 6; i++) {
+                codigo += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return codigo;
         }
 
         function crearNuevoCondominioMaster() {
@@ -673,25 +1127,27 @@
             const encargado = prompt(`👤 Ingrese el nombre del VECINO DIRECTIVA que administrará "${nombre}":`);
             if (!encargado) return;
 
-            if (confirm(`🌟 Se creará el proyecto: "${nombre}"\nAdministrador: ${encargado}\n\n¿Confirmar creación de Base de Datos nueva?`)) {
+            // Generar código aleatorio único para este condominio
+            const codigoUnico = generarCodigoAleatorio();
+
+            if (confirm(`🌟 Se creará el proyecto: "${nombre}"\nAdministrador: ${encargado}\nCódigo de Acceso: ${codigoUnico}\n\n¿Confirmar creación de Base de Datos nueva?`)) {
                 // 1. Agregar al listado maestro
                 const nuevoItem = {
                     nombre: nombre.toUpperCase(),
                     encargado: encargado.toUpperCase(),
                     correo: 'NUEVO@SISTEMA.COM',
-                    tel: '----'
+                    tel: '----',
+                    oculto: false
                 };
 
                 DB_MAESTRA_SISDEL.push(nuevoItem);
                 localStorage.setItem('SISDEL_LISTADO_MASTER', JSON.stringify(DB_MAESTRA_SISDEL));
 
-                // 2. Ejecutar cambio enviando los datos iniciales (Base limpia)
-                // Usamos 'DIRECTIVA' como usuario base pero con el nombre del encargado
-                const passwordInicial = 'M2026';
-                ejecutarCambioProyecto(nombre.toUpperCase(), 'DIRECTIVA', passwordInicial, encargado.toUpperCase());
+                // 2. Ejecutar cambio enviando los datos iniciales con código aleatorio
+                ejecutarCambioProyecto(nombre.toUpperCase(), codigoUnico, codigoUnico, encargado.toUpperCase());
 
-                // Nota: ejecutarCambioProyecto se encarga de limpiar localStorage['delco_vecinos'] etc 
-                // para este nuevo nombre porque no existirá SISDEL_DB_NOMBRE
+                // 3. Mostrar el código generado para que el programador lo comparta
+                alert(`✅ CONDOMINIO CREADO EXITOSAMENTE\n\n📋 DATOS DE ACCESO:\n────────────────────\nCondominio: ${nombre.toUpperCase()}\nAdministrador: ${encargado.toUpperCase()}\n\n🔑 CÓDIGO DE ACCESO: ${codigoUnico}\n────────────────────\n\n⚠️ IMPORTANTE: Guarde este código y compártalo con el administrador del condominio.`);
             }
         }
 
@@ -707,7 +1163,7 @@
 
         function ejecutarCambioProyecto(nuevoNombre, nuevoAdmin = null, nuevaClave = null, nombreRealAdmin = 'ADMINISTRADOR') {
             // 1. OBTENER ESTADO ACTUAL PARA GUARDARLO (RESPALDO)
-            const configActual = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'DELCO II' };
+            const configActual = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'MI CONDOMINIO' };
             const nombreActual = configActual.nombre.toUpperCase();
 
             const datosActuales = {
@@ -740,13 +1196,17 @@
                 };
                 localStorage.setItem('delco_config', JSON.stringify(nuevaConfig));
 
+                // Determinar el código de acceso válido para el admin
+                const codigoAdmin = (nuevoAdmin) ? nuevoAdmin.toUpperCase() : 'DIRECTIVA';
+                const claveAdmin = (nuevaClave) ? nuevaClave : 'M2026';
+
                 // --- REGISTRO AUTOMÁTICO EN EL DIRECTORIO ---
                 const primerRegistro = {
                     id: Date.now(),
                     lote: "DIR-01",
                     nombre: nombreRealAdmin.toUpperCase(),
                     rol: 1, // DIRECTIVA
-                    codigo: "M2026",
+                    codigo: codigoAdmin, // Código válido que coincide con username del login
                     dpi: "OFICIAL",
                     telefono: "----",
                     status: 1,
@@ -759,12 +1219,15 @@
 
                 // Usuarios maestros por defecto
                 let usuarios = [
-                    { username: 'DIRECTIVA', password_hash: 'M2026', rol_id: 1, nombre: nombreRealAdmin },
+                    { username: codigoAdmin, password_hash: claveAdmin, rol_id: 1, nombre: nombreRealAdmin },
                     { username: 'GARITA', password_hash: 'GARITA2026', rol_id: 3, nombre: 'SEGURIDAD' }
                 ];
-                if (nuevoAdmin) {
-                    usuarios[0] = { username: nuevoAdmin.toUpperCase(), password_hash: nuevaClave, rol_id: 1, nombre: nombreRealAdmin };
+
+                // Si el código es diferente a DIRECTIVA, agregar DIRECTIVA también como acceso alternativo
+                if (codigoAdmin !== 'DIRECTIVA') {
+                    usuarios.push({ username: 'DIRECTIVA', password_hash: 'M2026', rol_id: 1, nombre: 'ADMINISTRADOR SISDEL' });
                 }
+
                 localStorage.setItem('delco_usuarios', JSON.stringify(usuarios));
             }
 
@@ -787,6 +1250,95 @@
                 alert("❌ Clave Master Incorrecta");
             }
         });
+
+        // --- SISTEMA DE VEHÍCULOS ---
+        let DB_VEHICULOS = JSON.parse(localStorage.getItem('SISDEL_VEHICULOS')) || [];
+
+        function renderizarTablaVehiculos() {
+            const tbody = document.getElementById('tablaVehiculosBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            // Obtener condominio actualmente conectado
+            const configActual = JSON.parse(localStorage.getItem('delco_config')) || {};
+            const nombreCondo = (configActual.nombre || '').toUpperCase();
+
+            const vehiculosFiltrados = DB_VEHICULOS.filter(v => (v.condominio || '').toUpperCase() === nombreCondo);
+
+            if (vehiculosFiltrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="padding: 15px; text-align: center; color: var(--text-muted); font-style: italic;">No hay vehículos registrados para este condominio</td></tr>';
+                return;
+            }
+
+            vehiculosFiltrados.forEach((v, idx) => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #3f3f3f';
+                tr.innerHTML = `
+                    <td style="padding: 8px; font-weight: 600; letter-spacing: 1px;">${v.placa}</td>
+                    <td style="padding: 8px;">${v.color}</td>
+                    <td style="padding: 8px;">${v.vecino}</td>
+                    <td style="padding: 8px; text-align: center;">
+                        <button onclick="eliminarVehiculoMaster(${idx})" 
+                            style="background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 10px;">
+                            ELIMINAR
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function agregarVehiculo() {
+            const placa = document.getElementById('vehiculoPlaca').value.trim().toUpperCase();
+            const color = document.getElementById('vehiculoColor').value.trim().toUpperCase();
+            const vecino = document.getElementById('vehiculoVecino').value.trim().toUpperCase();
+
+            if (!placa || !color || !vecino) {
+                alert('⚠️ Debe completar todos los campos: PLACA, COLOR y VECINO.');
+                return;
+            }
+
+            const configActual = JSON.parse(localStorage.getItem('delco_config')) || {};
+            const nombreCondo = (configActual.nombre || 'SIN CONDOMINIO').toUpperCase();
+
+            DB_VEHICULOS.push({
+                placa: placa,
+                color: color,
+                vecino: vecino,
+                condominio: nombreCondo,
+                fecha: new Date().toISOString()
+            });
+
+            localStorage.setItem('SISDEL_VEHICULOS', JSON.stringify(DB_VEHICULOS));
+
+            // Limpiar campos
+            document.getElementById('vehiculoPlaca').value = '';
+            document.getElementById('vehiculoColor').value = '';
+            document.getElementById('vehiculoVecino').value = '';
+
+            renderizarTablaVehiculos();
+            sonarAlarma();
+            alert(`✅ Vehículo con placa "${placa}" registrado exitosamente.`);
+        }
+
+        function eliminarVehiculoMaster(index) {
+            const configActual = JSON.parse(localStorage.getItem('delco_config')) || {};
+            const nombreCondo = (configActual.nombre || '').toUpperCase();
+            const vehiculosFiltrados = DB_VEHICULOS.filter(v => (v.condominio || '').toUpperCase() === nombreCondo);
+
+            if (index >= 0 && index < vehiculosFiltrados.length) {
+                const vehiculo = vehiculosFiltrados[index];
+                if (confirm(`¿Eliminar el vehículo con placa "${vehiculo.placa}"?`)) {
+                    const realIndex = DB_VEHICULOS.indexOf(vehiculo);
+                    if (realIndex !== -1) {
+                        DB_VEHICULOS.splice(realIndex, 1);
+                        localStorage.setItem('SISDEL_VEHICULOS', JSON.stringify(DB_VEHICULOS));
+                        renderizarTablaVehiculos();
+                        alert('✅ Vehículo eliminado.');
+                    }
+                }
+            }
+        }
 
     </script>
 

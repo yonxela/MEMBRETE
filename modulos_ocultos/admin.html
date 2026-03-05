@@ -4,14 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración - DELCO II</title>
+    <title>Panel de Administración - Control Residencial</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Roboto:wght@400;500;700&display=swap"
         rel="stylesheet">
 
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-config.js"></script>
+
     <style>
+
         :root {
             --primary-color: #3b82f6;
             --primary-hover: #2563eb;
@@ -215,6 +220,123 @@
             color: #ff6b6b;
         }
 
+        /* =========================================
+           ESTILOS PREMIUM SISDEL MODAL (ALERTAS)
+           ========================================= */
+        .modal-overlay-custom {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay-custom.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-card-custom {
+            background: #1e293b;
+            width: 90%;
+            max-width: 380px;
+            border-radius: 20px;
+            padding: 1.8rem;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            text-align: center;
+        }
+
+        .modal-overlay-custom.active .modal-card-custom {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-icon-container-custom {
+            width: 54px;
+            height: 54px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.2rem auto;
+            color: #3b82f6;
+            font-size: 1.5rem;
+        }
+
+        .modal-success-custom .modal-icon-container-custom {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .modal-error-custom .modal-icon-container-custom {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .modal-warning-custom .modal-icon-container-custom {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .modal-title-custom {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 0.6rem;
+            letter-spacing: -0.01em;
+        }
+
+        .modal-text-custom {
+            font-size: 0.95rem;
+            color: #94a3b8;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-btn-confirm-custom {
+            width: 100%;
+            padding: 0.8rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .modal-btn-confirm-custom:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .modal-success-custom .modal-btn-confirm-custom {
+            background: #10b981;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .modal-error-custom .modal-btn-confirm-custom {
+            background: #ef4444;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
         @media (max-width: 768px) {
             .grid-container {
                 grid-template-columns: 1fr;
@@ -226,7 +348,11 @@
 <body>
 
     <div class="dashboard-header">
-        <h1 class="dashboard-title">Panel de Administración - DELCO II</h1>
+        <div>
+            <h1 class="dashboard-title">Panel de Administración</h1>
+            <span id="condoBadgeHeader"
+                style="display: none; background: rgba(59, 130, 246, 0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; margin-top: 4px; display: inline-block;"></span>
+        </div>
         <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
             <button class="btn-submit"
                 style="margin: 0; background-color: #fbbf24; color: #1e1e1e; width: auto; padding: 0.5rem 1rem;"
@@ -270,8 +396,88 @@
                             <input type="radio" name="rol" value="1"
                                 style="width: 18px; accent-color: var(--primary-color);"> Directiva
                         </label>
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; color: #f59e0b; cursor: pointer; font-size: 0.9rem;">
+                            <input type="radio" name="rol" value="4" style="width: 18px; accent-color: #f59e0b;"
+                                onchange="toggleAutorizaResidenteTemporal()"> Residente Temporal
+                        </label>
                     </div>
                 </div>
+
+                <div class="form-group" id="containerAutorizaTemporal"
+                    style="display: none; background: rgba(245, 158, 11, 0.05); padding: 15px; border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px;">
+                    <label style="color: #f59e0b;">👤 Vecino Titular que Autoriza (Obligatorio para Temporales)</label>
+
+                    <input type="text" id="buscadorAutoriza" placeholder="🔍 Buscar por nombre o lote..."
+                        class="input-field"
+                        style="background-color: #1a1a2e; width: 100%; margin-bottom: 8px; border-color: rgba(245, 158, 11, 0.3);"
+                        onkeyup="filtrarVecinosAutorizan()">
+
+                    <select id="temporalAutoriza" class="input-field" style="background-color: #1a1a2e; width: 100%;"
+                        size="4">
+                        <option value="">— Seleccione Vecino Titular —</option>
+                    </select>
+                </div>
+
+                <script>
+                    let opcionesTitularesOriginales = [];
+
+                    function toggleAutorizaResidenteTemporal() {
+                        const esTemporal = document.querySelector('input[name="rol"][value="4"]').checked;
+                        const container = document.getElementById('containerAutorizaTemporal');
+                        const select = document.getElementById('temporalAutoriza');
+                        const buscador = document.getElementById('buscadorAutoriza');
+
+                        if (esTemporal) {
+                            container.style.display = 'block';
+                            select.required = true;
+                            buscador.value = ''; // Limpiar buscador
+
+                            // Poblar el array original
+                            opcionesTitularesOriginales = vecinos_db.filter(v => v.rol == 2 || v.rol == 1);
+
+                            renderizarSelectAutorizan(opcionesTitularesOriginales);
+                        } else {
+                            container.style.display = 'none';
+                            select.required = false;
+                            select.value = "";
+                        }
+                    }
+
+                    function renderizarSelectAutorizan(lista) {
+                        const select = document.getElementById('temporalAutoriza');
+                        select.innerHTML = '';
+                        // No mostramos la opción default si usamos el modo box/size=4 porque es requerido seleccionar uno
+                        if (lista.length === 0) {
+                            select.innerHTML = '<option disabled value="">No se encontraron resultados</option>';
+                            return;
+                        }
+                        lista.forEach(v => {
+                            const opt = document.createElement('option');
+                            opt.value = v.nombre;
+                            opt.textContent = `LOTE ${v.lote} - ${v.nombre}`;
+                            select.appendChild(opt);
+                        });
+                    }
+
+                    function filtrarVecinosAutorizan() {
+                        const texto = document.getElementById('buscadorAutoriza').value.toLowerCase();
+                        const filtrados = opcionesTitularesOriginales.filter(v =>
+                            v.nombre.toLowerCase().includes(texto) ||
+                            (v.lote && v.lote.toString().toLowerCase().includes(texto))
+                        );
+                        renderizarSelectAutorizan(filtrados);
+                    }
+
+                    // Add event listeners to all radios to hide the field when returning to normal roles
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const radios = document.querySelectorAll('input[name="rol"]');
+                        radios.forEach(r => {
+                            r.addEventListener('change', toggleAutorizaResidenteTemporal);
+                        });
+                    });
+                </script>
+
                 <div class="form-group">
                     <label>Número de Lote</label>
                     <input type="text" id="lote" class="input-field" required>
@@ -296,12 +502,17 @@
                     <input type="number" id="dias_demora" class="input-field" value="0" min="0" required>
                 </div>
                 <div class="form-group">
-                    <label>Código de Vecino (Generado)</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="codigo" class="input-field" placeholder="Ej. XY1234" required>
-                        <button type="button" class="btn-submit" style="margin-top: 0; width: auto; padding: 0 15px;"
-                            onclick="generarCodigoNuevo()">Generar</button>
-                    </div>
+                    <label>🚗 Placas de Vehículos</label>
+                    <input type="text" id="placas" class="input-field" placeholder="Ej: P-123ABC, P-456DEF"
+                        style="text-transform: uppercase; letter-spacing: 1px;">
+                    <small style="color: var(--text-muted); font-size: 0.75rem;">Separe múltiples placas con
+                        comas</small>
+                </div>
+                <div class="form-group">
+                    <label>Código de Vecino (Automático)</label>
+                    <input type="text" id="codigo" class="input-field" placeholder="Se genera automáticamente" required
+                        readonly
+                        style="background-color: #1a1a2e; color: #60a5fa; font-weight: 700; letter-spacing: 2px; text-align: center; cursor: default;">
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button type="submit" class="btn-submit">Guardar Registro</button>
@@ -340,6 +551,7 @@
                             <th>Código</th>
                             <th>DPI</th>
                             <th>Teléfono</th>
+                            <th>Placas</th>
                             <th>Estatus</th>
                             <th>Demora</th>
                             <th>Acciones</th>
@@ -379,6 +591,24 @@
                         </button>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label>Código Identificador del Condominio (Automático 🔒)</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" id="configCodigoUniversal" class="input-field"
+                            style="font-family: monospace; font-weight: bold; letter-spacing: 2px; text-align: center; background-color: #1a1a1a; color: #10b981; cursor: not-allowed; border: 1px solid rgba(16, 185, 129, 0.3);"
+                            readonly>
+                        <button type="button" onclick="desbloquearCodigoMaster()"
+                            style="background: #374151; color: white; border: none; padding: 0 10px; border-radius: 6px; cursor: pointer;"
+                            title="Desbloquear con Clave Master">
+                            🔓
+                        </button>
+                    </div>
+                    <small style="color: var(--text-muted); font-size: 0.7rem;">
+                        Código único ligado al nombre (3 letras + 3 números). Es la llave maestra del sistema.
+                    </small>
+                </div>
+
                 <div class="form-group">
                     <label>Logotipo (URL de imagen)</label>
                     <input type="url" id="configLogo" class="input-field" placeholder="https://ejemplo.com/logo.png">
@@ -399,10 +629,22 @@
                 <hr style="border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
                 <h3 style="color: var(--text-main); font-size: 1.1rem; margin-bottom: 1rem;">Seguridad</h3>
 
-                <div class="form-group">
-                    <label>Cambiar Contraseña (Usuario: DIRECTIVA)</label>
-                    <input type="password" id="configPassword" class="input-field"
-                        placeholder="Dejar en blanco para conservar actual">
+                <!-- Sección de Código Universal movida bajo el Nombre del Condominio -->
+
+                <!-- Campo de contraseña manual eliminado según requerimiento -->
+
+                <div class="form-group"
+                    style="margin-top: 1.5rem; text-align: center; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <label style="margin-bottom: 10px; font-weight: bold; color: var(--text-main);">Estado del
+                        Sistema</label>
+                    <button type="button" id="btnToggleEstado" class="btn-submit"
+                        style="width: 100%; margin-top: 5px; font-weight: bold; font-size: 1rem; transition: all 0.3s;"
+                        onclick="toggleEstadoCondominio()">
+                        ACTIVAR
+                    </button>
+                    <small style="color: var(--text-muted); display: block; margin-top: 8px; font-size: 0.75rem;">
+                        Si se desactiva, se restringirá el acceso a vecinos y garita.
+                    </small>
                 </div>
 
                 <button type="submit" class="btn-submit"
@@ -436,11 +678,31 @@
                 </table>
             </div>
 
-            <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: center;">
+            <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                 <button onclick="crearNuevoCondominioMaster()"
                     style="background: #10b981; color: white; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit;">
                     + NUEVO CONDOMINIO
                 </button>
+                <button onclick="toggleSeccionOcultos()"
+                    style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); padding: 10px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit;">
+                    👁️ Mostrar Ocultos
+                </button>
+            </div>
+
+            <!-- Sección de condominios ocultos -->
+            <div id="seccionOcultos"
+                style="display:none; margin-top: 20px; background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 15px;">
+                <p style="color: #f59e0b; font-weight: 700; margin-bottom: 10px; font-size: 0.9rem;">🔒 CONDOMINIOS
+                    OCULTOS — Ingrese la clave maestra para restaurar</p>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <input type="password" id="claveRestaurar" placeholder="Clave maestra..."
+                        style="flex: 1; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(245,158,11,0.3); background: #1a1a2e; color: white; font-family: inherit; font-size: 0.9rem;">
+                    <button onclick="verificarClaveYMostrarOcultos()"
+                        style="background: #f59e0b; color: #1a1a2e; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit;">
+                        VERIFICAR
+                    </button>
+                </div>
+                <div id="listaOcultosContainer"></div>
             </div>
 
             <p
@@ -449,6 +711,25 @@
             </p>
         </div>
     </div>
+
+    <!-- Modal Seguro de Eliminación -->
+    <div id="modalEliminacionSegura" class="modal-overlay" style="z-index: 3000;">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <h3 style="color: #ef4444; margin-bottom: 1rem;">⚠️ ELIMINAR CONDOMINIO</h3>
+            <p id="msgEliminacionSegura" style="font-size: 0.95rem; color: #e2e8f0; margin-bottom: 1.5rem;"></p>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">Ingrese la CLAVE MAESTRA
+                para confirmar:</p>
+            <input type="password" id="inputClaveEliminacion" placeholder="SISDEL XXXX" class="input-field"
+                style="margin-bottom: 1.5rem; text-align: center; font-size: 1.1rem; letter-spacing: 2px;">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="cancelarEliminacionSegura()" class="btn-submit"
+                    style="background: #4b5563; flex: 1;">CANCELAR</button>
+                <button onclick="confirmarEliminacionSegura()" class="btn-submit"
+                    style="background: #ef4444; flex: 1;">ELIMINAR</button>
+            </div>
+        </div>
+    </div>
+
 
 
     <!-- Modal para Enviar Mensajes -->
@@ -574,15 +855,129 @@
         </div>
     </div>
 
+    <!-- =========================================
+         SISDEL PREMIUM MODAL (ALERTAS)
+         ========================================= -->
+    <div id="sisdelModal" class="modal-overlay-custom">
+        <div class="modal-card-custom" id="sisdelModalCard">
+            <div class="modal-icon-container-custom" id="modalIconContainer">
+                <span id="modalIcon">🔔</span>
+            </div>
+            <h3 class="modal-title-custom" id="modalTitle">Aviso del Sistema</h3>
+            <p class="modal-text-custom" id="modalText">Mensaje de alerta aquí.</p>
+            <button class="modal-btn-confirm-custom" id="modalBtnConfirm">Entendido</button>
+        </div>
+    </div>
+
     <script>
-        // SEGURIDAD: Verificar si inició sesión, de lo contrario echarlo al login
+        // SISDEL Modal Functionality
+        function mostrarSisdelModal(mensaje, titulo = "Aviso del Sistema", tipo = "info") {
+            const modal = document.getElementById('sisdelModal');
+            const card = document.getElementById('sisdelModalCard');
+            const iconContainer = document.getElementById('modalIconContainer');
+            const icon = document.getElementById('modalIcon');
+            const titleEl = document.getElementById('modalTitle');
+            const textEl = document.getElementById('modalText');
+            const btn = document.getElementById('modalBtnConfirm');
+
+            // Reset classes
+            card.classList.remove('modal-success-custom', 'modal-error-custom', 'modal-warning-custom');
+
+            // Set type
+            if (tipo === "success") {
+                card.classList.add('modal-success-custom');
+                icon.innerText = "✅";
+            } else if (tipo === "error") {
+                card.classList.add('modal-error-custom');
+                icon.innerText = "❌";
+            } else if (tipo === "warning") {
+                card.classList.add('modal-warning-custom');
+                icon.innerText = "⚠️";
+            } else {
+                icon.innerText = "🔔";
+            }
+
+            titleEl.innerText = titulo;
+            textEl.innerText = mensaje;
+
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+
+            // Return promise for sync-like behavior if needed
+            return new Promise((resolve) => {
+                btn.onclick = () => {
+                    modal.classList.remove('active');
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        resolve();
+                    }, 300);
+                };
+            });
+        }
+
+        // Override window.alert
+        window.alert = function (mensaje) {
+            // Analizar el mensaje para determinar el "tipo"
+            let tipo = "info";
+            let titulo = "Aviso del Sistema";
+
+            if (mensaje.includes("exitoso") || mensaje.includes("Enviado") || mensaje.includes("Correcto") || mensaje.includes("✅")) {
+                tipo = "success";
+                titulo = "Operación Exitosa";
+            } else if (mensaje.includes("error") || mensaje.includes("Clave administrativa incorrecta") || mensaje.includes("cancelada") || mensaje.includes("❌")) {
+                tipo = "error";
+                titulo = "Atención";
+            } else if (mensaje.includes("⚠️") || mensaje.includes("seguro")) {
+                tipo = "warning";
+                titulo = "Confirmación";
+            }
+
+            mostrarSisdelModal(mensaje, titulo, tipo);
+        };
+
+        // ============================================================
+        //  SISDEL — SISTEMA DE SESIÓN UNIFICADO v3.0
+        //  Verificar acceso usando el nuevo contexto de sesión
+        // ============================================================
+
+        // Verificar autenticación
         if (localStorage.getItem('admin_logged_in') !== 'true') {
-            window.location.href = '../login.html';
+            window.location.href = '../index.html';
+        }
+
+        // Leer sesión del sistema unificado
+        const _sesionUnificada = JSON.parse(sessionStorage.getItem('sisdel_sesion')) || {};
+        const _esProgramador = localStorage.getItem('is_sisdel') === 'true' || _sesionUnificada.esProgramador;
+
+        // Si el condominio está desactivado, solo el programador SISDEL tiene acceso al panel
+        const check_config = JSON.parse(localStorage.getItem('delco_config')) || { activo: true };
+        const check_sisdel = _esProgramador;
+
+        if (check_config.activo === false && !check_sisdel) {
+            document.body.innerHTML = `
+                <div style="height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); color: white; font-family: 'Outfit', sans-serif; text-align: center; padding: 20px;">
+                    <div style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 2.5rem; padding: 4rem 2rem; max-width: 500px; width: 100%; box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.8);">
+                        <div style="width: 80px; height: 80px; background: rgba(239, 68, 68, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem auto; border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; font-size: 2.5rem;">🔒</div>
+                        <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 1.5rem; color: #f8fafc; letter-spacing: -0.025em; line-height: 1.1;">PANEL <span style="color: #ef4444;">SUSPENDIDO</span></h1>
+                        <p style="font-size: 1.1rem; color: #94a3b8; line-height: 1.7; margin-bottom: 2.5rem; font-weight: 300;">
+                            El acceso administrativo para <strong>${check_config.nombre ? check_config.nombre.toUpperCase() : 'ESTE CONDOMINIO'}</strong> ha sido desactivado.
+                            <br><br>
+                            Favor comunicarse con <strong>SISDEL INTERNACIONAL</strong> para restaurar el acceso al panel.
+                        </p>
+                        <button onclick="localStorage.removeItem('admin_logged_in'); sessionStorage.removeItem('sisdel_sesion'); window.location.href='../index.html'" style="width: 100%; background: #3b82f6; color: white; border: none; padding: 1.25rem; border-radius: 1.25rem; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: all 0.3s; font-family: 'Outfit', sans-serif;">
+                            Cerrar Sesión
+                        </button>
+                    </div>
+                </div>
+            `;
+            throw new Error("Acceso Administrativo Suspendido");
         }
 
         function cerrarSesion() {
             localStorage.removeItem('admin_logged_in');
-            window.location.href = '../login.html';
+            localStorage.removeItem('is_sisdel');
+            sessionStorage.removeItem('sisdel_sesion');
+            window.location.href = '../index.html';
         }
 
         // Usar LocalStorage para que los datos persistan en el navegador
@@ -594,19 +989,48 @@
             localStorage.setItem('delco_vecinos', JSON.stringify(vecinos_db));
         }
 
-        function generarCodigoNuevo() {
-            // Generar 2 letras al azar
+        // Función para obtener el código del condominio (llave maestra)
+        function getCondoCode() {
+            const inputCodigo = document.getElementById('configCodigoUniversal');
+            if (inputCodigo && inputCodigo.value) return inputCodigo.value.toUpperCase();
+
+            let usuarios_db = JSON.parse(localStorage.getItem('delco_usuarios')) || [];
+            let adminDirectiva = usuarios_db.find(u => u.username === 'DIRECTIVA');
+            if (adminDirectiva && adminDirectiva.password_hash) return adminDirectiva.password_hash.toUpperCase();
+
+            return "SISDEL"; // Fallback si no hay nada configurado aún
+        }
+
+        // Función reutilizable que RETORNA un código aleatorio (3 letras + 3 números)
+        function generarCodigoAleatorio() {
             const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            let dosLetras = "";
-            for (let i = 0; i < 2; i++) {
-                dosLetras += letras.charAt(Math.floor(Math.random() * letras.length));
+            let tresLetras = "";
+            for (let i = 0; i < 3; i++) {
+                tresLetras += letras.charAt(Math.floor(Math.random() * letras.length));
             }
+            let tresNumeros = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return tresLetras + tresNumeros;
+        }
 
-            // Generar los 4 últimos números aleatorios
-            // o tomar de otro lado si prefieres, aquí creamos 4 dígitos fijos (1000 - 9999)
-            let cuatroNumeros = Math.floor(1000 + Math.random() * 9000).toString();
+        // NUEVA FUNCIÓN: Genera el código del vecino siguiendo las reglas específicas
+        function generarCodigoVecino() {
+            const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const condoCode = getCondoCode();
 
-            document.getElementById('codigo').value = dosLetras + cuatroNumeros;
+            // 1. Primera letra del código del nombre del condominio
+            const char1 = condoCode.charAt(0) || 'S';
+            // 2. Segunda letra al azar
+            const char2 = letras.charAt(Math.floor(Math.random() * letras.length));
+            // 3. Tercera letra del código del nombre del condominio
+            const char3 = condoCode.charAt(2) || 'D';
+            // 4-6. Tres números al azar
+            const tresNumeros = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+
+            return (char1 + char2 + char3 + tresNumeros).toUpperCase();
+        }
+
+        function generarCodigoNuevo() {
+            document.getElementById('codigo').value = generarCodigoVecino();
         }
 
         function abrirMarbeteVecino(codigo, nombre) {
@@ -657,26 +1081,46 @@
 
             const vecinosFiltro = vecinos_db.filter(v => {
                 if (!textoBusqueda) return true;
-                return (v.nombre.toLowerCase().includes(textoBusqueda) ||
-                    (v.telefono && v.telefono.includes(textoBusqueda)));
+                const nombre = v.nombre || '';
+                const telefono = v.telefono || '';
+                return (nombre.toLowerCase().includes(textoBusqueda) ||
+                    telefono.includes(textoBusqueda));
             });
 
             vecinosFiltro.forEach(vecino => {
                 const tr = document.createElement('tr');
 
+                // Color de fondo para filas morosas
+                if (vecino.status === 0) tr.classList.add('moroso-row');
+
+                let rolBadge = '<span style="background: rgba(59,130,246,0.1); color: #60a5fa; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">RESIDENTE</span>';
+                if (vecino.rol == 1) rolBadge = '<span style="background: rgba(16,185,129,0.1); color: #10b981; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">DIRECTIVA</span>';
+                if (vecino.rol == 3) rolBadge = '<span style="background: rgba(139,92,246,0.1); color: #a78bfa; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">GARITA</span>';
+                if (vecino.rol == 4) rolBadge = '<span style="background: rgba(245,158,11,0.1); color: #f59e0b; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">TEMPORAL</span>';
+
+                const checkboxId = `status_switch_${vecino.id}`;
+
+                const isDirectivaListado = vecino.rol == 1; // Para evitar borrarse a sí mismo si es el único
+
+                let infoTemporal = '';
+                if (vecino.rol == 4 && vecino.autorizado_por) {
+                    infoTemporal = `<br><small style="color: #f59e0b; font-size: 0.75rem;">Autorizado por: ${vecino.autorizado_por}</small>`;
+                }
                 const statusHtml = vecino.status === 1
                     ? '<span class="status-badge status-active">AL DÍA</span>'
                     : '<span class="status-badge status-inactive">MOROSO</span>';
 
-                let rolBadge = '';
-                if (vecino.rol == 1) rolBadge = '<span class="status-badge" style="background: rgba(139, 92, 246, 0.2); color: #a78bfa;">DIRECTIVA</span>';
-                else if (vecino.rol == 3) rolBadge = '<span class="status-badge" style="background: rgba(251, 191, 36, 0.2); color: #fbbf24;">GARITA</span>';
-                else rolBadge = '<span class="status-badge" style="background: rgba(148, 163, 184, 0.2); color: #94a3b8;">VECINO</span>';
+                const placasHtml = vecino.placas
+                    ? vecino.placas.split(',').map(p => `<span style="display:inline-block; background: rgba(251,191,36,0.15); color: #fbbf24; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin: 1px; letter-spacing: 0.5px;">${p.trim()}</span>`).join('')
+                    : '<span style="color: var(--text-muted); font-size: 0.8rem;">—</span>';
 
                 tr.innerHTML = `
-                    <td><strong>${vecino.lote}</strong></td>
-                    <td>${vecino.nombre}</td>
-                    <td>${rolBadge}</td>
+                        <td style="font-weight: 700; color: #f8fafc;">LOTE ${vecino.lote || 'N/A'}</td>
+                        <td style="font-weight: bold;">
+                            ${vecino.nombre}
+                            ${infoTemporal}
+                        </td>
+                        <td>${rolBadge}</td>
                     <td><span style="color: var(--primary-color); font-weight: 600; letter-spacing: 1px;">${vecino.codigo || '-'}</span></td>
                     <td>${vecino.dpi}</td>
                     <td>
@@ -685,6 +1129,7 @@
                             placeholder="Sin Teléfono"
                             onchange="actualizarTelefonoLocal(${vecino.id}, this.value)">
                     </td>
+                    <td>${placasHtml}</td>
                     <td>${statusHtml}</td>
                     <td style="color: var(--danger-color); font-weight: bold;">${vecino.dias_demora || 0} ds</td>
                     <td>
@@ -722,16 +1167,19 @@
             e.preventDefault();
 
             const rolSeleccionado = document.querySelector('input[name="rol"]:checked').value;
+            const autorizadoPor = (rolSeleccionado == 4) ? document.getElementById('temporalAutoriza').value : null;
 
             const datosFormulario = {
                 nombre: document.getElementById('nombre').value.toUpperCase(),
                 lote: document.getElementById('lote').value,
                 dpi: document.getElementById('dpi').value,
                 telefono: document.getElementById('telefono').value,
+                placas: document.getElementById('placas').value.toUpperCase(),
                 codigo: document.getElementById('codigo').value,
                 status: parseInt(document.getElementById('status').value),
                 dias_demora: parseInt(document.getElementById('dias_demora').value) || 0,
-                rol: parseInt(rolSeleccionado)
+                rol: parseInt(rolSeleccionado),
+                autorizado_por: autorizadoPor
             };
 
             if (vecinos_db.length === 0) {
@@ -775,6 +1223,8 @@
                 const radioV = document.querySelector('input[name="rol"][value="2"]');
                 if (radioV) radioV.checked = true;
             }
+            // Generar código automático para el próximo registro
+            generarCodigoNuevo();
         });
 
         function actualizarUsuariosLogin(datos) {
@@ -811,6 +1261,7 @@
                 document.getElementById('lote').value = vecino.lote;
                 document.getElementById('dpi').value = vecino.dpi;
                 document.getElementById('telefono').value = vecino.telefono || '';
+                document.getElementById('placas').value = vecino.placas || '';
                 document.getElementById('codigo').value = vecino.codigo || '';
                 document.getElementById('status').value = vecino.status;
                 document.getElementById('dias_demora').value = vecino.dias_demora !== undefined ? vecino.dias_demora : 0;
@@ -954,15 +1405,25 @@
 
         // MÓDULO DE CONFIGURACIÓN
         let config_db = JSON.parse(localStorage.getItem('delco_config')) || {
-            nombre: 'DELCO II',
-            nombreMarbete: 'DELCO II',
+            nombre: 'MI CONDOMINIO',
+            nombreMarbete: 'MI CONDOMINIO',
             logo: '',
             correo: '',
-            telefono: ''
+            telefono: '',
+            activo: true
         };
 
+        // Asegurar que la propiedad activo exista
+        if (config_db.activo === undefined) config_db.activo = true;
+
         function abrirModalConfig() {
-            document.getElementById('modalConfig').style.display = 'flex';
+            const pass = prompt("USO EXCLUSIVO DE SISDEL INTERNACIONAL:");
+            if (pass === "SISDEL 2026") {
+                cargarConfiguracion();
+                document.getElementById('modalConfig').style.display = 'flex';
+            } else if (pass !== null) {
+                alert("❌ ACCESO DENEGADO.\n\nEsta sección es para uso exclusivo del programador de SISDEL.");
+            }
         }
 
         function cerrarModalConfig() {
@@ -971,26 +1432,54 @@
 
         function cargarConfiguracion() {
             const inputNombre = document.getElementById('configNombre');
-            inputNombre.value = config_db.nombre || '';
-            inputNombre.readOnly = true;
-            inputNombre.style.backgroundColor = "#1a1a1a";
-            inputNombre.style.cursor = "not-allowed";
-            inputNombre.style.color = "#888";
+            const nombreActual = config_db.nombre || 'MI CONDOMINIO';
 
-            document.getElementById('configLogo').value = config_db.logo || '';
-            document.getElementById('configEncargado').value = config_db.encargado || '';
-            document.getElementById('configCorreo').value = config_db.correo || '';
-            document.getElementById('configTelefono').value = config_db.telefono || '';
-            document.getElementById('configPassword').value = ''; // limpiar siempre
+            if (inputNombre) {
+                inputNombre.value = nombreActual;
+                inputNombre.readOnly = true;
+                inputNombre.style.backgroundColor = "#1a1a1a";
+                inputNombre.style.cursor = "not-allowed";
+                inputNombre.style.color = "#888";
+            }
 
-            // Buscar encargado en la lista maestra para mostrarlo en el título
-            const listadoMaster = DB_MAESTRA_SISDEL;
-            const infoMaster = listadoMaster.find(c => c.nombre.toUpperCase() === config_db.nombre.toUpperCase());
-            const encargadoTexto = infoMaster ? ` (${infoMaster.encargado})` : "";
+            if (document.getElementById('configLogo')) document.getElementById('configLogo').value = config_db.logo || '';
+            if (document.getElementById('configEncargado')) document.getElementById('configEncargado').value = config_db.encargado || '';
+            if (document.getElementById('configCorreo')) document.getElementById('configCorreo').value = config_db.correo || '';
+            if (document.getElementById('configTelefono')) document.getElementById('configTelefono').value = config_db.telefono || '';
 
-            const nombreEncargado = config_db.encargado || "ADMINISTRACIÓN";
-            document.querySelector('.dashboard-title').innerText = `Panel de Administración - ${config_db.nombre} (${nombreEncargado})`;
-            document.title = `Panel de Administración - ${config_db.nombre}`;
+            // Cargar o generar automáticamente el código de DIRECTIVA
+            let usuarios_db = JSON.parse(localStorage.getItem('delco_usuarios')) || [];
+            let adminDirectiva = usuarios_db.find(u => u.username === 'DIRECTIVA');
+            const inputCodigo = document.getElementById('configCodigoUniversal');
+
+            if (inputCodigo) {
+                if (adminDirectiva && adminDirectiva.password_hash && adminDirectiva.password_hash !== 'SINDATO') {
+                    inputCodigo.value = adminDirectiva.password_hash;
+                } else {
+                    // Generar automáticamente si no existe
+                    inputCodigo.value = generarCodigoAleatorio();
+                }
+            }
+
+            actualizarBotonEstado();
+
+            // Leer sesión unificada para mostrar nombre correcto del condominio
+            const _s = JSON.parse(sessionStorage.getItem('sisdel_sesion')) || {};
+            const nombreDesdeSession = _s.condoNombre || nombreActual;
+            const nombreEncargado = config_db.encargado || _s.usuarioNombre || "ADMINISTRACIÓN";
+
+            const titleEl = document.querySelector('.dashboard-title');
+            if (titleEl) {
+                titleEl.innerText = `Panel de Administración — ${nombreDesdeSession}`;
+            }
+            document.title = `Panel de Administración — ${nombreDesdeSession}`;
+
+            // Badge de condominio activo en el header (si existe)
+            const badgeEl = document.getElementById('condoBadgeHeader');
+            if (badgeEl) {
+                badgeEl.textContent = `📍 ${nombreDesdeSession}`;
+                badgeEl.style.display = 'inline-block';
+            }
         }
 
         function desbloquearNombreMaster() {
@@ -1002,7 +1491,22 @@
                 inputNombre.style.cursor = "text";
                 inputNombre.style.color = "white";
                 inputNombre.focus();
-                alert("✅ Campo Desbloqueado. Puede cambiar el nombre ahora.");
+                alert("✅ Campo Desbloqueado. Puede cambiar el nombre del condominio ahora.");
+            } else if (pass !== null) {
+                alert("❌ Clave Incorrecta");
+            }
+        }
+
+        function desbloquearCodigoMaster() {
+            const pass = prompt("USO EXCLUSIVO DE SISDEL INTERNACIONAL:");
+            if (pass === "SISDEL 2026") {
+                const inputCodigo = document.getElementById('configCodigoUniversal');
+                inputCodigo.readOnly = false;
+                inputCodigo.style.backgroundColor = "#2a2a2a";
+                inputCodigo.style.cursor = "text";
+                inputCodigo.style.color = "#10b981";
+                inputCodigo.focus();
+                alert("✅ Campo Desbloqueado. Puede modificar el CÓDIGO ADMINISTRADOR ahora.\n\n⚠️ Recuerde que este cambio afectará el inicio de sesión de la Directiva.");
             } else if (pass !== null) {
                 alert("❌ Clave Incorrecta");
             }
@@ -1018,22 +1522,32 @@
                 encargado: document.getElementById('configEncargado').value.trim(),
                 correo: document.getElementById('configCorreo').value.trim(),
                 telefono: document.getElementById('configTelefono').value.trim(),
+                activo: config_db.activo,
                 setup_complete: true
             };
             localStorage.setItem('delco_config', JSON.stringify(config_db));
 
-            // Gestión de cambio de clave para el usuario DIRECTIVA
-            const nuevaClave = document.getElementById('configPassword').value.trim();
-            if (nuevaClave) {
+            // Gestión del código único de DIRECTIVA (Generado automáticamente)
+            const claveFinal = document.getElementById('configCodigoUniversal').value.trim();
+
+            if (claveFinal) {
                 let usuarios_db = JSON.parse(localStorage.getItem('delco_usuarios')) || [];
                 let indexDirectiva = usuarios_db.findIndex(u => u.username === 'DIRECTIVA');
 
                 if (indexDirectiva !== -1) {
-                    usuarios_db[indexDirectiva].password_hash = nuevaClave;
+                    const passAntigua = usuarios_db[indexDirectiva].password_hash;
+                    usuarios_db[indexDirectiva].password_hash = claveFinal;
+
+                    // También actualizar el usuario cuyo username es la clave antigua si existe (para login directo)
+                    const indexLoginDirecto = usuarios_db.findIndex(u => u.username === passAntigua.toUpperCase());
+                    if (indexLoginDirecto !== -1) {
+                        usuarios_db[indexLoginDirecto].username = claveFinal.toUpperCase();
+                    }
+
                     localStorage.setItem('delco_usuarios', JSON.stringify(usuarios_db));
-                    alert(`Configuración guardada.\nContraseña de acceso para 'DIRECTIVA' actualizada con éxito a: ${nuevaClave}`);
+                    alert(`Configuración guardada.\n\n🔑 Código de Acceso Unificado: ${claveFinal}`);
                 } else {
-                    alert('Configuración guardada.\nNo se encontró el usuario DIRECTIVA en la base de datos para cambiar su clave.');
+                    alert('Configuración guardada.\nNo se encontró el usuario DIRECTIVA en la base de datos.');
                 }
             } else {
                 alert('Configuración guardada exitosamente.');
@@ -1042,6 +1556,33 @@
             cargarConfiguracion();
             cerrarModalConfig();
         });
+
+        function toggleEstadoCondominio() {
+            config_db.activo = !config_db.activo;
+            actualizarBotonEstado();
+            // Guardamos inmediatamente para que el efecto sea global
+            localStorage.setItem('delco_config', JSON.stringify(config_db));
+
+            const estadoStr = config_db.activo ? "ACTIVADO" : "DESACTIVADO";
+            alert(`El sistema ha sido ${estadoStr} correctamente.`);
+        }
+
+        function actualizarBotonEstado() {
+            const btn = document.getElementById('btnToggleEstado');
+            if (!btn) return;
+
+            if (config_db.activo) {
+                btn.innerText = '🟢 CONDOMINIO ACTIVADO';
+                btn.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+                btn.style.color = '#10b981';
+                btn.style.border = '1px solid #10b981';
+            } else {
+                btn.innerText = '🔴 CONDOMINIO DESACTIVADO';
+                btn.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
+                btn.style.color = '#ef4444';
+                btn.style.border = '1px solid #ef4444';
+            }
+        }
 
         // MÓDULO DE GESTIÓN DE VISITAS
         let visitas_db = JSON.parse(localStorage.getItem('delco_visitas')) || [];
@@ -1138,33 +1679,31 @@
         });
 
         // --- SISTEMA MAESTRO SISDEL (PARA USO DEL PROGRAMADOR) ---
-        const DB_DEFAULT_SISDEL = [
-            { nombre: "CONDOMINIO EL CIELO", encargado: "NATAN RODAS", correo: "natan@ejemplo.com", tel: "3100-1708" },
-            { nombre: "RESIDENCIAL ESMERALDA", encargado: "ALVARO TRUJILLO", correo: "alvaro@ejemplo.com", tel: "5545-6655" },
-            { nombre: "CONDOMINIO EL VALLE", encargado: "WILLIAM ARREAGA", correo: "william@ejemplo.com", tel: "8887-7788" },
-            { nombre: "DELCO II", encargado: "ADMINISTRACIÓN", correo: "info@delco.com", tel: "2323-0000" }
-        ];
+        const DB_DEFAULT_SISDEL = [];
 
         let DB_MAESTRA_SISDEL = JSON.parse(localStorage.getItem('SISDEL_LISTADO_MASTER')) || DB_DEFAULT_SISDEL;
 
         // Renderizar al cargar la página
         renderizarTabla();
         cargarConfiguracion();
+        generarCodigoNuevo(); // Auto-generar código para el primer registro
 
         // Verificación de Sistema Nuevo (Solo si no se ha completado la configuración inicial)
         if (vecinos_db.length === 0) {
             // Intentar auto-poblar si tenemos info en el listado maestro
-            const esteCondo = DB_MAESTRA_SISDEL.find(c => c.nombre.toUpperCase() === config_db.nombre.toUpperCase());
+            const nombreActual = config_db.nombre || 'MI CONDOMINIO';
+            const esteCondo = (DB_MAESTRA_SISDEL || []).find(c => c.nombre && c.nombre.toUpperCase() === nombreActual.toUpperCase());
 
             if (esteCondo) {
+                const codigoAutoAdmin = generarCodigoAleatorio();
                 const autoVecino = {
                     id: Date.now(),
                     lote: "DIR-01",
                     nombre: esteCondo.encargado.toUpperCase(),
                     rol: 1, // DIRECTIVA
-                    codigo: "M2026",
+                    codigo: codigoAutoAdmin,
                     dpi: "OFICIAL",
-                    telefono: esteCondo.tel || "----",
+                    telefono: esteCondo ? esteCondo.tel : "----",
                     status: 1,
                     dias_demora: 0
                 };
@@ -1205,8 +1744,16 @@
 
             // Refrescar listado
             DB_MAESTRA_SISDEL = JSON.parse(localStorage.getItem('SISDEL_LISTADO_MASTER')) || DB_MAESTRA_SISDEL;
+            const ocultos = JSON.parse(localStorage.getItem('SISDEL_OCULTOS')) || [];
 
-            DB_MAESTRA_SISDEL.forEach(c => {
+            // Solo mostrar los NO ocultos
+            const visibles = DB_MAESTRA_SISDEL.filter(c => !ocultos.includes(c.nombre.toUpperCase()));
+
+            if (visibles.length === 0) {
+                tabla.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align:center; color: #94a3b8;">Sin condominios visibles</td></tr>';
+            }
+
+            visibles.forEach(c => {
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid #333';
                 tr.innerHTML = `
@@ -1214,10 +1761,19 @@
                     <td style="padding: 12px;">${c.encargado}</td>
                     <td style="padding: 12px; color: var(--text-muted);">${c.correo}</td>
                     <td style="padding: 12px;">${c.tel || '----'}</td>
-                    <td style="padding: 12px;">
+                    <td style="padding: 12px; display: flex; gap: 6px; flex-wrap: wrap;">
                         <button onclick="cambioRapidoSisdel('${c.nombre}')" 
                             style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">
                             CONECTAR
+                        </button>
+                        <button onclick="ocultarCondominio('${c.nombre}')" 
+                            title="Ocultar condominio de la lista (reversible con clave)"
+                            style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px;">
+                            👁️
+                        </button>
+                        <button onclick="eliminarCondominioMaster('${c.nombre}')" 
+                            style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">
+                            🗑️
                         </button>
                     </td>
                 `;
@@ -1227,14 +1783,112 @@
             document.getElementById('modalMaestroSisdel').style.display = 'flex';
         }
 
-        function crearNuevoCondominioMaster() {
+        function ocultarCondominio(nombre) {
+            const ocultos = JSON.parse(localStorage.getItem('SISDEL_OCULTOS')) || [];
+            const key = nombre.toUpperCase();
+            if (!ocultos.includes(key)) {
+                ocultos.push(key);
+                localStorage.setItem('SISDEL_OCULTOS', JSON.stringify(ocultos));
+            }
+            mostrarMaestroSisdel();
+        }
+
+        function toggleSeccionOcultos() {
+            const sec = document.getElementById('seccionOcultos');
+            const lista = document.getElementById('listaOcultosContainer');
+            const clave = document.getElementById('claveRestaurar');
+            // Toggle visibilidad
+            if (sec.style.display === 'none') {
+                sec.style.display = 'block';
+                lista.innerHTML = '';
+                if (clave) clave.value = '';
+            } else {
+                sec.style.display = 'none';
+            }
+        }
+
+        function verificarClaveYMostrarOcultos() {
+            const CLAVE_MAESTRA = 'SISDEL 2026';
+            const inputVal = document.getElementById('claveRestaurar').value.trim();
+            const lista = document.getElementById('listaOcultosContainer');
+
+            if (inputVal !== CLAVE_MAESTRA) {
+                lista.innerHTML = '<p style="color:#ef4444; font-size:0.85rem; margin-top:6px;">❌ Clave incorrecta.</p>';
+                return;
+            }
+
+            const ocultos = JSON.parse(localStorage.getItem('SISDEL_OCULTOS')) || [];
+            if (ocultos.length === 0) {
+                lista.innerHTML = '<p style="color:#10b981; font-size:0.85rem;">✅ No hay condominios ocultos.</p>';
+                return;
+            }
+
+            lista.innerHTML = '';
+            ocultos.forEach(nombre => {
+                const item = document.createElement('div');
+                item.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding: 8px 10px; background: rgba(0,0,0,0.2); border-radius:6px; margin-bottom:6px;';
+                item.innerHTML = `
+                    <span style="color:white; font-weight:600; font-size:0.9rem;">🏢 ${nombre}</span>
+                    <button onclick="restaurarCondominio('${nombre}')"
+                        style="background: #10b981; color: white; border: none; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; font-family: inherit;">
+                        RESTAURAR
+                    </button>
+                `;
+                lista.appendChild(item);
+            });
+        }
+
+        function restaurarCondominio(nombre) {
+            let ocultos = JSON.parse(localStorage.getItem('SISDEL_OCULTOS')) || [];
+            // nombre viene en UPPERCASE directamente del array ocultos
+            ocultos = ocultos.filter(n => n !== nombre);
+            localStorage.setItem('SISDEL_OCULTOS', JSON.stringify(ocultos));
+
+            // Refrescar la tabla del modal (SISDEL_OCULTOS ya actualizado)
+            mostrarMaestroSisdel();
+
+            // Reabrir la sección de ocultos y rellenar la clave automáticamente
+            const sec = document.getElementById('seccionOcultos');
+            sec.style.display = 'block';
+
+            // Restablece la clave para que verificarClaveYMostrarOcultos funcione
+            const inputClave = document.getElementById('claveRestaurar');
+            inputClave.value = 'SISDEL 2026';
+            verificarClaveYMostrarOcultos();
+        }
+
+        async function crearNuevoCondominioMaster() {
             const nombre = prompt("📝 Ingrese el NOMBRE del Nuevo Condominio:");
             if (!nombre) return;
 
             const encargado = prompt(`👤 Ingrese el nombre del VECINO DIRECTIVA que administrará "${nombre}":`);
             if (!encargado) return;
 
-            if (confirm(`🌟 Se creará el proyecto: "${nombre}"\nAdministrador: ${encargado}\n\n¿Confirmar creación de Base de Datos nueva?`)) {
+            // Generar código de acceso automático (igual que al registrar vecinos)
+            const codigoAdmin = generarCodigoAleatorio();
+
+            if (confirm(`🌟 Se creará el proyecto: "${nombre}"\nAdministrador: ${encargado}\nCódigo de Acceso Generado: ${codigoAdmin}\n\n¿Confirmar creación de Base de Datos nueva?`)) {
+                
+                const { data, error } = await supabase
+                    .from('condominios')
+                    .insert([
+                        { 
+                            nombre: nombre.toUpperCase(), 
+                            encargado: encargado.toUpperCase(), 
+                            correo: 'NUEVO@SISTEMA.COM', 
+                            tel: '----',
+                            codigo_acceso: codigoAdmin,
+                            activo: true
+                        }
+                    ]);
+
+                if (error) {
+                    console.error('Error guardando en Supabase:', error);
+                    alert("⚠️ Error al sincronizar con la base de datos central (Supabase). Se guardará solo localmente.");
+                } else {
+                    console.log('Condominio guardado en Supabase exitosamente.');
+                }
+
                 const nuevoItem = {
                     nombre: nombre.toUpperCase(),
                     encargado: encargado.toUpperCase(),
@@ -1245,9 +1899,83 @@
                 DB_MAESTRA_SISDEL.push(nuevoItem);
                 localStorage.setItem('SISDEL_LISTADO_MASTER', JSON.stringify(DB_MAESTRA_SISDEL));
 
-                // Ejecutar cambio a base limpia pasando el nombre del administrador real
-                ejecutarCambioProyecto(nombre.toUpperCase(), 'DIRECTIVA', 'M2026', encargado.toUpperCase());
+                // Ejecutar cambio a base limpia pasando el código de acceso generado
+                ejecutarCambioProyecto(nombre.toUpperCase(), 'DIRECTIVA', codigoAdmin, encargado.toUpperCase());
+
+                // Informar al usuario del código generado
+                alert(`✅ CÓDIGO DE ACCESO DEL ADMINISTRADOR\n\nCondominio: ${nombre.toUpperCase()}\nAdministrador: ${encargado.toUpperCase()}\n\n🔑 Código de Acceso: ${codigoAdmin}\n\n⚠️ Guarde este código, es la clave de ingreso del administrador.`);
             }
+        }
+
+        let condoPendienteEliminar = null;
+        let esActivoPendienteEliminar = false;
+
+        function eliminarCondominioMaster(nombre) {
+            const configActual = JSON.parse(localStorage.getItem('delco_config')) || {};
+            const esActivo = configActual.nombre && configActual.nombre.toUpperCase() === nombre.toUpperCase();
+
+            let msgExtra = esActivo ? `<br><br><span style="color:#ef4444;font-weight:bold;">🔴 ATENCIÓN: Este es el condominio ACTIVO actualmente.</span>` : "";
+
+            condoPendienteEliminar = nombre;
+            esActivoPendienteEliminar = esActivo;
+
+            document.getElementById('msgEliminacionSegura').innerHTML = `Se borrarán TODOS los datos de: <strong>${nombre}</strong>${msgExtra}`;
+            document.getElementById('inputClaveEliminacion').value = '';
+            document.getElementById('modalEliminacionSegura').style.display = 'flex';
+        }
+
+        function cancelarEliminacionSegura() {
+            condoPendienteEliminar = null;
+            esActivoPendienteEliminar = false; // Reset this too
+            document.getElementById('modalEliminacionSegura').style.display = 'none';
+        }
+
+        function confirmarEliminacionSegura() {
+            const claveSeguridad = document.getElementById('inputClaveEliminacion').value;
+            if (claveSeguridad !== 'SISDEL 2026') {
+                alert("❌ Acción cancelada. Clave maestra incorrecta.");
+                document.getElementById('inputClaveEliminacion').value = '';
+                return;
+            }
+
+            const nombre = condoPendienteEliminar;
+            const esActivo = esActivoPendienteEliminar;
+
+            // 1. Borrar el respaldo de datos del condominio
+            localStorage.removeItem(`SISDEL_DB_${nombre.toUpperCase()}`);
+
+            // 2. Quitarlo del listado maestro
+            const index = DB_MAESTRA_SISDEL.findIndex(c => c.nombre.toUpperCase() === nombre.toUpperCase());
+            if (index !== -1) {
+                DB_MAESTRA_SISDEL.splice(index, 1);
+                localStorage.setItem('SISDEL_LISTADO_MASTER', JSON.stringify(DB_MAESTRA_SISDEL));
+            }
+
+            // 3. Si era el condominio activo, limpiar datos activos
+            if (esActivo) {
+                localStorage.removeItem('delco_config');
+                localStorage.removeItem('delco_vecinos');
+                localStorage.removeItem('delco_usuarios');
+                localStorage.removeItem('delco_visitas');
+                localStorage.removeItem('delco_mensajes');
+                localStorage.removeItem('delco_historial_escaneos'); // Added this for full cleanup
+
+                cancelarEliminacionSegura(); // Close modal before navigation
+
+                if (DB_MAESTRA_SISDEL.length > 0) {
+                    // Conectar al primer condominio disponible
+                    alert(`✅ "${nombre}" eliminado.\nConectando a: ${DB_MAESTRA_SISDEL[0].nombre}...`);
+                    ejecutarCambioProyecto(DB_MAESTRA_SISDEL[0].nombre);
+                    return;
+                } else {
+                    alert(`✅ "${nombre}" eliminado.\nNo quedan condominios. El sistema está en blanco.`);
+                    window.location.href = '../index.html';
+                    return;
+                }
+            }
+
+            alert(`✅ Condominio "${nombre}" eliminado permanentemente.`);
+            mostrarMaestroSisdel(); // Refrescar la tabla
         }
 
         function cerrarMaestroSisdel() {
@@ -1262,7 +1990,7 @@
 
         function ejecutarCambioProyecto(nuevoNombre, nuevoAdmin = null, nuevaClave = null, nombreRealAdmin = 'ADMINISTRADOR') {
             // 1. OBTENER ESTADO ACTUAL PARA GUARDARLO (RESPALDO)
-            const configActual = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'DELCO II' };
+            const configActual = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'MI CONDOMINIO' };
             const nombreActual = configActual.nombre.toUpperCase();
 
             const datosActuales = {
@@ -1270,7 +1998,8 @@
                 vecinos: JSON.parse(localStorage.getItem('delco_vecinos')) || [],
                 usuarios: JSON.parse(localStorage.getItem('delco_usuarios')) || [],
                 visitas: JSON.parse(localStorage.getItem('delco_visitas')) || [],
-                mensajes: JSON.parse(localStorage.getItem('delco_mensajes')) || []
+                mensajes: JSON.parse(localStorage.getItem('delco_mensajes')) || [],
+                historial: JSON.parse(localStorage.getItem('delco_historial_escaneos')) || []
             };
 
             // 2. RESPALDAR CONDOMINIO SALIENTE EN SU PROPIO CUBO
@@ -1286,6 +2015,7 @@
                 localStorage.setItem('delco_usuarios', JSON.stringify(datosNuevos.usuarios || []));
                 localStorage.setItem('delco_visitas', JSON.stringify(datosNuevos.visitas || []));
                 localStorage.setItem('delco_mensajes', JSON.stringify(datosNuevos.mensajes || []));
+                localStorage.setItem('delco_historial_escaneos', JSON.stringify(datosNuevos.historial || []));
             } else {
                 // Iniciar proyecto nuevo desde cero (Pero preservando los otros)
                 // Buscar info en el listado maestro para pre-poblar
@@ -1297,17 +2027,20 @@
                     setup_complete: true,
                     encargado: esteCondo ? esteCondo.encargado : nombreRealAdmin,
                     correo: esteCondo ? esteCondo.correo : '',
-                    telefono: esteCondo ? esteCondo.tel : ''
+                    telefono: esteCondo ? esteCondo.tel : '',
+                    activo: true
                 };
                 localStorage.setItem('delco_config', JSON.stringify(nuevaConfig));
 
                 // --- AGREGAR AL ENCARGADO COMO PRIMER VECINO AUTOMÁTICAMENTE ---
+                // Usar el código generado que viene como parámetro, o generar uno nuevo
+                const codigoAdminFinal = nuevaClave || generarCodigoAleatorio();
                 const primerVecino = {
                     id: Date.now(),
                     lote: "DIR-01",
                     nombre: nombreRealAdmin.toUpperCase(),
                     rol: 1, // DIRECTIVA
-                    codigo: "M2026",
+                    codigo: codigoAdminFinal,
                     dpi: "OFICIAL",
                     telefono: esteCondo ? esteCondo.tel : "----",
                     status: 1,
@@ -1317,15 +2050,15 @@
 
                 localStorage.setItem('delco_visitas', JSON.stringify([]));
                 localStorage.setItem('delco_mensajes', JSON.stringify([]));
+                localStorage.setItem('delco_historial_escaneos', JSON.stringify([]));
 
-                // Usuarios maestros por defecto
+                // Usuarios maestros por defecto — usar el código generado como credenciales
                 let usuarios = [
-                    { username: 'DIRECTIVA', password_hash: 'M2026', rol_id: 1, nombre: nombreRealAdmin },
+                    { username: 'DIRECTIVA', password_hash: codigoAdminFinal, rol_id: 1, nombre: nombreRealAdmin },
                     { username: 'GARITA', password_hash: 'GARITA2026', rol_id: 3, nombre: 'SEGURIDAD' }
                 ];
-                if (nuevoAdmin) {
-                    usuarios[0] = { username: nuevoAdmin.toUpperCase(), password_hash: nuevaClave, rol_id: 1, nombre: nombreRealAdmin };
-                }
+                // También registrar al admin con su código como username para login directo
+                usuarios.push({ username: codigoAdminFinal.toUpperCase(), password_hash: 'dir-01', rol_id: 1, nombre: nombreRealAdmin, lote: 'DIR-01' });
                 localStorage.setItem('delco_usuarios', JSON.stringify(usuarios));
             }
 

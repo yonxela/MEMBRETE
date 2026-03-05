@@ -2,9 +2,11 @@
 <html lang="es">
 
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Escáner QR - DELCO II</title>
+    <title>Escáner QR - Control Residencial</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -313,7 +315,7 @@
                 }
             } else {
                 resNombre.innerText = "Código Inválido";
-                resLote.innerText = "No registrado en DELCO II";
+                resLote.innerText = "No registrado en el sistema";
                 resStatus.className = 'status-strip status-moroso';
                 resStatus.innerText = 'ACCESO DENEGADO';
                 resQr.style.display = 'none';

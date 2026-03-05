@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Visitas - DELCO II</title>
+    <title>Control de Visitas - Control Residencial</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -19,6 +19,7 @@
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --border-color: #333333;
+            --accent: #3b82f6;
         }
 
         * {
@@ -64,18 +65,6 @@
             margin-bottom: 2rem;
         }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-
-        @media (max-width: 600px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
         .form-group {
             display: flex;
             flex-direction: column;
@@ -83,7 +72,7 @@
             margin-bottom: 1.5rem;
         }
 
-        .form-group.full-width {
+        .full-width {
             grid-column: 1 / -1;
         }
 
@@ -93,7 +82,8 @@
             font-weight: 600;
         }
 
-        input {
+        input,
+        select {
             padding: 0.8rem;
             border-radius: 0.5rem;
             border: 1px solid var(--border-color);
@@ -103,10 +93,52 @@
             font-size: 1rem;
         }
 
-        input:focus {
+        input:focus,
+        select:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        select option {
+            background-color: #1a2235;
+            color: white;
+        }
+
+        .vecino-selector-box {
+            background: rgba(59, 130, 246, 0.07);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .vecino-selector-box label {
+            display: block;
+            color: #60a5fa;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .vecino-selector-box select {
+            width: 100%;
+            border-color: rgba(59, 130, 246, 0.3);
+            background-color: rgba(15, 23, 42, 0.8);
+        }
+
+        .vecino-badge {
+            display: none;
+            margin-top: 0.6rem;
+            padding: 0.5rem 0.8rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 0.5rem;
+            color: #10b981;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
 
         .btn {
@@ -137,7 +169,6 @@
             color: var(--text-muted);
             text-decoration: none;
             font-size: 1rem;
-            transition: color 0.2s;
             margin-top: 1rem;
         }
 
@@ -146,106 +177,7 @@
             text-decoration: underline;
         }
 
-        /* Alertas / Mensajes Modal */
-        .alerts-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.85);
-            z-index: 2000;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            padding: 20px;
-        }
-
-        .alert-card {
-            background-color: #1e293b;
-            border-left: 5px solid var(--primary-color);
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            animation: popIn 0.3s ease-out forwards;
-            position: relative;
-            width: 100%;
-            max-width: 450px;
-        }
-
-        .alert-card.alert-todos {
-            border-left-color: #fbbf24;
-        }
-
-        .alert-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 8px;
-            padding-right: 15px;
-        }
-
-        .alert-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: white;
-            line-height: 1.2;
-        }
-
-        .alert-close {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 1.5rem;
-            line-height: 1;
-        }
-
-        .alert-close:hover {
-            color: white;
-        }
-
-        .alert-body {
-            font-size: 0.95rem;
-            color: var(--text-main);
-            line-height: 1.4;
-        }
-
-        .alert-time {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 10px;
-            text-align: right;
-        }
-
-        @keyframes popIn {
-            from {
-                transform: scale(0.9);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-                transform: scale(1);
-            }
-
-            to {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-        }
-
-        /* Estilos Tabla */
+        /* TABLAS */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -260,7 +192,6 @@
         }
 
         th {
-            cursor: pointer;
             font-size: 0.85rem;
             color: var(--text-muted);
             text-transform: uppercase;
@@ -268,328 +199,563 @@
             background-color: rgba(255, 255, 255, 0.02);
         }
 
-        td {
-            font-size: 1rem;
-        }
-
         tr:hover {
             background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* MODAL CONSULTA */
+        .modal-consulta-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 3000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .modal-consulta-content {
+            background-color: var(--panel-bg);
+            border-radius: 1rem;
+            padding: 2rem 1.5rem;
+            width: 100%;
+            max-width: 550px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-consulta-close {
+            position: absolute;
+            top: 12px;
+            right: 18px;
+            font-size: 2rem;
+            color: var(--danger-color);
+            cursor: pointer;
+        }
+
+        .visita-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+        }
+
+        .visita-item.selected {
+            border-color: var(--success-color);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .visita-item-name {
+            font-weight: 700;
+            color: white;
+        }
+
+        .visita-item-detail {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .btn-consulta {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+
+        /* MODAL PREMIUM SISDEL V4 (Compacto & Elegante) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 1.5rem;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: modalEntry 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent);
+            opacity: 0.8;
+            filter: blur(1px);
+        }
+
+        .modal-card.modal-success::before {
+            background: #10b981;
+        }
+
+        @keyframes modalEntry {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-icon-container {
+            width: 64px;
+            height: 64px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem auto;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: var(--accent);
+            font-size: 1.8rem;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .modal-success .modal-icon-container {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+        }
+
+        .modal-title-custom {
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin-bottom: 0.6rem;
+            color: #f8fafc;
+            letter-spacing: -0.02em;
+        }
+
+        .modal-text-custom {
+            color: #94a3b8;
+            line-height: 1.55;
+            margin-bottom: 1.75rem;
+            font-size: 0.98rem;
+        }
+
+        .modal-btn-confirm {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.9rem 1.5rem;
+            border-radius: 1rem;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .modal-btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            filter: brightness(1.1);
+        }
+
+
+        /* BANDEJA DE MENSAJES */
+        .alerts-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+            gap: 15px;
+        }
+
+        .alert-card {
+            background: #1e293b;
+            border-left: 5px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 20px;
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+        }
+
+        .alert-todos {
+            border-left-color: #fbbf24;
+        }
+
+        .alert-title {
+            font-weight: 700;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .alert-body {
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .alert-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--text-muted);
         }
     </style>
 </head>
 
 <body>
-    <!-- Contenedor para notificaciones de Mensajes -->
     <div id="alertsContainer" class="alerts-container"></div>
 
     <div class="container">
         <div
             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem;">
             <div>
-                <h1 class="header-title" id="headerCondoName" style="text-align: left; margin: 0;">DELCO II</h1>
-                <p class="header-subtitle" style="text-align: left; margin: 0;">Panel de Control de Visitas</p>
+                <h1 class="header-title" id="headerCondoName">MI CONDOMINIO</h1>
+                <p class="header-subtitle">Panel de Control de Visitas</p>
             </div>
             <button onclick="verMiMarbete()" class="btn"
-                style="background-color: var(--primary-color); color: white; border-radius: 8px; font-weight: 600;">
-                🪪 Ver Mi Marbete
-            </button>
+                style="background-color: var(--primary-color); color: white; border-radius: 8px;">🪪 Ver Mi
+                Marbete</button>
         </div>
 
         <div class="panel">
             <h2
                 style="margin-bottom: 1.5rem; font-size: 1.2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
                 Registrar Nueva Visita</h2>
+            <button type="button" class="btn-consulta" onclick="abrirConsultaVisitas()">📋 Consultar Visitas
+                Anteriores</button>
 
             <div id="avisoMoroso"
-                style="display: none; background-color: #fef08a; color: #854d0e; padding: 20px; border-radius: 8px; font-weight: 700; font-size: 1.1rem; text-align: center; border: 2px solid #eab308; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                style="display: none; background: #fef08a; color: #854d0e; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; font-weight: 700;">
                 ⚠️ USTED ESTÁ PENDIENTE DE PAGO
-                <div style="font-size: 0.9rem; font-weight: 500; margin-top: 10px;">Su formulario para programar visitas
-                    ha sido desactivado. Por favor comuníquese con la administración para regularizar su cuenta.</div>
+                <div style="font-size: 0.9rem; font-weight: 500; margin-top: 10px;">Formulario desactivado
+                    temporalmente.</div>
+            </div>
+
+            <!-- SELECTOR DE VECINO QUE AUTORIZA -->
+            <div class="vecino-selector-box">
+                <label>👤 Vecino que Autoriza la Visita</label>
+
+                <input type="text" id="buscadorVecinos" placeholder="🔍 Buscar por nombre o lote..." class="input-field"
+                    style="width: 100%; margin-bottom: 8px; border-color: rgba(59, 130, 246, 0.3); background-color: rgba(15, 23, 42, 0.8);"
+                    onkeyup="filtrarVecinosAutoriza()">
+
+                <select id="vecinoSelector" style="background-color: rgba(15, 23, 42, 0.8); width: 100%;" size="4"
+                    onchange="seleccionarVecino(this.value)">
+                    <option value="">— Seleccione un vecino —</option>
+                </select>
+                <div class="vecino-badge" id="vecinoBadge">✓ Autorización registrada</div>
             </div>
 
             <form id="visitaForm">
-                <div class="form-group full-width">
-                    <label>Nombre de la Visita</label>
-                    <input type="text" id="nombreVisita" placeholder="Nombre completo del visitante" required>
+                <div class="form-group full-width"><label>Nombre de la Visita</label><input type="text"
+                        id="nombreVisita" required></div>
+                <div class="form-group full-width"><label>Identificación</label><input type="text"
+                        id="identificacionVisita" required></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group"><label>Placa</label><input type="text" id="placaVisita" required></div>
+                    <div class="form-group"><label>Personas</label><input type="number" id="cantidadPersonas" min="1"
+                            value="1" required></div>
                 </div>
-
-                <div class="form-group full-width">
-                    <label>Número de Identificación Personal</label>
-                    <input type="text" id="identificacionVisita" placeholder="Número de identificación personal"
-                        required>
-                </div>
-
-                <div class="form-group">
-                    <label>Placa(s) del Vehículo</label>
-                    <input type="text" id="placaVisita" placeholder="Ej. P123ABC" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Cantidad de Personas</label>
-                    <input type="number" id="cantidadPersonas" placeholder="Núm. de personas" min="1" required>
-                </div>
-
-                <div class="form-group full-width">
-                    <label>Autorizado por (Vecino / Lote)</label>
-                    <input type="text" id="autorizadoPor" placeholder="Lote o Nombre del vecino que autoriza" required>
-                </div>
-
-                <div class="form-group full-width">
-                    <label>Programar Fecha de Visita</label>
-                    <input type="date" id="fechaVisita" required>
-                </div>
+                <div class="form-group full-width"><label>Autoriza (Copiado del vecino seleccionado)</label><input
+                        type="text" id="autorizadoPor" readonly
+                        placeholder="Se completa al seleccionar el vecino arriba"
+                        style="background: rgba(0,0,0,0.2); color: #94a3b8; font-style: italic;"></div>
+                <div class="form-group full-width"><label>Fecha Visita</label><input type="date" id="fechaVisita"
+                        required></div>
+                <button type="submit" class="btn btn-primary">Guardar Registro de Visita</button>
+            </form>
         </div>
 
-        <button type="submit" class="btn btn-primary">Guardar Registro de Visita</button>
-        </form>
-    </div>
-
-    <div class="panel">
-        <div
-            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-            <h2 style="font-size: 1.2rem; margin: 0;">TABLA DE VISITAS</h2>
-            <div style="display: flex; gap: 8px;">
-                <input type="text" id="busquedaVisitas" placeholder="Buscar por Nombre o Placa..."
-                    style="padding: 8px; width: 220px; font-size: 0.9rem;">
-                <button type="button" class="btn"
-                    style="padding: 8px 15px; background-color: var(--primary-color); color: white;"
-                    onclick="renderizarVisitas()">Buscar</button>
-                <button type="button" class="btn"
-                    style="padding: 8px 15px; background-color: var(--border-color); color: white;"
-                    onclick="limpiarBusquedaVisitas()">Limpiar</button>
+        <div class="panel">
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.2rem;">TABLA DE VISITAS</h2>
+            <div style="overflow-x: auto;">
+                <table id="tablaVisitas">
+                    <thead>
+                        <tr>
+                            <th>FECHA</th>
+                            <th>VISITANTE</th>
+                            <th>PLACA</th>
+                            <th>PERSONAS</th>
+                            <th>AUTORIZA</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaBody"></tbody>
+                </table>
             </div>
         </div>
 
-        <div style="overflow-x: auto;">
-            <table id="tablaVisitas">
-                <thead>
-                    <tr>
-                        <th>FECHA Y HORA</th>
-                        <th>Visitante</th>
-                        <th>No. Identificación</th>
-                        <th>Placa(s)</th>
-                        <th>No. Personas</th>
-                        <th>Autoriza (Vecino)</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaBody">
-                    <!-- Visitas dinámicas -->
-                </tbody>
-            </table>
+        <div style="text-align: center; margin-top: 2rem;"><a href="garita.html" target="_blank" class="btn"
+                style="background: #fbbf24; color: black; font-weight: 700;">🛡️ VISTA DE GARITA</a></div>
+        <a href="javascript:history.back()" class="btn-back">← Volver Atrás</a>
+    </div>
+
+    <!-- MODALES -->
+    <div id="modalConsultaVisitas" class="modal-consulta-overlay">
+        <div class="modal-consulta-content">
+            <span class="modal-consulta-close" onclick="cerrarConsultaVisitas()">&times;</span>
+            <h2 style="color: var(--primary-color);">📋 Visitas Anteriores</h2>
+            <div style="margin: 15px 0;"><input type="text" id="busquedaVisitaModal" placeholder="Buscar..."
+                    oninput="filtrarVisitasModal()" style="width: 100%;"></div>
+            <div id="listaVisitasAnteriores"></div>
+            <button type="button" class="btn btn-primary" style="margin-top:1rem;"
+                onclick="usarVisitaSeleccionada()">Cargar Datos</button>
         </div>
     </div>
 
-    <div style="text-align: center; margin-top: 2rem; margin-bottom: 1rem;">
-        <a href="garita.html" target="_blank" class="btn"
-            style="background-color: var(--highlight-color); color: #1e1e1e; text-decoration: none; padding: 1rem 2rem; border-radius: 8px; font-weight: 700; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(251, 191, 36, 0.3); display: inline-block;">
-            🛡️ ABRIR PANTALLA EXCLUSIVA DE GARITA
-        </a>
-    </div>
-
-    <div style="text-align: center; margin-top: 2rem; margin-bottom: 1rem;">
-        <a href="garita.html" target="_blank" class="btn"
-            style="background-color: var(--highlight-color); color: #1e1e1e; text-decoration: none; padding: 1rem 2rem; border-radius: 8px; font-weight: 700; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(251, 191, 36, 0.3); display: inline-block;">
-            🛡️ ABRIR PANTALLA EXCLUSIVA DE GARITA
-        </a>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">Esta pantalla se actualiza sola y
-            solo muestra autorizaciones del día de hoy.</p>
-    </div>
-
-    <a href="javascript:history.back()" class="btn-back">← Volver Atrás</a>
+    <div id="sisdelModal" class="modal-overlay">
+        <div class="modal-card">
+            <div id="modalIconWrapper" class="modal-icon-container">⚠️</div>
+            <h2 id="modalTitleEl" class="modal-title-custom">Aviso</h2>
+            <div id="modalMessageEl" class="modal-text-custom">Contenido...</div>
+            <button class="modal-btn-confirm" onclick="cerrarSisdelModal()">Entendido</button>
+        </div>
     </div>
 
     <script>
-        // Cargar configuración de condominio
-        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'DELCO II' };
-        document.getElementById('headerCondoName').innerText = config_db.nombre.toUpperCase();
-        document.title = `Control de Visitas - ${config_db.nombre}`;
+        const config_db = JSON.parse(localStorage.getItem('delco_config')) || { nombre: 'CONDOMINIO', activo: true };
+        let visitas_db = JSON.parse(localStorage.getItem('delco_visitas')) || [];
+        const vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [];
 
-        function verMiMarbete() {
-            const params = new URLSearchParams(window.location.search);
-            const codigoUrl = params.get('codigo');
-            if (codigoUrl) {
-                window.location.href = `../marbete.html?codigo=${encodeURIComponent(codigoUrl)}`;
-            } else {
-                window.location.href = `../index.html`;
-            }
+        let opcionesVecinosOriginales = [];
+
+        // Poblar el selector de vecinos
+        function poblarSelectorVecinos(preseleccionarId = null) {
+            const select = document.getElementById('vecinoSelector');
+            const buscador = document.getElementById('buscadorVecinos');
+
+            // Refrescar lista completa
+            opcionesVecinosOriginales = vecinos_db.filter(v => !v.condo || v.condo === config_db.nombre || true);
+
+            buscador.value = ''; // limpiar texto a cargar todo
+            renderizarSelectVecinos(opcionesVecinosOriginales, preseleccionarId);
         }
 
-        // Array de simulacion cargando de memoria
-        let visitas_db = JSON.parse(localStorage.getItem('delco_visitas')) || [];
+        function renderizarSelectVecinos(lista, preseleccionarId = null) {
+            const select = document.getElementById('vecinoSelector');
+            select.innerHTML = '';
 
-        function renderizarVisitas() {
-            const tbody = document.getElementById('tablaBody');
-            tbody.innerHTML = '';
-
-            const busquedaInput = document.getElementById('busquedaVisitas');
-            const textoBusqueda = busquedaInput ? busquedaInput.value.toLowerCase().trim() : '';
-
-            const visitasFiltro = visitas_db.filter(v => {
-                if (!textoBusqueda) return true;
-                return (v.nombre.toLowerCase().includes(textoBusqueda) ||
-                    (v.placa && v.placa.toLowerCase().includes(textoBusqueda)));
-            });
-
-            if (visitasFiltro.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No se encontraron visitas.</td></tr>';
+            if (lista.length === 0) {
+                select.innerHTML = '<option disabled value="">No se encontraron resultados</option>';
                 return;
             }
 
-            // Ordenar de más reciente a más antiguo
-            const visitasOrdenadas = [...visitasFiltro].reverse();
+            lista.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.id;
+                const rol = v.rol == 1 ? '🏛️ DIRECTIVA' : v.rol == 3 ? '🔐 GARITA' : (v.rol == 4 ? '⏳ TEMPORAL' : '🏠 VECINO');
+                opt.textContent = `${rol} · LOTE ${v.lote} - ${v.nombre}`;
+                opt.dataset.nombre = v.nombre;
+                opt.dataset.lote = v.lote;
+                if (preseleccionarId && v.id == preseleccionarId) opt.selected = true;
+                select.appendChild(opt);
+            });
 
-            visitasOrdenadas.forEach(visita => {
+            // Si hay preselección desde URL que acabamos de meter, disparar cambio visual (solo si se seleccionó)
+            if (preseleccionarId && select.value) {
+                seleccionarVecino(preseleccionarId);
+            }
+        }
+
+        function filtrarVecinosAutoriza() {
+            const texto = document.getElementById('buscadorVecinos').value.toLowerCase();
+            const filtrados = opcionesVecinosOriginales.filter(v =>
+                v.nombre.toLowerCase().includes(texto) ||
+                (v.lote && v.lote.toString().toLowerCase().includes(texto))
+            );
+            // Al filtrar, si no pasamos preselectID, queda como estaba
+            renderizarSelectVecinos(filtrados);
+        }
+
+        function seleccionarVecino(vecinoId) {
+            const select = document.getElementById('vecinoSelector');
+            const opt = select.querySelector(`option[value="${vecinoId}"]`);
+            const badge = document.getElementById('vecinoBadge');
+            const campoAutoriza = document.getElementById('autorizadoPor');
+
+            if (opt && vecinoId) {
+                const nombre = opt.dataset.nombre;
+                const lote = opt.dataset.lote;
+                const texto = `LOTE ${lote} - ${nombre}`;
+
+                campoAutoriza.value = texto;
+                campoAutoriza.style.color = '#10b981';
+                campoAutoriza.style.fontStyle = 'normal';
+                badge.style.display = 'block';
+                badge.textContent = `✓ Autoriza: ${nombre} (Lote ${lote})`;
+            } else {
+                campoAutoriza.value = '';
+                campoAutoriza.style.color = '#94a3b8';
+                campoAutoriza.style.fontStyle = 'italic';
+                badge.style.display = 'none';
+            }
+        }
+
+        function mostrarSisdelModal(titulo, mensaje, icono = "⚠️") {
+            const modal = document.getElementById('sisdelModal');
+            const card = modal.querySelector('.modal-card');
+            card.classList.toggle('modal-success', mensaje.includes('✅'));
+            document.getElementById('modalIconWrapper').textContent = icono;
+            document.getElementById('modalTitleEl').textContent = titulo;
+            document.getElementById('modalMessageEl').innerHTML = mensaje;
+            modal.style.display = 'flex';
+        }
+        function cerrarSisdelModal() { document.getElementById('sisdelModal').style.display = 'none'; }
+        window.alert = (msg) => mostrarSisdelModal("Aviso", msg);
+
+        function renderizarVisitas() {
+            const tbody = document.getElementById('tablaBody'); tbody.innerHTML = '';
+            const filtradas = visitas_db.filter(v => !v.condo || v.condo === config_db.nombre).reverse();
+            if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#666;padding:2rem;">No hay registros</td></tr>'; return; }
+            filtradas.forEach(v => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="color: var(--primary-color);">
-                        <strong style="font-size: 1rem; display: block;">${visita.fecha}</strong>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">${visita.hora}</span>
-                    </td>
-                    <td><strong>${visita.nombre}</strong></td>
-                    <td style="color: var(--highlight-color); font-weight: 600;">${visita.identificacion || '-'}</td>
-                    <td style="letter-spacing: 1px; text-transform: uppercase;">${visita.placa}</td>
-                    <td>${visita.cantidad}</td>
-                    <td style="color: #a1a1aa; font-weight: 500;">${visita.autoriza}</td>
-                `;
+                tr.innerHTML = `<td>${v.fecha}</td><td><strong>${v.nombre}</strong></td><td>${v.placa}</td><td>${v.cantidad}</td><td>${v.autoriza}</td>`;
                 tbody.appendChild(tr);
             });
         }
 
-        function limpiarBusquedaVisitas() {
-            if (document.getElementById('busquedaVisitas')) {
-                document.getElementById('busquedaVisitas').value = '';
-            }
-            renderizarVisitas();
-        }
-
-        document.getElementById('visitaForm').addEventListener('submit', function (e) {
+        document.getElementById('visitaForm').onsubmit = function (e) {
             e.preventDefault();
-
-            const ahora = new Date();
-            const horaStr = ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-
-            const fechaInput = document.getElementById('fechaVisita').value;
-            const [y, m, d] = fechaInput.split('-');
-            const dateProgramada = new Date(y, m - 1, d, 12, 0, 0);
-            const fechaStr = dateProgramada.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-
-            const nuevaVisita = {
-                id: visitas_db.length + 1,
+            const hoy = new Date();
+            const nueva = {
+                id: Date.now(),
                 nombre: document.getElementById('nombreVisita').value.toUpperCase(),
-                identificacion: document.getElementById('identificacionVisita').value.toUpperCase(),
+                identificacion: document.getElementById('identificacionVisita').value,
                 placa: document.getElementById('placaVisita').value.toUpperCase(),
                 cantidad: document.getElementById('cantidadPersonas').value,
-                autoriza: document.getElementById('autorizadoPor').value.toUpperCase(),
-                fecha: fechaStr,
-                hora: horaStr,
-                timestamp: ahora.getTime(),
-                fecha_programada: fechaInput
+                autoriza: document.getElementById('autorizadoPor').value,
+                fecha: new Date(document.getElementById('fechaVisita').value).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
+                hora: hoy.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+                timestamp: hoy.getTime(),
+                fecha_programada: document.getElementById('fechaVisita').value,
+                condo: config_db.nombre,
+                entró: false
             };
-
-            visitas_db.push(nuevaVisita);
+            visitas_db.push(nueva);
             localStorage.setItem('delco_visitas', JSON.stringify(visitas_db));
-
+            alert("✅ Visita registrada exitosamente.");
             renderizarVisitas();
             this.reset();
-            alert("Visita guardada exitosamente y lista para garita.");
-        });
+            const year = hoy.getFullYear(); const month = String(hoy.getMonth() + 1).padStart(2, '0'); const day = String(hoy.getDate()).padStart(2, '0');
+            document.getElementById('fechaVisita').value = `${year}-${month}-${day}`;
+            verificarMensajes();
+        };
 
-        // Carga inicial
-        const dtToday = new Date();
-        const yyyy = dtToday.getFullYear();
-        const mm = String(dtToday.getMonth() + 1).padStart(2, '0');
-        const dd = String(dtToday.getDate()).padStart(2, '0');
-        if (document.getElementById('fechaVisita')) {
-            document.getElementById('fechaVisita').value = `${yyyy}-${mm}-${dd}`;
+        // CONSULTA
+        let indexSel = null;
+        function abrirConsultaVisitas() {
+            const container = document.getElementById('listaVisitasAnteriores'); container.innerHTML = '';
+            const unicas = []; const nombres = new Set();
+            [...visitas_db].reverse().forEach(v => {
+                if (!nombres.has(v.nombre)) { nombres.add(v.nombre); unicas.push(v); }
+            });
+            window._visitasConsulta = unicas;
+            unicas.forEach((v, i) => {
+                const item = document.createElement('div'); item.className = 'visita-item';
+                item.onclick = () => { indexSel = i; document.querySelectorAll('.visita-item').forEach(el => el.classList.remove('selected')); item.classList.add('selected'); };
+                item.innerHTML = `<div><div class="visita-item-name">${v.nombre}</div><div class="visita-item-detail">🚗 ${v.placa} | 🆔 ${v.identificacion}</div></div>`;
+                container.appendChild(item);
+            });
+            document.getElementById('modalConsultaVisitas').style.display = 'flex';
+        }
+        function cerrarConsultaVisitas() { document.getElementById('modalConsultaVisitas').style.display = 'none'; indexSel = null; }
+        function usarVisitaSeleccionada() {
+            if (indexSel === null) return;
+            const v = window._visitasConsulta[indexSel];
+            document.getElementById('nombreVisita').value = v.nombre;
+            document.getElementById('identificacionVisita').value = v.identificacion;
+            document.getElementById('placaVisita').value = v.placa;
+            cerrarConsultaVisitas();
         }
 
-        renderizarVisitas();
-        verificarMensajes();
-
-        // FUNCIÓN PARA VERIFICAR MENSAJES (Bandeja)
         function verificarMensajes() {
             const params = new URLSearchParams(window.location.search);
-            const codigoUrl = params.get('codigo');
+            const codigo = params.get('codigo');
+            if (!codigo) return;
+            const vecinos = JSON.parse(localStorage.getItem('delco_vecinos')) || [];
+            const v = vecinos.find(x => x.codigo === codigo || x.dpi === codigo);
+            if (!v) return;
+            // Preseleccionar el vecino en el selector y copiar su nombre en Autoriza
+            document.getElementById('vecinoSelector').value = v.id;
+            seleccionarVecino(v.id);
+            if (v.status === 0) { document.getElementById('visitaForm').style.display = 'none'; document.getElementById('avisoMoroso').style.display = 'block'; }
 
-            if (!codigoUrl) return; // Si no hay código de vecino en la url, no mostrar nada
-
-            // Buscar ID del vecino
-            const vecinos_db = JSON.parse(localStorage.getItem('delco_vecinos')) || [];
-            const vecinoActivo = vecinos_db.find(v => v.codigo === codigoUrl || v.dpi === codigoUrl);
-
-            if (!vecinoActivo) return;
-
-            // Bloquear formulario si es moroso
-            if (vecinoActivo.status === 0) {
-                document.getElementById('visitaForm').style.display = 'none';
-                document.getElementById('avisoMoroso').style.display = 'block';
-            } else {
-                // Pre-rellenar autorizado por con los datos del vecino
-                const inputAutoriza = document.getElementById('autorizadoPor');
-                if (inputAutoriza) {
-                    inputAutoriza.value = `LOTE ${vecinoActivo.lote} - ${vecinoActivo.nombre}`;
-                    inputAutoriza.readOnly = true;
-                    inputAutoriza.style.backgroundColor = 'rgba(255,255,255,0.05)';
-                    inputAutoriza.style.color = '#94a3b8';
-                }
-            }
-
-            const mensajes_db = JSON.parse(localStorage.getItem('delco_mensajes')) || [];
-            const keyLeidos = `delco_leidos_${codigoUrl}`;
-            const mensajesMostrados = JSON.parse(localStorage.getItem(keyLeidos)) || [];
-
-            const misMensajes = mensajes_db.filter(m =>
-                (m.id_destinatario === "TODOS" || m.id_destinatario === parseInt(vecinoActivo.id)) &&
-                !mensajesMostrados.includes(m.id)
-            );
-
-            if (misMensajes.length > 0) {
-                const container = document.getElementById('alertsContainer');
-                container.style.display = 'flex';
-                misMensajes.forEach(m => {
-                    const isTodos = m.id_destinatario === "TODOS";
-                    const alertEl = document.createElement('div');
-                    alertEl.className = `alert-card ${isTodos ? 'alert-todos' : ''}`;
-                    alertEl.id = `alert-${m.id}`;
-                    alertEl.innerHTML = `
-                        <span class="alert-close" onclick="cerrarMensaje(${m.id}, '${codigoUrl}')">&times;</span>
-                        <div class="alert-header">
-                            <div class="alert-title">${isTodos ? '📢 AVISO GENERAL' : '✉️ MENSAJE PRIVADO'}<br><span style="font-size:0.9rem;font-weight:400;">${m.asunto}</span></div>
-                        </div>
-                        <div class="alert-body">${m.cuerpo}</div>
-                        <div class="alert-time">${m.fecha_envio}</div>
-                    `;
-                    container.appendChild(alertEl);
-
-                    // Desaparecer automáticamente a los 2 minutos (120,000 ms)
-                    setTimeout(() => {
-                        cerrarMensaje(m.id, codigoUrl);
-                    }, 120000);
+            const mensajes = JSON.parse(localStorage.getItem('delco_mensajes')) || [];
+            const leidos = JSON.parse(localStorage.getItem(`delco_leidos_${codigo}`)) || [];
+            const mis = mensajes.filter(m => (m.id_destinatario === "TODOS" || m.id_destinatario === parseInt(v.id)) && !leidos.includes(m.id));
+            if (mis.length > 0) {
+                const container = document.getElementById('alertsContainer'); container.style.display = 'flex';
+                mis.forEach(m => {
+                    const card = document.createElement('div'); card.className = `alert-card ${m.id_destinatario === 'TODOS' ? 'alert-todos' : ''}`;
+                    card.innerHTML = `<span class="alert-close" onclick="this.parentElement.remove()">×</span><div class="alert-title">${m.asunto}</div><div>${m.cuerpo}</div>`;
+                    container.appendChild(card);
                 });
             }
         }
 
-        function cerrarMensaje(mensajeId, vecinoCodigo) {
-            const alertEl = document.getElementById(`alert-${mensajeId}`);
-            if (alertEl) {
-                alertEl.style.animation = "fadeOut 0.3s ease-out forwards";
-                setTimeout(() => {
-                    alertEl.remove();
-                    const container = document.getElementById('alertsContainer');
-                    if (container.children.length === 0) {
-                        container.style.display = 'none';
-                    }
-                }, 300);
-            }
-
-            // Guardar como leído para que no vuelva a salir la próxima vez
-            const keyLeidos = `delco_leidos_${vecinoCodigo}`;
-            const mensajesMostrados = JSON.parse(localStorage.getItem(keyLeidos)) || [];
-            if (!mensajesMostrados.includes(mensajeId)) {
-                mensajesMostrados.push(mensajeId);
-                localStorage.setItem(keyLeidos, JSON.stringify(mensajesMostrados));
-            }
-        }
+        document.getElementById('headerCondoName').innerText = config_db.nombre.toUpperCase();
+        const hoy = new Date(); document.getElementById('fechaVisita').value = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+        poblarSelectorVecinos(); // Llenar el dropdown con todos los vecinos
+        renderizarVisitas(); verificarMensajes();
     </script>
 </body>
 
